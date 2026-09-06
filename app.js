@@ -4,14 +4,14 @@ import { formatDateKey } from './utils.js';
 
 // Список категорий расходов
 const EXPENSE_CATEGORIES = [
-  { id: 'food', name: '🛒 Продукты' },
+  { id: 'food', name: '🛒 Продукты', emoji: '🛒' },
   { id: 'pharmacy', name: '💊 Аптека/Лекарства', emoji: '💊' },
-  { id: 'transport', name: '⛽ Транспорт/Топливо' },
+  { id: 'transport', name: '⛽ Транспорт/Топливо', emoji: '⛽' },
   { id: 'utilities', name: '🏠 ЖКХ', emoji: '🏠' },
   { id: 'communication', name: '📱 Связь', emoji: '📱' },
-  { id: 'health', name: '🏥 Здоровье/Врачи' },
+  { id: 'health', name: '🏥 Здоровье/Врачи', emoji: '🏥' },
   { id: 'gifts', name: '🎁 Подарки', emoji: '🎁' },
-  { id: 'home', name: '🏠 Для дома' },
+  { id: 'home', name: '🏠 Для дома', emoji: '🏠' },
   { id: 'clothes', name: '👕 Одежда', emoji: '👕' },
   { id: 'other', name: '📦 Другое', emoji: '📦' },
 ];
