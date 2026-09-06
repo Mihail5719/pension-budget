@@ -1,5 +1,5 @@
 import { loadData, saveData } from './storage.js';
-import { renderAll, renderTodayScreen, renderTransactionList } from './ui.js';
+import { renderAll, renderTodayScreen, renderTransactionList, renderSettings } from './ui.js';
 import { formatDateKey } from './utils.js';
 
 // Список категорий расходов
@@ -18,11 +18,11 @@ const EXPENSE_CATEGORIES = [
 
 // Список категорий доходов
 const INCOME_CATEGORIES = [
-    { id: 'gift', name: '🎁 Подарок', emoji: '🎁' },
-    { id: 'help', name: '👨‍‍👧 Помощь от детей/родственников', emoji: '👨👩‍👧' },
-    { id: 'work', name: '💼 Подработка', emoji: '💼' },
-    { id: 'debt', name: '💰 Возврат долга', emoji: '💰' },
-    { id: 'other', name: '📦 Другое', emoji: '📦' }
+  { id: 'gift', name: '🎁 Подарок', emoji: '🎁' },
+  { id: 'help', name: '👨‍‍👧 Помощь от детей/родственников', emoji: '👨👩‍👧' },
+  { id: 'work', name: '💼 Подработка', emoji: '💼' },
+  { id: 'debt', name: '💰 Возврат долга', emoji: '💰' },
+  { id: 'other', name: '📦 Другое', emoji: '📦' },
 ];
 
 let appData; // Глобальное состояние приложения
@@ -148,77 +148,89 @@ function setupEventListeners() {
 
 // Открытие модального окна доходов
 function openIncomeModal() {
-    incomeModal.classList.add('is-open');
-    incomeCategorySelect.focus();
+  incomeModal.classList.add('is-open');
+  incomeCategorySelect.focus();
 }
 
 // Закрытие модального окна доходов
 function closeIncomeModal() {
-    incomeModal.classList.remove('is-open');
-    incomeCategorySelect.value = 'gift'; // Сброс на первую категорию
-    incomeAmountInput.value = '';
+  incomeModal.classList.remove('is-open');
+  incomeCategorySelect.value = 'gift'; // Сброс на первую категорию
+  incomeAmountInput.value = '';
 }
 
 // Сохранение дохода
 function saveIncome() {
-    const categoryId = incomeCategorySelect.value;
-    const amount = parseInt(incomeAmountInput.value);
-    
-    if (isNaN(amount) || amount <= 0) {
-        alert('Пожалуйста, введите корректную сумму');
-        incomeAmountInput.focus();
-        return;
-    }
-    
-    // Находим название категории
-    const category = INCOME_CATEGORIES.find(c => c.id === categoryId);
-    const categoryName = category ? category.name : categoryId;
-    
-    // Создаём транзакцию с типом "income"
-    const transaction = {
-        id: Date.now(),
-        date: new Date().toISOString(),
-        category: categoryName,
-        amount: amount,
-        type: 'income' // Важно! Отличает доход от расхода
-    };
-    
-    // Добавляем в данные
-    appData.transactions.push(transaction);
-    
-    // Сохраняем
-    saveData(appData);
-    
-    // Закрываем модалку и перерисовываем
-    closeIncomeModal();
-    renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions);
-    renderTransactionList(appData.transactions, appData.settings.pensionDay);
-    
-    console.log('Добавлен доход:', transaction);
+  const categoryId = incomeCategorySelect.value;
+  const amount = parseInt(incomeAmountInput.value);
+
+  if (isNaN(amount) || amount <= 0) {
+    alert('Пожалуйста, введите корректную сумму');
+    incomeAmountInput.focus();
+    return;
+  }
+
+  // Находим название категории
+  const category = INCOME_CATEGORIES.find((c) => c.id === categoryId);
+  const categoryName = category ? category.name : categoryId;
+
+  // Создаём транзакцию с типом "income"
+  const transaction = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    category: categoryName,
+    amount: amount,
+    type: 'income', // Важно! Отличает доход от расхода
+  };
+
+  // Добавляем в данные
+  appData.transactions.push(transaction);
+
+  // Сохраняем
+  saveData(appData);
+
+  // Закрываем модалку и перерисовываем
+  closeIncomeModal();
+  renderTodayScreen(
+    appData.settings,
+    appData.fixedExpenses,
+    appData.transactions,
+  );
+  renderTransactionList(appData.transactions, appData.settings.pensionDay);
+
+  console.log('Добавлен доход:', transaction);
 }
 
 // Элементы модального окна расходов
-let expenseModal, expenseCategorySelect, expenseAmountInput, expenseSaveBtn, expenseCancelBtn;
+let expenseModal,
+  expenseCategorySelect,
+  expenseAmountInput,
+  expenseSaveBtn,
+  expenseCancelBtn;
 
 // Элементы модального окна доходов
-let incomeModal, incomeCategorySelect, incomeAmountInput, incomeSaveBtn, incomeCancelBtn;
+let incomeModal,
+  incomeCategorySelect,
+  incomeAmountInput,
+  incomeSaveBtn,
+  incomeCancelBtn;
 
 // Открытие модального окна расходов
 function openExpenseModal() {
-    expenseModal.classList.add('is-open');
-    expenseCategorySelect.focus();
+  expenseModal.classList.add('is-open');
+  expenseCategorySelect.focus();
 }
 
 // Закрытие модального окна расходов
 function closeExpenseModal() {
-    expenseModal.classList.remove('is-open');
-    expenseCategorySelect.value = 'products'; // Сброс на первую категорию
-    expenseAmountInput.value = '';
+  expenseModal.classList.remove('is-open');
+  expenseCategorySelect.value = 'products'; // Сброс на первую категорию
+  expenseAmountInput.value = '';
 }
 
 // Обработчик добавления расхода (новая версия с модальным окном)
 function handleAddExpense() {
-    openExpenseModal();
+  openExpenseModal();
 }
 
 // Сохранение расхода
@@ -333,8 +345,6 @@ function handleAddPayment() {
     appData.fixedExpenses,
     appData.transactions,
   );
-
-  console.log('Добавлен платёж:', payment);
 }
 
 // Обработчик клика по кнопкам удаления
