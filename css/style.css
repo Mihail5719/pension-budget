@@ -76,6 +76,7 @@ body {
 
 .screen {
     display: none;
+    padding-bottom: 100px;
 }
 
 .screen:target {
