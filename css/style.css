@@ -337,13 +337,12 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 8px 4px;
-    min-width: 0;
+    padding: 8px 2px;
     flex: 1;
-    max-width: 33%;
     cursor: pointer;
     transition: all 0.2s;
     border-radius: var(--border-radius);
+    text-decoration: none;
 }
 
 .bottom-nav__item:hover {
@@ -361,15 +360,13 @@ body {
 }
 
 .bottom-nav__label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--color-text-secondary);
     text-align: center;
     margin-top: 4px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    text-decoration: none;
 }
 
 /* Адаптация для смартфонов */
