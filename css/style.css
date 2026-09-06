@@ -336,11 +336,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--spacing-sm) var(--spacing-md);
-    text-decoration: none;
-    color: var(--color-text-secondary);
-    border-radius: var(--border-radius);
+    justify-content: center;
+    padding: 8px 4px;
+    min-width: 0;
+    flex: 1;
+    max-width: 33%;
+    cursor: pointer;
     transition: all 0.2s;
+    border-radius: var(--border-radius);
 }
 
 .bottom-nav__item:hover {
@@ -358,8 +361,15 @@ body {
 }
 
 .bottom-nav__label {
-    font-size: var(--font-size-small);
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 /* Адаптация для смартфонов */
@@ -537,4 +547,17 @@ body {
 .btn-delete-payment:hover {
     background-color: rgba(198, 40, 40, 0.1);
     transform: scale(1.1);
+}
+
+/* Скрытый заголовок для валидатора */
+.screen__title--hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
