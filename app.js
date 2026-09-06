@@ -61,7 +61,10 @@ function setupEventListeners() {
   EXPENSE_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
     option.value = category.id;
-    option.textContent = category.name;
+    // Явно берем эмодзи из поля emoji, если оно есть
+    option.textContent = category.emoji
+      ? `${category.emoji} ${category.name}`
+      : category.name;
     expenseCategorySelect.appendChild(option);
   });
 
