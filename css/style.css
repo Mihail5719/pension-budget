@@ -1,0 +1,540 @@
+/* Базовые стили для desktop */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --font-size-base: 18px;
+    --font-size-large: 32px;
+    --font-size-small: 16px;
+    
+    --btn-min-height: 48px;
+    
+    --color-primary: #1976d2;
+    --color-primary-dark: #1565c0;
+    --color-secondary: #757575;
+    --color-background: #f5f5f5;
+    --color-surface: #ffffff;
+    --color-text: #212121;
+    --color-text-secondary: #757575;
+    
+    --color-ok: #2e7d32;
+    --color-warn: #f57f17;
+    --color-danger: #c62828;
+    
+    --spacing-xs: 8px;
+    --spacing-sm: 16px;
+    --spacing-md: 24px;
+    --spacing-lg: 32px;
+    
+    --border-radius: 12px;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    color: var(--color-text);
+    background-color: var(--color-background);
+}
+
+.app {
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface);
+}
+
+/* Header */
+.header {
+    background-color: var(--color-primary);
+    color: white;
+    padding: var(--spacing-md);
+    text-align: center;
+}
+
+.header__title {
+    font-size: var(--font-size-large);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.header__subtitle {
+    font-size: var(--font-size-small);
+    opacity: 0.9;
+}
+
+/* Main content */
+.main {
+    flex: 1;
+    padding: var(--spacing-md);
+}
+
+.screen {
+    display: none;
+}
+
+.screen:target {
+    display: block;
+}
+
+.screen__title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Today screen - desktop layout */
+.today-card {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.today-card__label {
+    font-size: var(--font-size-small);
+    opacity: 0.9;
+    margin-bottom: var(--spacing-xs);
+}
+
+.today-card__amount {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+}
+
+.today-card__indicator {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin: 0 auto;
+}
+
+.indicator--ok {
+    background-color: var(--color-ok);
+}
+
+.indicator--warn {
+    background-color: var(--color-warn);
+}
+
+.indicator--danger {
+    background-color: var(--color-danger);
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin: var(--spacing-md) auto;
+    min-height: var(--btn-min-height);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn--primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn--primary:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.btn--secondary {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    border: 2px solid var(--color-secondary);
+}
+
+.btn--secondary:hover {
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+/* Зелёная кнопка для доходов */
+.btn--success {
+    background-color: var(--color-ok);
+    color: white;
+}
+
+.btn--success:hover {
+    background-color: #1b5e20;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+    max-width: 600px;
+    margin: var(--spacing-md) auto;
+}
+
+.stat {
+    background-color: var(--color-background);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.stat__label {
+    display: block;
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat__value {
+    display: block;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* History screen */
+.transaction-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+.transaction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-background);
+    padding: 20px 24px;
+    border-radius: var(--border-radius);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.transaction__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.transaction__category {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.transaction__date {
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+}
+
+.transaction__amount {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-danger);
+    margin-left: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Зелёный цвет для доходов */
+.transaction__amount--income {
+    color: var(--color-ok);
+}
+
+/* Settings screen */
+.settings-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-sm);
+    max-width: 800px;
+    margin: 0 auto var(--spacing-md);
+}
+
+.settings-label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.settings-label__text {
+    font-weight: 600;
+}
+
+.settings-input {
+    width: 100%;
+    min-height: var(--btn-min-height);
+    padding: var(--spacing-sm);
+    font-size: 18px;
+    border: 2px solid var(--color-secondary);
+    border-radius: var(--border-radius);
+}
+
+.settings-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.settings-subtitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    text-align: center;
+}
+
+.fixed-expenses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-xs);
+    max-width: 800px;
+    margin: 0 auto var(--spacing-md);
+}
+
+.fixed-expense {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-background);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+}
+
+.fixed-expense__name {
+    font-weight: 600;
+}
+
+.fixed-expense__amount {
+    color: var(--color-text-secondary);
+}
+
+/* Bottom navigation - desktop */
+.bottom-nav {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    background-color: var(--color-surface);
+    border-top: 1px solid #e0e0e0;
+    padding: var(--spacing-sm);
+}
+
+.bottom-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-decoration: none;
+    color: var(--color-text-secondary);
+    border-radius: var(--border-radius);
+    transition: all 0.2s;
+}
+
+.bottom-nav__item:hover {
+    background-color: var(--color-background);
+}
+
+.bottom-nav__item--active {
+    color: var(--color-primary);
+    background-color: var(--color-background);
+}
+
+.bottom-nav__icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.bottom-nav__label {
+    font-size: var(--font-size-small);
+    font-weight: 600;
+}
+
+/* Адаптация для смартфонов */
+@media (max-width: 768px) {
+    :root {
+        --font-size-base: 20px;
+        --font-size-large: 32px;
+        --btn-min-height: 56px;
+    }
+
+    .app {
+        max-width: 100%;
+    }
+
+    .main {
+        padding-bottom: 100px;
+    }
+
+    .today-card__amount {
+        font-size: 40px;
+    }
+
+    .transaction-list {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-group {
+        grid-template-columns: 1fr;
+    }
+
+    .fixed-expenses {
+        grid-template-columns: 1fr;
+    }
+
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        justify-content: space-around;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .bottom-nav__item {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.is-open {
+    display: flex;
+}
+
+.modal__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal__content {
+    position: relative;
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    max-width: 400px;
+    width: 90%;
+    z-index: 1;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal__title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.modal__label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+}
+
+.modal__label-text {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-text);
+}
+
+.modal__select,
+.modal__input {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    font-size: 18px;
+    border: 2px solid var(--color-secondary);
+    border-radius: var(--border-radius);
+    background-color: var(--color-surface);
+    cursor: pointer;
+}
+
+.modal__select:focus,
+.modal__input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.modal__input {
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.modal__buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+    .modal__content {
+        width: 95%;
+        max-width: none;
+        margin: 20px;
+    }
+    
+    .modal__buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal__buttons .btn--secondary {
+        order: 2;
+    }
+    
+    .modal__buttons .btn--primary {
+        order: 1;
+    }
+}
+
+/* Кнопки удаления */
+.btn-delete,
+.btn-delete-payment {
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    margin-left: 12px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.btn-delete:hover,
+.btn-delete-payment:hover {
+    background-color: rgba(198, 40, 40, 0.1);
+    transform: scale(1.1);
+}

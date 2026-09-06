@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой бюджет</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="app">
+        <header class="header">
+            <h1 class="header__title">Мой бюджет</h1>
+            <p class="header__subtitle">Пенсия: 23 числа</p>
+        </header>
+
+        <main class="main">
+            <!-- Экран 1: Сегодня -->
+            <section class="screen screen--today" id="screen-today">
+                <h2 class="screen__title">Главный экран</h2>
+                <div class="today-card">
+                    <p class="today-card__label">Сегодня можно потратить</p>
+                    <p class="today-card__amount" id="daily-limit">— ₽</p>
+                    <div class="today-card__indicator" id="indicator"></div>
+                </div>
+        
+                <button class="btn btn--primary btn--large" id="btn-add-expense">
+                    Записать расход
+                </button>
+
+                <button class="btn btn--success btn--large" id="btn-add-income">
+                    Добавить доход
+                </button>
+        
+                <div class="quick-stats">
+                    <div class="stat">
+                        <span class="stat__label">Потрачено за период</span>
+                        <span class="stat__value" id="spent-total">— ₽</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat__label">Осталось дней</span>
+                        <span class="stat__value" id="days-left">—</span>
+                    </div>
+                </div>
+            </section>
+        
+            <!-- Экран 2: История -->
+            <section class="screen screen--history" id="screen-history">
+                <h2 class="screen__title">История расходов</h2>
+                <div class="transaction-list" id="transaction-list">
+                    <!-- Транзакции будут добавляться сюда из JS -->
+                </div>
+            </section>
+        
+            <!-- Экран 3: Настройки -->
+            <section class="screen screen--settings" id="screen-settings">
+                <h2 class="screen__title">Настройки</h2>
+        
+                <div class="settings-group">
+                    <label class="settings-label">
+                        <span class="settings-label__text">Размер пенсии</span>
+                        <input type="number" class="settings-input" id="input-pension" min="0">
+                    </label>
+        
+                    <label class="settings-label">
+                        <span class="settings-label__text">День получения</span>
+                        <input type="number" class="settings-input" id="input-pension-day" min="1" max="31">
+                    </label>
+        
+                    <label class="settings-label">
+                        <span class="settings-label__text">Неприкосновенный запас</span>
+                        <input type="number" class="settings-input" id="input-reserve" min="0">
+                    </label>
+                </div>
+        
+                <h3 class="settings-subtitle">Обязательные платежи</h3>
+        
+                <div class="fixed-expenses" id="fixed-expenses-list">
+                    <!-- Платежи будут добавляться сюда из JS -->
+                </div>
+        
+                <button class="btn btn--secondary" id="btn-add-payment">
+                    Добавить платёж
+                </button>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="#screen-today" class="bottom-nav__item bottom-nav__item--active">
+                <span class="bottom-nav__icon">🏠</span>
+                <span class="bottom-nav__label">Сегодня</span>
+            </a>
+            <a href="#screen-history" class="bottom-nav__item">
+                <span class="bottom-nav__icon">📋</span>
+                <span class="bottom-nav__label">История</span>
+            </a>
+            <a href="#screen-settings" class="bottom-nav__item">
+                <span class="bottom-nav__icon">⚙️</span>
+                <span class="bottom-nav__label">Настройки</span>
+            </a>
+        </nav>
+    </div>
+    
+<!-- Модальное окно для добавления расхода -->
+<div class="modal" id="expense-modal">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+        <h2 class="modal__title">Записать расход</h2>
+
+        <label class="modal__label">
+            <span class="modal__label-text">Категория</span>
+            <select class="modal__select" id="expense-category">
+                <!-- Категории будут добавлены через JavaScript -->
+            </select>
+        </label>
+
+        <label class="modal__label">
+            <span class="modal__label-text">Сумма (₽)</span>
+            <input type="number" class="modal__input" id="expense-amount" placeholder="0" min="1">
+        </label>
+
+        <div class="modal__buttons">
+            <button class="btn btn--secondary" id="btn-cancel-expense">Отмена</button>
+            <button class="btn btn--primary" id="btn-save-expense">Записать</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для добавления дохода -->
+    <div class="modal" id="income-modal">
+        <div class="modal__overlay"></div>
+        <div class="modal__content">
+            <h2 class="modal__title">Добавить доход</h2>
+            <label class="modal__label">
+                <span class="modal__label-text">Тип дохода</span>
+                <select class="modal__select" id="income-category"></select>
+            </label>
+            <label class="modal__label">
+                <span class="modal__label-text">Сумма (₽)</span>
+                <input type="number" class="modal__input" id="income-amount" placeholder="0" min="1">
+            </label>
+            <div class="modal__buttons">
+                <button class="btn btn--secondary" id="btn-cancel-income">Отмена</button>
+                <button class="btn btn--success" id="btn-save-income">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>       
+</body>
+
+</html>
