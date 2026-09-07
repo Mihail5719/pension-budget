@@ -135,9 +135,14 @@ function setupEventListeners() {
     .getElementById('input-reserve')
     .addEventListener('change', handleSettingsChange);
 
-  // Кнопка "Добавить платёж"
+    // Кнопка "Добавить платёж"
   const btnAddPayment = document.getElementById('btn-add-payment');
   btnAddPayment.addEventListener('click', handleAddPayment);
+
+  // Обработчики экспорта/импорта
+  document.getElementById('btn-export').addEventListener('click', handleExport);
+  document.getElementById('btn-import').addEventListener('click', handleImport);
+  document.getElementById('file-import').addEventListener('change', processImportedFile);
 
   // Делегирование событий для кнопок удаления
   document.addEventListener('click', handleDeleteClick);
