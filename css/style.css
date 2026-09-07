@@ -139,9 +139,10 @@ body {
 
 /* Today screen - desktop layout */
 .today-card {
-  background: var(--card-bg);
-  );
-  color: white;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  border: 1px solid #e0e0e0;
+  border-top: 4px solid #3498db;
+  color: var(--text-primary);
   padding: var(--spacing-lg);
   border-radius: var(--border-radius);
   text-align: center;
@@ -149,8 +150,17 @@ body {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+  transition: all 0.3s ease;
 }
 
+/* Карточка в тёмной теме */
+body.dark-theme .today-card {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  border: 1px solid #404040;
+  border-top: 4px solid #2980b9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
 .today-card__label {
   font-size: var(--font-size-small);
   opacity: 0.9;
