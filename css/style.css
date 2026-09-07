@@ -817,27 +817,27 @@ body.dark-theme .today-card {
 }
 /* Кнопки в тёмной теме — тёмные */
 body.dark-theme .btn--primary {
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
-  border: 1px solid var(--border-color);
+  background: #2d2d2d;
+  color: #e0e0e0;
+  border: 1px solid #404040;
   box-shadow: none;
 }
 
 body.dark-theme .btn--primary:hover {
-  background: var(--card-bg);
+  background: #3d3d3d;
   box-shadow: none;
   transform: none;
 }
 
 body.dark-theme .btn--success {
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
-  border: 1px solid var(--border-color);
+  background: #2d2d2d;
+  color: #e0e0e0;
+  border: 1px solid #404040;
   box-shadow: none;
 }
 
 body.dark-theme .btn--success:hover {
-  background: var(--card-bg);
+  background: #3d3d3d;
   box-shadow: none;
   transform: none;
 }
