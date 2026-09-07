@@ -777,3 +777,41 @@ input[type="tel"] {
 .nav__item--active {
     color: var(--btn-primary-bg);
 }
+/* === УЛУЧШЕНИЯ ДЛЯ СВЕТЛОЙ ТЕМЫ === */
+
+/* Карточка "Сегодня можно потратить" — синяя полоска сверху */
+.today-card {
+  border-top: 4px solid #3498db;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+}
+
+/* Кнопка "Записать расход" — синяя */
+.btn--primary {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn--primary:hover {
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Кнопка "Добавить доход" — зелёная */
+.btn--success {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+.btn--success:hover {
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Убираем синюю полоску в тёмной теме */
+body.dark-theme .today-card {
+  border-top: none;
+}
