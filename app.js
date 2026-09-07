@@ -345,8 +345,6 @@ function handleAddPayment() {
     appData.fixedExpenses,
     appData.transactions,
   );
-  // Перезагружаем страницу для мобильных устройств (обход кэша)
-  location.reload();
 }
 
 // Обработчик клика по кнопкам удаления
