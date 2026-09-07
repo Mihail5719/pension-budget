@@ -775,3 +775,9 @@ input[type="tel"] {
 .nav__item--active {
     color: var(--btn-primary-bg);
 }
+/* Активная вкладка навигации в тёмной теме */
+body.dark-theme .nav__item--active,
+body.dark-theme .tab--active {
+    background-color: var(--card-bg);
+    color: var(--btn-primary-bg);
+}
