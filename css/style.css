@@ -35,8 +35,8 @@ body.dark-theme {
     --input-border: #404040;
     --shadow: rgba(0, 0, 0, 0.3);
     /* Переменные для навигации и других компонентов */
-    --color-surface: var(--bg-secondary);
-    --color-background: var(--card-bg);
+    --color-surface: #1a1a1a;
+   --color-background: #2d2d2d;
     --color-primary: var(--btn-primary-bg);
     --color-text-secondary: var(--text-secondary);
     --color-text: var(--text-primary);
