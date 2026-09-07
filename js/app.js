@@ -445,3 +445,20 @@ function processImportedFile(event) {
 
 // Запускаем после загрузки DOM
 document.addEventListener('DOMContentLoaded', init);
+// === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = themeToggle.querySelector('.theme-icon');
+    
+    // Применяем сохранённую тему
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        themeIcon.textContent = '☀️';
+    }
+    
+    // Обработчик переключения
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        
+        if (document.body.classList.contains('dark-theme')) {
