@@ -694,3 +694,23 @@ body {
 .header {
     position: relative;
 }
+/* === ДОПОЛНИТЕЛЬНЫЕ ЭЛЕМЕНТЫ ДЛЯ ТЁМНОЙ ТЕМЫ === */
+
+/* Поля ввода и выпадающие списки */
+input, select {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--input-border);
+}
+
+/* Карточки и элементы списков (платежи, транзакции) */
+.fixed-expense, .transaction-item, .today-card, .stat-card {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+/* Текст внутри обязательных платежей */
+.fixed-expense__name, .fixed-expense__amount {
+    color: var(--text-primary);
+}
