@@ -139,10 +139,10 @@ function setupEventListeners() {
   const btnAddPayment = document.getElementById('btn-add-payment');
   btnAddPayment.addEventListener('click', handleAddPayment);
 
-  // Обработчики экспорта/импорта
-  document.getElementById('btn-export').addEventListener('click', handleExport);
-  document.getElementById('btn-import').addEventListener('click', handleImport);
-  document.getElementById('file-import').addEventListener('change', processImportedFile);
+    // Обработчики экспорта/импорта (обновлённые ID)
+  document.getElementById('export-btn').addEventListener('click', handleExport);
+  document.getElementById('import-btn').addEventListener('click', handleImport);
+  document.getElementById('import-file').addEventListener('change', processImportedFile);
 
   // Делегирование событий для кнопок удаления
   document.addEventListener('click', handleDeleteClick);
