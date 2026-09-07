@@ -6,7 +6,7 @@ import { formatDateKey } from './utils.js';
 const EXPENSE_CATEGORIES = [
     { id: 'products', name: '🛒 Продукты', emoji: '🛒' },
     { id: 'pharmacy', name: '💊 Аптека/Лекарства', emoji: '💊' },
-    { id: 'transport', name: ' Транспорт/Топливо', emoji: '🚗' },
+    { id: 'transport', name: '🚗 Транспорт/Топливо', emoji: '🚗' },
     { id: 'utilities', name: '🏠 ЖКХ', emoji: '🏠' },
     { id: 'communication', name: '📱 Связь', emoji: '📱' },
     { id: 'health', name: '🩺 Здоровье/Врачи', emoji: '🩺' },
