@@ -338,7 +338,7 @@ function handleAddPayment() {
   // Сохраняем
   saveData(appData);
 
-  // Перерисовываем
+  // Перерисовываем экраны
   renderSettings(appData.settings, appData.fixedExpenses);
   renderTodayScreen(
     appData.settings,
@@ -346,7 +346,6 @@ function handleAddPayment() {
     appData.transactions,
   );
 }
-
 // Обработчик клика по кнопкам удаления
 function handleDeleteClick(event) {
   const target = event.target;
