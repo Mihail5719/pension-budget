@@ -443,22 +443,40 @@ function processImportedFile(event) {
     event.target.value = '';
 }
 
-// Запускаем после загрузки DOM
+// Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', init);
+
 // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     const themeToggle = document.getElementById('theme-toggle');
+    
+    // Если кнопки нет на странице, выходим
+    if (!themeToggle) return;
+    
     const themeIcon = themeToggle.querySelector('.theme-icon');
     
-    // Применяем сохранённую тему
+    // Применяем сохранённую тему при загрузке
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
         themeIcon.textContent = '☀️';
+    } else {
+        themeIcon.textContent = '🌙';
     }
     
-    // Обработчик переключения
+    // Обработчик переключения по клику
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-theme');
         
         if (document.body.classList.contains('dark-theme')) {
+            localStorage.setItem('theme', 'dark');
+            themeIcon.textContent = '☀️';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeIcon.textContent = '🌙';
+        }
+    });
+}
+
+// Вызываем функцию инициализации темы
+initTheme();
