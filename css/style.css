@@ -714,3 +714,50 @@ input, select {
 .fixed-expense__name, .fixed-expense__amount {
     color: var(--text-primary);
 }
+/* === ФИНАЛЬНАЯ ДОРАБОТКА ТЁМНОЙ ТЕМЫ === */
+
+/* Основной контейнер приложения */
+.app, .main, body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Заголовки секций */
+.screen__title, h2, h3 {
+    color: var(--text-primary);
+}
+
+/* Поля ввода */
+input[type="text"],
+input[type="number"],
+input[type="tel"] {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--input-border);
+}
+
+/* Все кнопки */
+.btn, .action-btn, button {
+    background-color: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
+    border-color: var(--border-color);
+}
+
+.btn-primary {
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+}
+
+/* Навигация внизу */
+.nav {
+    background-color: var(--bg-secondary);
+    border-top-color: var(--border-color);
+}
+
+.nav__item {
+    color: var(--text-secondary);
+}
+
+.nav__item--active {
+    color: var(--btn-primary-bg);
+}
