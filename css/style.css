@@ -777,7 +777,16 @@ input[type="tel"] {
 }
 /* Активная вкладка навигации в тёмной теме */
 body.dark-theme .nav__item--active,
-body.dark-theme .tab--active {
-    background-color: var(--card-bg);
-    color: var(--btn-primary-bg);
+body.dark-theme .tab--active,
+body.dark-theme .nav__item.active,
+body.dark-theme [class*="active"] {
+    background-color: var(--card-bg) !important;
+    color: var(--btn-primary-bg) !important;
+}
+
+/* Все элементы навигации в тёмной теме */
+body.dark-theme .nav,
+body.dark-theme .bottom-nav,
+body.dark-theme [class*="nav"] {
+    background-color: var(--bg-secondary) !important;
 }
