@@ -377,6 +377,66 @@ function handleDeleteClick(event) {
     }
   }
 }
+// === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===
+
+// Экспорт данных в JSON-файл
+function handleExport() {
+    const dataStr = JSON.stringify(appData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `budget-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    alert('✅ Данные успешно сохранены в файл!');
+}
+
+// Импорт данных из JSON-файла
+function handleImport() {
+    document.getElementById('file-import').click();
+}
+
+function processImportedFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            // Проверяем структуру данных
+            if (!importedData.settings || !importedData.fixedExpenses || !importedData.transactions) {
+                throw new Error('Неверный формат файла');
+            }
+            
+            // Подтверждение
+            if (!confirm('⚠️ Это заменит все текущие данные. Продолжить?')) {
+                return;
+            }
+            
+            // Заменяем данные
+            appData = importedData;
+            saveData(appData);
+            
+            // Перерисовываем всё
+            renderAll(appData);
+            
+            alert('✅ Данные успешно восстановлены!');
+        } catch (error) {
+            alert('❌ Ошибка при импорте: ' + error.message);
+        }
+    };
+    reader.readAsText(file);
+    
+    // Сбрасываем input, чтобы можно было импортировать тот же файл повторно
+    event.target.value = '';
+}
 
 // Запускаем после загрузки DOM
 document.addEventListener('DOMContentLoaded', init);
