@@ -28,7 +28,10 @@ const INCOME_CATEGORIES = [
 let appData; // Глобальное состояние приложения
 
 function init() {
-  console.log('Приложение запущено');
+ // Если хэш не задан — показываем главный экран
+  if (!window.location.hash || window.location.hash === '#') {
+      window.location.hash = '#screen-today';
+  }
 
   // Загружаем данные
   appData = loadData();
