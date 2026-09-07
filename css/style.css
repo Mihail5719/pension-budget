@@ -1,3 +1,40 @@
+/* === ЦВЕТОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ ТЕМ === */
+:root {
+    --bg-primary: #f9f9f9;
+    --bg-secondary: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border-color: #d1d5db;
+    --header-bg: #3498db;
+    --header-text: #ffffff;
+    --card-bg: #ffffff;
+    --btn-primary-bg: #3498db;
+    --btn-primary-text: #ffffff;
+    --btn-secondary-bg: #ffffff;
+    --btn-secondary-text: #333333;
+    --input-bg: #ffffff;
+    --input-border: #d1d5db;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Тёмная тема */
+body.dark-theme {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --border-color: #404040;
+    --header-bg: #2c3e50;
+    --header-text: #ffffff;
+    --card-bg: #2d2d2d;
+    --btn-primary-bg: #2980b9;
+    --btn-primary-text: #ffffff;
+    --btn-secondary-bg: #2d2d2d;
+    --btn-secondary-text: #e0e0e0;
+    --input-bg: #2d2d2d;
+    --input-border: #404040;
+    --shadow: rgba(0, 0, 0, 0.3);
+}
 /* Базовые стили для desktop */
 * {
   margin: 0;
