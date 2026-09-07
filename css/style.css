@@ -151,12 +151,17 @@ body {
   margin-left: auto;
   margin-right: auto;
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+  transition: all 0.3s ease;
 }
 
 /* Карточка в тёмной теме */
 body.dark-theme .today-card {
   background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
- .today-card__label {
+  border: 1px solid #404040;
+  border-top: 4px solid #2980b9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.today-card__label {
   font-size: var(--font-size-small);
   opacity: 0.9;
   margin-bottom: var(--spacing-xs);
@@ -772,4 +777,3 @@ input[type="tel"] {
 .nav__item--active {
     color: var(--btn-primary-bg);
 }
-
