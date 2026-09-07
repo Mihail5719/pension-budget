@@ -666,3 +666,31 @@ body {
 .btn-icon {
     font-size: 16px;
 }
+/* Кнопка переключения темы */
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.theme-icon {
+    font-size: 20px;
+}
+
+.header {
+    position: relative;
+}
