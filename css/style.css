@@ -761,3 +761,17 @@ input[type="tel"] {
 .nav__item--active {
     color: var(--btn-primary-bg);
 }
+/* Нижняя навигация */
+.nav, .bottom-nav {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+.nav__item {
+    color: var(--text-secondary);
+}
+
+.nav__item:hover,
+.nav__item--active {
+    color: var(--btn-primary-bg);
+}
