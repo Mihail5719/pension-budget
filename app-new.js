@@ -1,5 +1,5 @@
 import { loadData, saveData } from './storage.js';
-import { renderAll, renderTodayScreen, renderTransactionList, renderSettings } from './ui.js';
+import { renderAll, renderTodayScreen, renderTransactionList, renderSettings } from './ui-new.js';
 import { formatDateKey } from './utils.js';
 
 // Список категорий расходов
