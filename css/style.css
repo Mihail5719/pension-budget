@@ -767,32 +767,4 @@ input[type="tel"] {
 .nav__item--active {
     color: var(--btn-primary-bg);
 }
-/* Нижняя навигация */
-.nav, .bottom-nav {
-    background-color: var(--bg-secondary);
-    border-top: 1px solid var(--border-color);
-}
 
-.nav__item {
-    color: var(--text-secondary);
-}
-
-.nav__item:hover,
-.nav__item--active {
-    color: var(--btn-primary-bg);
-}
-/* Активная вкладка навигации в тёмной теме */
-body.dark-theme .nav__item--active,
-body.dark-theme .tab--active,
-body.dark-theme .nav__item.active,
-body.dark-theme [class*="active"] {
-    background-color: var(--card-bg) !important;
-    color: var(--btn-primary-bg) !important;
-}
-
-/* Все элементы навигации в тёмной теме */
-body.dark-theme .nav,
-body.dark-theme .bottom-nav,
-body.dark-theme [class*="nav"] {
-    background-color: var(--bg-secondary) !important;
-}
