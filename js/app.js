@@ -542,12 +542,10 @@ function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     const themeToggle = document.getElementById('theme-toggle');
     
-    // Если кнопки нет на странице, выходим
     if (!themeToggle) return;
     
     const themeIcon = themeToggle.querySelector('.theme-icon');
     
-    // Применяем сохранённую тему при загрузке
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
         themeIcon.textContent = '☀️';
@@ -555,7 +553,6 @@ function initTheme() {
         themeIcon.textContent = '🌙';
     }
     
-    // Обработчик переключения по клику
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-theme');
         
@@ -572,11 +569,10 @@ function initTheme() {
 // Вызываем функцию инициализации темы
 initTheme();
 
-   // Обработчик кнопки "Начать настройку" на приветственном экране
-   const btnStartSetup = document.getElementById('btn-start-setup');
-   if (btnStartSetup) {
-       btnStartSetup.addEventListener('click', () => {
-           // Переключаемся на экран настроек
-           window.location.hash = '#screen-settings';
-       });
-   }
+// Обработчик кнопки "Начать настройку" на приветственном экране
+const btnStartSetup = document.getElementById('btn-start-setup');
+if (btnStartSetup) {
+    btnStartSetup.addEventListener('click', () => {
+        window.location.hash = '#screen-settings';
+    });
+}
