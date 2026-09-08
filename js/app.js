@@ -28,6 +28,20 @@ const INCOME_CATEGORIES = [
 let appData; // Глобальное состояние приложения
 
 function init() {
+    // Приветственный экран
+const hasSettings = localStorage.getItem('budgetData');
+const welcomeScreen = document.getElementById('screen-welcome');
+const todayScreen = document.getElementById('screen-today');
+
+if (!hasSettings && welcomeScreen && todayScreen) {
+    todayScreen.classList.remove('active');
+    welcomeScreen.classList.add('active');
+    window.location.hash = '#screen-welcome';
+} else {
+    if (!window.location.hash || window.location.hash === '#') {
+        window.location.hash = '#screen-today';
+    }
+}
  // Если хэш не задан — показываем главный экран
   if (!window.location.hash || window.location.hash === '#') {
       window.location.hash = '#screen-today';
@@ -483,3 +497,11 @@ function initTheme() {
 
 // Вызываем функцию инициализации темы
 initTheme();
+
+// Кнопка "Начать настройку"
+const btnStartSetup = document.getElementById('btn-start-setup');
+if (btnStartSetup) {
+    btnStartSetup.addEventListener('click', () => {
+        window.location.hash = '#screen-settings';
+    });
+}
