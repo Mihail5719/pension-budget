@@ -502,6 +502,12 @@ initTheme();
 const btnStartSetup = document.getElementById('btn-start-setup');
 if (btnStartSetup) {
     btnStartSetup.addEventListener('click', () => {
+        // Скрываем приветственный экран
+        const welcomeScreen = document.getElementById('screen-welcome');
+        if (welcomeScreen) {
+            welcomeScreen.classList.remove('active');
+        }
+        // Переходим в настройки
         window.location.hash = '#screen-settings';
     });
 }
