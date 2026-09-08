@@ -930,3 +930,14 @@ body.dark-theme .welcome-container {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
+/* === ФОН ПРИЛОЖЕНИЯ (ГРАДИЕНТ "НЕБО") === */
+body {
+    background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+    min-height: 100vh;
+}
+
+/* Фон для тёмной темы */
+body.dark-theme {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+}
+
