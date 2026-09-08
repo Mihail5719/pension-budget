@@ -420,7 +420,7 @@ function handleExport() {
 
 // Импорт данных из JSON-файла
 function handleImport() {
-    document.getElementById('file-import').click();
+    document.getElementById('import-file').click(); 
 }
 
 function processImportedFile(event) {
@@ -462,6 +462,12 @@ function processImportedFile(event) {
 
 // Запускаем приложение после загрузки DOM
 document.addEventListener('DOMContentLoaded', init);
+
+// Привязываем обработку файла к скрытому полю импорта
+const importFileInput = document.getElementById('import-file');
+if (importFileInput) {
+    importFileInput.addEventListener('change', processImportedFile);
+}
 
 // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
 function initTheme() {
