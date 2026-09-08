@@ -29,7 +29,7 @@ let appData; // Глобальное состояние приложения
 
 function init() {
     // Приветственный экран
-const hasSettings = localStorage.getItem('budgetData');
+const hasSettings = localStorage.getItem('pensionBudget');
 const welcomeScreen = document.getElementById('screen-welcome');
 const todayScreen = document.getElementById('screen-today');
 
