@@ -28,94 +28,6 @@ const INCOME_CATEGORIES = [
 let appData; // Глобальное состояние приложения
 
 function init() {
-    /* === ПРИВЕТСТВЕННЫЙ ЭКРАН === */
-.screen--welcome {
-    display: none;
-    min-height: 60vh;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.screen--welcome.active {
-    display: flex;
-}
-
-.welcome-container {
-    text-align: center;
-    max-width: 500px;
-    width: 100%;
-    padding: 32px 24px;
-    background: var(--card-bg, #ffffff);
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.welcome-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-}
-
-.welcome-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-primary, #2c3e50);
-    margin: 0 0 12px 0;
-}
-
-.welcome-text {
-    font-size: 16px;
-    color: var(--text-secondary, #666);
-    line-height: 1.5;
-    margin: 0 0 24px 0;
-}
-
-.welcome-steps {
-    text-align: left;
-    margin-bottom: 28px;
-}
-
-.welcome-step {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-color, #eee);
-}
-
-.welcome-step:last-child {
-    border-bottom: none;
-}
-
-.step-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: var(--btn-primary-bg, #3498db);
-    color: white;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.step-text {
-    font-size: 15px;
-    color: var(--text-primary, #333);
-}
-
-.welcome-btn {
-    width: 100%;
-    max-width: 280px;
-}
-
-/* Тёмная тема для приветственного экрана */
-body.dark-theme .welcome-container {
-    background: var(--card-bg);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
  // Если хэш не задан — показываем главный экран
   if (!window.location.hash || window.location.hash === '#') {
       window.location.hash = '#screen-today';
@@ -542,10 +454,12 @@ function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     const themeToggle = document.getElementById('theme-toggle');
     
+    // Если кнопки нет на странице, выходим
     if (!themeToggle) return;
     
     const themeIcon = themeToggle.querySelector('.theme-icon');
     
+    // Применяем сохранённую тему при загрузке
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
         themeIcon.textContent = '☀️';
@@ -553,6 +467,7 @@ function initTheme() {
         themeIcon.textContent = '🌙';
     }
     
+    // Обработчик переключения по клику
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-theme');
         
@@ -568,11 +483,3 @@ function initTheme() {
 
 // Вызываем функцию инициализации темы
 initTheme();
-
-// Обработчик кнопки "Начать настройку" на приветственном экране
-const btnStartSetup = document.getElementById('btn-start-setup');
-if (btnStartSetup) {
-    btnStartSetup.addEventListener('click', () => {
-        window.location.hash = '#screen-settings';
-    });
-}
