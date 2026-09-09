@@ -13,14 +13,18 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     result.freeBudget,
   );
 
-  // Обновляем главную цифру
-  const dailyLimitEl = document.getElementById('daily-limit');
-  dailyLimitEl.textContent = formatMoney(result.dailyLimit);
+  // Обновляем ГЛАВНОЕ число - остаток до пенсии
+  const remainingEl = document.getElementById('remaining-amount');
+  remainingEl.textContent = formatMoney(result.remaining);
 
   // Обновляем индикатор (цвет)
   const indicatorEl = document.getElementById('indicator');
   indicatorEl.className = 'today-card__indicator';
   indicatorEl.classList.add(`indicator--${indicatorState}`);
+
+  // Обновляем ВТОРОЕ число - безопасный дневной лимит
+  const dailyLimitEl = document.getElementById('daily-limit');
+  dailyLimitEl.textContent = formatMoney(result.dailyLimit);
 
   // Обновляем статистику
   document.getElementById('spent-total').textContent = formatMoney(

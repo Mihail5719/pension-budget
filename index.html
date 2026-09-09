@@ -58,9 +58,12 @@
             <section class="screen screen--today" id="screen-today">
                 <h2 class="screen__title screen__title--hidden">Главный экран</h2>
                 <div class="today-card">
-                    <p class="today-card__label">Сегодня можно потратить</p>
-                    <p class="today-card__amount" id="daily-limit">— ₽</p>
+                    <div class="today-card__label">Осталось до пенсии</div>
+                    <div class="today-card__amount" id="remaining-amount">0 ₽</div>
                     <div class="today-card__indicator" id="indicator"></div>
+                    <div class="today-card__label today-card__label--small">Безопасный дневной лимит</div>
+                    <div class="today-card__amount today-card__amount--secondary" id="daily-limit">0 ₽</div>
+                    <div class="today-card__hint">чтобы хватило до пенсии</div>
                 </div>
         
                 <button class="btn btn--primary btn--large" id="btn-add-expense">
@@ -73,12 +76,12 @@
         
                 <div class="quick-stats">
                     <div class="stat">
-                        <span class="stat__label">Потрачено за период</span>
-                        <span class="stat__value" id="spent-total">— ₽</span>
+                        <span class="stat__label">Дней осталось</span>
+                        <span class="stat__value" id="days-left">0</span>
                     </div>
                     <div class="stat">
-                        <span class="stat__label">Осталось дней</span>
-                        <span class="stat__value" id="days-left">—</span>
+                        <span class="stat__label">Потрачено</span>
+                        <span class="stat__value" id="spent-total">0 ₽</span>
                     </div>
                 </div>
             </section>

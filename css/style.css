@@ -167,6 +167,38 @@ body.dark-theme .today-card {
   margin-bottom: var(--spacing-xs);
 }
 
+/* Маленький лейбл для дневного лимита */
+.today-card__label--small {
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Вторичное число (дневной лимит) - меньше главного */
+.today-card__amount--secondary {
+    font-size: 36px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+/* Подсказка курсивом под дневным лимитом */
+.today-card__hint {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+/* Разделитель перед статистикой */
+.today-card__divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 16px 0;
+    opacity: 0.3;
+}
+
 .today-card__amount {
   font-size: 48px;
   font-weight: 700;
@@ -245,11 +277,21 @@ body.dark-theme .today-card {
   margin: var(--spacing-md) auto;
 }
 
+/* Карточка статистики с рамкой и тенью */
 .stat {
   background-color: var(--color-background);
   padding: var(--spacing-sm);
   border-radius: var(--border-radius);
   text-align: center;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Лёгкий эффект при наведении (для десктопа) */
+.stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px var(--shadow);
 }
 
 .stat__label {
@@ -939,5 +981,14 @@ body {
 /* Фон для тёмной темы */
 body.dark-theme {
     background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+}
+
+/* Усиленная тень для карточек статистики в тёмной теме */
+body.dark-theme .stat {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-theme .stat:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
