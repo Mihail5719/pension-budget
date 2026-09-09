@@ -626,6 +626,29 @@ body.dark-theme .today-card {
   }
 }
 
+/* 
+  КНОПКА РЕДАКТИРОВАНИЯ
+  Синяя кнопка с иконкой карандаша
+*/
+.btn-edit {
+  background: none;
+  border: none;
+  color: var(--color-primary);  /* Синий цвет */
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  margin-left: 8px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.btn-edit:hover {
+  background-color: rgba(25, 118, 210, 0.1);  /* Лёгкий синий фон при наведении */
+  transform: scale(1.1);
+}
+
 /* Кнопки удаления */
 .btn-delete,
 .btn-delete-payment {

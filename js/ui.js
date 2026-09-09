@@ -66,13 +66,14 @@ export function renderTransactionList(transactions, pensionDay) {
     const deleteAction = isIncome ? 'delete-income' : 'delete-transaction';
 
     itemEl.innerHTML = `
-            <div class="transaction__info">
-                <span class="transaction__category">${transaction.category}</span>
-                <span class="transaction__date">${formatDateTime(transaction.date)}</span>
-            </div>
-            <span class="${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
-            <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
-        `;
+    <div class="transaction__info">
+        <span class="transaction__category">${transaction.category}</span>
+        <span class="transaction__date">${formatDateTime(transaction.date)}</span>
+    </div>
+    <span class="${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
+    <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
+    <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+`;
 
     listEl.appendChild(itemEl);
   });

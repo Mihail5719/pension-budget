@@ -205,6 +205,51 @@
         </div>
     </div>
 
+    <!-- 
+      МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ ТРАНЗАКЦИИ
+      Используется для изменения существующих записей (расходов и доходов)
+    -->
+    <div class="modal" id="edit-modal">
+        <!-- Затемнённый фон (оверлей) -->
+        <div class="modal__overlay"></div>
+    
+        <!-- Содержимое модального окна -->
+        <div class="modal__content">
+            <h3 class="modal__title">Редактировать запись</h3>
+    
+            <!-- Выпадающий список категорий -->
+            <label class="modal__label">
+                <span class="modal__label-text">Категория:</span>
+                <select class="modal__select" id="edit-category">
+                    <!-- Категории заполняются через JavaScript -->
+                </select>
+            </label>
+    
+            <!-- Поле ввода суммы -->
+            <label class="modal__label">
+                <span class="modal__label-text">Сумма (₽):</span>
+                <input type="number" class="modal__input" id="edit-amount" placeholder="0" inputmode="numeric" min="1">
+            </label>
+    
+            <!-- Поле выбора даты -->
+            <label class="modal__label">
+                <span class="modal__label-text">Дата:</span>
+                <input type="date" class="modal__input" id="edit-date"
+                    style="font-size: 18px; font-weight: 400; text-align: left;">
+            </label>
+    
+            <!-- Кнопки подтверждения и отмены -->
+            <div class="modal__buttons">
+                <button class="btn btn--primary" id="btn-save-edit">
+                    Сохранить
+                </button>
+                <button class="btn btn--secondary" id="btn-cancel-edit">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div> 
+
     <script type="module" src="js/app.js"></script>     
 </body>
 

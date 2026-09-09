@@ -152,14 +152,34 @@ function setupEventListeners() {
     .getElementById('input-reserve')
     .addEventListener('change', handleSettingsChange);
 
-    // Кнопка "Добавить платёж"
+  // Кнопка "Добавить платёж"
   const btnAddPayment = document.getElementById('btn-add-payment');
   btnAddPayment.addEventListener('click', handleAddPayment);
 
-    // Обработчики экспорта/импорта (обновлённые ID)
+  // Обработчики экспорта/импорта (обновлённые ID)
   document.getElementById('export-btn').addEventListener('click', handleExport);
   document.getElementById('import-btn').addEventListener('click', handleImport);
-  document.getElementById('import-file').addEventListener('change', processImportedFile);
+  document
+    .getElementById('import-file')
+    .addEventListener('change', processImportedFile);
+
+  // Обработчик кнопки редактирования в модальном окне
+  document
+    .getElementById('btn-save-edit')
+    .addEventListener('click', saveEditTransaction);
+  document
+    .getElementById('btn-cancel-edit')
+    .addEventListener('click', closeEditModal);
+
+  // Закрытие модального окна редактирования по клику на оверлей
+  document.getElementById('edit-modal').addEventListener('click', (e) => {
+    if (
+      e.target ===
+      document.getElementById('edit-modal').querySelector('.modal__overlay')
+    ) {
+      closeEditModal();
+    }
+  });
 
   // Делегирование событий для кнопок удаления
   document.addEventListener('click', handleDeleteClick);
@@ -360,6 +380,13 @@ function handleAddPayment() {
 function handleDeleteClick(event) {
   const target = event.target;
 
+  // Редактирование транзакции
+  if (target.dataset.action === 'edit-transaction') {
+    const transactionId = parseInt(target.dataset.id);
+    openEditModal(transactionId);
+    return; // Выходим, чтобы не срабатывали другие обработчики
+  }
+
   // Удаление транзакции (расхода)
   if (target.dataset.action === 'delete-transaction') {
     const transactionId = parseInt(target.dataset.id);
@@ -399,6 +426,130 @@ function handleDeleteClick(event) {
     }
   }
 }
+
+/**
+ * ================================================================================
+ * РЕДАКТИРОВАНИЕ ТРАНЗАКЦИЙ
+ * ================================================================================
+ */
+
+// ID редактируемой транзакции (сохраняется между функциями)
+let editingTransactionId = null;
+
+/**
+ * Открыть модальное окно редактирования
+ * @param {number} transactionId - ID транзакции для редактирования
+ */
+function openEditModal(transactionId) {
+    // Находим транзакцию по ID
+    const transaction = appData.transactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+
+    // Сохраняем ID для последующего сохранения
+    editingTransactionId = transactionId;
+
+    // Определяем тип транзакции (расход или доход)
+    const isIncome = transaction.type === 'income';
+    const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+    // Заполняем выпадающий список категориями
+    const categorySelect = document.getElementById('edit-category');
+    categorySelect.innerHTML = '';
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        // Выбираем текущую категорию транзакции
+        if (category.name === transaction.category) {
+            option.selected = true;
+        }
+        categorySelect.appendChild(option);
+    });
+
+    // Заполняем сумму
+    document.getElementById('edit-amount').value = transaction.amount;
+
+    // Заполняем дату (формат YYYY-MM-DD для input type="date")
+    const transactionDate = new Date(transaction.date);
+    const dateStr = transactionDate.toISOString().split('T')[0];
+    document.getElementById('edit-date').value = dateStr;
+
+    // Открываем модальное окно
+    document.getElementById('edit-modal').classList.add('is-open');
+    document.getElementById('edit-amount').focus();
+}
+
+/**
+ * Закрыть модальное окно редактирования
+ */
+function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('is-open');
+    editingTransactionId = null;
+}
+
+/**
+ * Сохранить изменения транзакции
+ */
+function saveEditTransaction() {
+    if (!editingTransactionId) return;
+
+    // Получаем новые значения
+    const categoryId = document.getElementById('edit-category').value;
+    const amount = parseInt(document.getElementById('edit-amount').value);
+    const dateStr = document.getElementById('edit-date').value;
+
+    // Валидация суммы
+    if (isNaN(amount) || amount <= 0) {
+        alert('Пожалуйста, введите корректную сумму');
+        document.getElementById('edit-amount').focus();
+        return;
+    }
+
+    // Валидация даты
+    if (!dateStr) {
+        alert('Пожалуйста, выберите дату');
+        return;
+    }
+
+    // Находим транзакцию
+    const transactionIndex = appData.transactions.findIndex(t => t.id === editingTransactionId);
+    if (transactionIndex === -1) {
+        alert('Транзакция не найдена');
+        return;
+    }
+
+    // Определяем тип транзакции (сохраняем оригинальный тип)
+    const originalTransaction = appData.transactions[transactionIndex];
+    const isIncome = originalTransaction.type === 'income';
+    const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+    // Находим название категории
+    const category = categories.find(c => c.id === categoryId);
+    const categoryName = category ? category.name : categoryId;
+
+    // Создаём новую дату (сохраняем оригинальное время)
+    const originalDate = new Date(originalTransaction.date);
+    const newDate = new Date(dateStr);
+    newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), originalDate.getSeconds());
+
+    // Обновляем транзакцию
+    appData.transactions[transactionIndex] = {
+        ...originalTransaction,  // Сохраняем id и type
+        category: categoryName,
+        amount: amount,
+        date: newDate.toISOString()
+    };
+
+    // Сохраняем данные
+    saveData(appData);
+
+    // Закрываем модалку и перерисовываем интерфейс
+    closeEditModal();
+    renderAll(appData);
+
+    console.log('Транзакция обновлена:', appData.transactions[transactionIndex]);
+}
+
 // === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===
 
 // Экспорт данных в JSON-файл
