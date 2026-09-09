@@ -1,9 +1,16 @@
-// Форматирование суммы: 12350 → "12 350 ₽"
+/**
+ * Форматирует число в денежный формат с копейками
+ * Пример: 12350.45 -> "12 350,45 ₽"
+ *
+ * @param {number} amount - Сумма для форматирования
+ * @returns {string} - Отформатированная строка с копейками
+ */
 export function formatMoney(amount) {
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'RUB',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

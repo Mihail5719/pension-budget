@@ -101,7 +101,8 @@
                 <div class="settings-group">
                     <label class="settings-label">
                         <span class="settings-label__text">Размер пенсии</span>
-                        <input type="number" class="settings-input" id="input-pension" min="0">
+                        <input type="number" class="settings-input" id="input-pension" placeholder="0.00" inputmode="decimal" min="0"
+                            step="0.01">
                     </label>
         
                     <label class="settings-label">
@@ -111,7 +112,8 @@
         
                     <label class="settings-label">
                         <span class="settings-label__text">Неприкосновенный запас</span>
-                        <input type="number" class="settings-input" id="input-reserve" min="0">
+                        <input type="number" class="settings-input" id="input-reserve" placeholder="0.00" inputmode="decimal" min="0"
+                            step="0.01">
                     </label>
                 </div>
         
@@ -175,7 +177,8 @@
 
         <label class="modal__label">
             <span class="modal__label-text">Сумма (₽)</span>
-            <input type="number" class="modal__input" id="expense-amount" placeholder="0" min="1">
+            <input type="number" class="modal__input" id="expense-amount" placeholder="0.00" inputmode="decimal" min="0"
+                step="0.01">
         </label>
 
         <div class="modal__buttons">
@@ -196,7 +199,8 @@
             </label>
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
-                <input type="number" class="modal__input" id="income-amount" placeholder="0" min="1">
+                <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal" min="0"
+                    step="0.01">
             </label>
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-income">Отмена</button>

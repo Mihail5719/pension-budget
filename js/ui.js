@@ -82,9 +82,11 @@ export function renderTransactionList(transactions, pensionDay) {
 // Отрисовка настроек
 export function renderSettings(settings, fixedExpenses) {
     // Заполняем поля ввода
-    document.getElementById('input-pension').value = settings.pensionAmount;
+    document.getElementById('input-pension').value =
+      settings.pensionAmount.toFixed(2);
     document.getElementById('input-pension-day').value = settings.pensionDay;
-    document.getElementById('input-reserve').value = settings.reserveAmount;
+    document.getElementById('input-reserve').value =
+      settings.reserveAmount.toFixed(2);
     
     // Отрисовываем список обязательных платежей
     const listEl = document.getElementById('fixed-expenses-list');

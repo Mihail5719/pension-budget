@@ -201,7 +201,7 @@ function closeIncomeModal() {
 // Сохранение дохода
 function saveIncome() {
     const categoryId = incomeCategorySelect.value;
-    const amount = parseInt(incomeAmountInput.value);
+    const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
     
     if (isNaN(amount) || amount <= 0) {
         alert('Пожалуйста, введите корректную сумму');
@@ -263,7 +263,7 @@ function handleAddExpense() {
 // Сохранение расхода
 function saveExpense() {
   const categoryId = expenseCategorySelect.value;
-  const amount = parseInt(expenseAmountInput.value);
+  const amount = parseFloat(expenseAmountInput.value.replace(',', '.'));
 
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
@@ -296,14 +296,15 @@ function saveExpense() {
 }
 // Обработчик изменения настроек
 function handleSettingsChange() {
-  const pensionAmount = parseInt(
-    document.getElementById('input-pension').value,
+  const pensionAmount = parseFloat(
+    document.getElementById('input-pension').value.replace(',', '.'),
   );
+
   const pensionDay = parseInt(
     document.getElementById('input-pension-day').value,
   );
-  const reserveAmount = parseInt(
-    document.getElementById('input-reserve').value,
+  const reserveAmount = parseFloat(
+    document.getElementById('input-reserve').value.replace(',', '.'),
   );
 
   // Валидация
@@ -346,7 +347,8 @@ function handleAddPayment() {
   const amountStr = prompt('Сумма платежа:');
   if (!amountStr) return;
 
-  const amount = parseInt(amountStr);
+  // Заменяем запятую на точку для корректного парсинга
+  const amount = parseFloat(amountStr.replace(',', '.'));
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     return;
@@ -495,7 +497,9 @@ function saveEditTransaction() {
 
     // Получаем новые значения
     const categoryId = document.getElementById('edit-category').value;
-    const amount = parseInt(document.getElementById('edit-amount').value);
+  const amount = parseFloat(
+    document.getElementById('edit-amount').value.replace(',', '.'),
+  );
     const dateStr = document.getElementById('edit-date').value;
 
     // Валидация суммы
