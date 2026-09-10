@@ -315,43 +315,84 @@ body.dark-theme .today-card {
   width: 100%;
 }
 
+/* Карточка транзакции — flex-контейнер */
 .transaction {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background-color: var(--color-background);
-  padding: 20px 24px;
-  border-radius: var(--border-radius);
-  width: 100%;
-  box-sizing: border-box;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background-color: var(--color-card, #ffffff);
+  border-radius: var(--border-radius, 12px);
+  gap: 12px;
+  box-shadow: 0 2px 6px var(--shadow, rgba(0, 0, 0, 0.08));
 }
 
+/* Левая часть: категория + дата */
 .transaction__info {
+  flex: 1;
+  min-width: 0; /* Позволяет тексту переноситься и обрезаться */
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
-  min-width: 0;
 }
 
 .transaction__category {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--text-primary, #1a1a1a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .transaction__date {
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
+  font-size: 13px;
+  color: var(--text-secondary, #666);
 }
 
+/* Сумма — не сжимается, не переносится */
 .transaction__amount {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--color-danger);
-  margin-left: 20px;
   white-space: nowrap;
   flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* Правая часть: кнопки действий */
+.transaction__actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-edit,
+.btn-delete {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.btn-edit {
+  color: var(--color-primary, #1976d2);
+}
+
+.btn-edit:hover {
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+.btn-delete {
+  color: var(--color-danger, #dc3545);
+}
+
+.btn-delete:hover {
+  background-color: rgba(220, 53, 69, 0.1);
 }
 
 /* Зелёный цвет для доходов */
@@ -1015,3 +1056,24 @@ body.dark-theme .stat:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
+/* Адаптация для очень узких экранов (меньше 400px) */
+@media (max-width: 400px) {
+  .transaction {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .transaction__category {
+    font-size: 15px;
+  }
+
+  .transaction__amount {
+    font-size: 15px;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    font-size: 16px;
+    padding: 4px 6px;
+  }
+}

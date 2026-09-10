@@ -43,6 +43,28 @@ export function formatDateTime(dateStr) {
   return `${date.getDate()} ${date.toLocaleDateString('ru-RU', { month: 'short' })}, ${time}`;
 }
 
+/**
+ * Форматирует дату БЕЗ времени: "Сегодня", "Вчера" или "3 сент"
+ * Используется для отображения в списке транзакций на мобильных устройствах
+ * 
+ * @param {string} dateStr - Строка даты в формате ISO (например, "2026-09-10T21:33:00.000Z")
+ * @returns {string} - Только дата без времени
+ */
+export function formatDateOnly(dateStr) {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Сегодня';
+  }
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Вчера';
+  }
+  return `${date.getDate()} ${date.toLocaleDateString('ru-RU', { month: 'short' })}`;
+}
+
 // Определяем границы текущего "пенсионного периода"
 // Если пенсия 15-го, то период: с 15-го прошлого месяца по 14-е текущего
 export function getCurrentPeriod(pensionDay) {

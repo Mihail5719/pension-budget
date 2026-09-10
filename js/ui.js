@@ -1,4 +1,4 @@
-import { formatMoney, formatDateTime } from './utils.js';
+import { formatMoney, formatDateOnly } from './utils.js';
 import {
   calculateDailyLimit,
   getIndicatorState,
@@ -68,42 +68,44 @@ export function renderTransactionList(transactions, pensionDay) {
     itemEl.innerHTML = `
     <div class="transaction__info">
         <span class="transaction__category">${transaction.category}</span>
-        <span class="transaction__date">${formatDateTime(transaction.date)}</span>
+        <span class="transaction__date">${formatDateOnly(transaction.date)}</span>
     </div>
-    <span class="${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
-    <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
-    <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+    <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
+    <div class="transaction__actions">
+        <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
+        <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+    </div>
 `;
-
+    
     listEl.appendChild(itemEl);
   });
 }
 
 // Отрисовка настроек
 export function renderSettings(settings, fixedExpenses) {
-    // Заполняем поля ввода
-    document.getElementById('input-pension').value =
-      settings.pensionAmount.toFixed(2);
-    document.getElementById('input-pension-day').value = settings.pensionDay;
-    document.getElementById('input-reserve').value =
-      settings.reserveAmount.toFixed(2);
-    
-    // Отрисовываем список обязательных платежей
-    const listEl = document.getElementById('fixed-expenses-list');
-    listEl.innerHTML = '';
-    
-    fixedExpenses.forEach(expense => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'fixed-expense';
-        itemEl.dataset.id = expense.id;
-        
-        itemEl.innerHTML = `
+  // Заполняем поля ввода
+  document.getElementById('input-pension').value =
+    settings.pensionAmount.toFixed(2);
+  document.getElementById('input-pension-day').value = settings.pensionDay;
+  document.getElementById('input-reserve').value =
+    settings.reserveAmount.toFixed(2);
+
+  // Отрисовываем список обязательных платежей
+  const listEl = document.getElementById('fixed-expenses-list');
+  listEl.innerHTML = '';
+
+  fixedExpenses.forEach((expense) => {
+    const itemEl = document.createElement('div');
+    itemEl.className = 'fixed-expense';
+    itemEl.dataset.id = expense.id;
+
+    itemEl.innerHTML = `
             <span class="fixed-expense__name">${expense.name}</span>
             <span class="fixed-expense__amount">${formatMoney(expense.amount)}</span>
             <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
         `;
-        listEl.appendChild(itemEl);
-    });
+    listEl.appendChild(itemEl);
+  });
 }
 
 // Обновление всей страницы
