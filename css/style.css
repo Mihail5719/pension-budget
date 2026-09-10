@@ -618,15 +618,15 @@ body.dark-theme .today-card {
 
 /* Модальное окно */
 .modal {
-  display: none;
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
+  width: 100%;
+  height: 100%;
+  display: none;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 
 .modal.is-open {
@@ -651,6 +651,8 @@ body.dark-theme .today-card {
   width: 90%;
   z-index: 1;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-height: 85vh;   /* ← ДОБАВИТЬ: максимум 85% высоты экрана */
+  overflow-y: auto;   /* ← ДОБАВИТЬ: прокрутка, если не влезает */
 }
 
 .modal__title {
@@ -710,6 +712,13 @@ body.dark-theme .today-card {
     width: 95%;
     max-width: none;
     margin: 20px;
+    max-height: 90vh;   /* ← ДОБАВИТЬ */
+    padding: 16px;      /* ← ДОБАВИТЬ: чуть меньше отступы */
+  }
+
+  .modal__title {
+    font-size: 20px;    /* ← ДОБАВИТЬ: уменьшаем заголовок */
+    margin-bottom: 12px;
   }
 
   .modal__buttons {
