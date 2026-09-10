@@ -377,19 +377,20 @@ body.dark-theme .today-card {
 /* Левая часть: категория + дата */
 .transaction__info {
   flex: 1;
-  min-width: 0; /* Позволяет тексту переноситься и обрезаться */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  align-self: flex-start;  /* ← Прижимает к верху карточки */
 }
 
 .transaction__category {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary, #1a1a1a);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-primary);
+  white-space: normal;          /* ← РАЗРЕШАЕТ перенос текста */
+  word-break: break-word;       /* ← Переносит длинные слова */
+  line-height: 1.3;             /* ← Чуть больше межстрочный интервал */
 }
 
 .transaction__date {
