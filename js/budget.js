@@ -53,7 +53,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     1,
   );
 
-  const dailyLimit = Math.floor(remaining / daysLeft);
+  const dailyLimit = remaining / daysLeft;
 
   return {
     dailyLimit,
