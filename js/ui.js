@@ -2,7 +2,7 @@ import { formatMoney, formatDateOnly } from './utils.js';
 import {
   calculateDailyLimit,
   getIndicatorState,
-  getTotalFixedExpenses,
+  getTodayPayments,
 } from './budget.js';
 
 // Обновление экрана "Сегодня"
@@ -12,6 +12,8 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     result.dailyLimit,
     result.freeBudget,
   );
+  const todayPayments = getTodayPayments(fixedExpenses);
+  renderTodayPayments(todayPayments);
 
   // Обновляем ГЛАВНОЕ число - остаток до пенсии
   const remainingEl = document.getElementById('remaining-amount');
@@ -76,7 +78,7 @@ export function renderTransactionList(transactions, pensionDay) {
         <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
     </div>
 `;
-    
+
     listEl.appendChild(itemEl);
   });
 }
@@ -116,4 +118,42 @@ export function renderAll(data) {
   renderTodayScreen(data.settings, data.fixedExpenses, data.transactions);
   renderTransactionList(data.transactions, data.settings.pensionDay);
   renderSettings(data.settings, data.fixedExpenses);
+}
+
+/**
+ * Отображает блок "Сегодня к оплате" на главном экране
+ */
+function renderTodayPayments(payments) {
+  const container = document.getElementById('today-payments-container');
+  if (!container) return; // Если контейнера нет, ничего не делаем
+  
+  // Очищаем контейнер перед отрисовкой
+  container.innerHTML = '';
+  
+  if (payments.length === 0) {
+    container.innerHTML = '<p class="today-payments__empty">Сегодня платежей нет 🎉</p>';
+    return;
+  }
+  
+  // Заголовок блока
+  const title = document.createElement('h3');
+  title.className = 'today-payments__title';
+  title.textContent = 'Сегодня к оплате';
+  container.appendChild(title);
+  
+  // Список платежей
+  const list = document.createElement('div');
+  list.className = 'today-payments__list';
+  
+  payments.forEach(payment => {
+    const item = document.createElement('div');
+    item.className = 'today-payment-item';
+    item.innerHTML = `
+      <span class="today-payment-item__name">${payment.name}</span>
+      <span class="today-payment-item__amount">${formatMoney(payment.amount)}</span>
+    `;
+    list.appendChild(item);
+  });
+  
+  container.appendChild(list);
 }

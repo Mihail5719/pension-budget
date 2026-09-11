@@ -78,3 +78,14 @@ export function getIndicatorState(dailyLimit, freeBudget) {
   if (ratio < 0.5) return 'warn';
   return 'ok';
 }
+
+/**
+ * Возвращает список обязательных платежей, которые нужно оплатить сегодня
+ * @param {Array} fixedExpenses - массив обязательных платежей
+ * @returns {Array} - платежи на сегодня
+ */
+export function getTodayPayments(fixedExpenses) {
+  const today = new Date().getDate(); // текущее число месяца (1-31)
+  
+  return fixedExpenses.filter(expense => expense.day === today);
+}
