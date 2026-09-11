@@ -347,35 +347,38 @@ function handleAddPayment() {
   const amountStr = prompt('Сумма платежа:');
   if (!amountStr) return;
 
-  // Заменяем запятую на точку для корректного парсинга
   const amount = parseFloat(amountStr.replace(',', '.'));
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     return;
   }
 
-  // Создаём платёж
+  const dayStr = prompt(
+    'День месяца для оплаты (1-28):\nНапример, 5 — значит платить 5-го числа каждого месяца',
+  );
+  if (!dayStr) return;
+
+  const day = parseInt(dayStr);
+  if (isNaN(day) || day < 1 || day > 28) {
+    alert('Пожалуйста, введите число от 1 до 28');
+    return;
+  }
+
   const payment = {
     id: Date.now(),
     name: name.trim(),
     amount: amount,
+    day: day, // ← День платежа добавлен!
   };
 
-  // Добавляем в данные
   appData.fixedExpenses.push(payment);
-
-  // Сохраняем
   saveData(appData);
-
-  // Перерисовываем
   renderSettings(appData.settings, appData.fixedExpenses);
   renderTodayScreen(
     appData.settings,
     appData.fixedExpenses,
     appData.transactions,
   );
-
-  console.log('Добавлен платёж:', payment);
 }
 
 // Обработчик клика по кнопкам удаления
