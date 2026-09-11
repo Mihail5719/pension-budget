@@ -100,10 +100,13 @@ export function renderSettings(settings, fixedExpenses) {
     itemEl.dataset.id = expense.id;
 
     itemEl.innerHTML = `
-            <span class="fixed-expense__name">${expense.name}</span>
-            <span class="fixed-expense__amount">${formatMoney(expense.amount)}</span>
-            <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
-        `;
+    <div class="fixed-expense__info">
+        <span class="fixed-expense__name">${expense.name}</span>
+        <span class="fixed-expense__day">${expense.day ? `${expense.day}-го числа` : ''}</span>
+    </div>
+    <span class="fixed-expense__amount">${formatMoney(expense.amount)}</span>
+    <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
+`;
     listEl.appendChild(itemEl);
   });
 }
