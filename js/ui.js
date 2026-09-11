@@ -1,9 +1,9 @@
-import { formatMoney, formatDateOnly } from './utils.js';
+import { formatMoney, formatDateOnly, getCurrentPeriod } from './utils.js'; 
 import {
   calculateDailyLimit,
   getIndicatorState,
   getTodayPayments,
-} from './budget.js';
+} from './budget.js'; 
 
 // Обновление экрана "Сегодня"
 export function renderTodayScreen(settings, fixedExpenses, transactions) {
@@ -131,10 +131,11 @@ function renderTodayPayments(payments) {
   container.innerHTML = '';
 
   // Фильтруем платежи, которые ещё не оплачены сегодня
-  const unpaidPayments = payments.filter(p => !isPaymentPaidToday(p.id));
+  const unpaidPayments = payments.filter((p) => !isPaymentPaidToday(p.id));
 
   if (unpaidPayments.length === 0) {
-    container.innerHTML = '<p class="today-payments__empty">Сегодня платежей нет 🎉</p>';
+    container.innerHTML =
+      '<p class="today-payments__empty">Сегодня платежей нет 🎉</p>';
     return;
   }
 
@@ -148,7 +149,7 @@ function renderTodayPayments(payments) {
   const list = document.createElement('div');
   list.className = 'today-payments__list';
 
-  unpaidPayments.forEach(payment => {
+  unpaidPayments.forEach((payment) => {
     const item = document.createElement('div');
     item.className = 'today-payment-item';
     item.innerHTML = `
@@ -167,10 +168,10 @@ function renderTodayPayments(payments) {
   container.appendChild(list);
 
   // Назначаем обработчики кликов
-  container.querySelectorAll('[data-action="mark-paid"]').forEach(btn => {
+  container.querySelectorAll('[data-action="mark-paid"]').forEach((btn) => {
     btn.addEventListener('click', handleMarkPaid);
   });
-  container.querySelectorAll('[data-action="postpone"]').forEach(btn => {
+  container.querySelectorAll('[data-action="postpone"]').forEach((btn) => {
     btn.addEventListener('click', handlePostpone);
   });
 }
@@ -182,10 +183,9 @@ function isPaymentPaidToday(paymentId) {
   const today = new Date().toISOString().split('T')[0];
   const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
   const transactions = appData.transactions || [];
-  
-  return transactions.some(t => 
-    t.date === today && 
-    t.paymentId === paymentId
+
+  return transactions.some(
+    (t) => t.date === today && t.paymentId === paymentId,
   );
 }
 
@@ -195,16 +195,20 @@ function isPaymentPaidToday(paymentId) {
 function handleMarkPaid(event) {
   const paymentId = parseInt(event.currentTarget.dataset.id);
   const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
-  const payment = appData.fixedExpenses.find(p => p.id === paymentId);
-  
+  const payment = appData.fixedExpenses.find((p) => p.id === paymentId);
+
   if (!payment) return;
-  
-  if (!confirm(`Отметить "${payment.name}" (${formatMoney(payment.amount)}) как оплаченное?`)) {
+
+  if (
+    !confirm(
+      `Отметить "${payment.name}" (${formatMoney(payment.amount)}) как оплаченное?`,
+    )
+  ) {
     return;
   }
-  
+
   const today = new Date().toISOString().split('T')[0];
-  
+
   const transaction = {
     id: Date.now(),
     type: 'expense',
@@ -212,16 +216,20 @@ function handleMarkPaid(event) {
     amount: payment.amount,
     date: today,
     paymentId: paymentId,
-    note: 'Автоматически: обязательный платёж'
+    note: 'Автоматически: обязательный платёж',
   };
-  
+
   appData.transactions = appData.transactions || [];
   appData.transactions.push(transaction);
   localStorage.setItem('pensionBudget', JSON.stringify(appData));
-  
+
   // Обновляем все экраны
-  renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions);
-  
+  renderTodayScreen(
+    appData.settings,
+    appData.fixedExpenses,
+    appData.transactions,
+  );
+
   // Обновляем экран Истории (если функция существует)
   if (typeof renderTransactionList === 'function') {
     renderTransactionList(appData.transactions);
@@ -237,14 +245,161 @@ function handleMarkPaid(event) {
 function handlePostpone(event) {
   const paymentId = parseInt(event.currentTarget.dataset.id);
   const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
-  const payment = appData.fixedExpenses.find(p => p.id === paymentId);
-  
+  const payment = appData.fixedExpenses.find((p) => p.id === paymentId);
+
   if (!payment) return;
-  
+
   const postponed = appData.postponedPayments || {};
   postponed[paymentId] = new Date().toISOString().split('T')[0];
   appData.postponedPayments = postponed;
   localStorage.setItem('pensionBudget', JSON.stringify(appData));
-  
-  renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions);
+
+  renderTodayScreen(
+    appData.settings,
+    appData.fixedExpenses,
+    appData.transactions,
+  );
+}
+
+// Настройки внешнего вида для категорий
+const categoryConfig = {
+  Продукты: { emoji: '🛒', color: '#3498db' }, // Синий
+  Аптека: { emoji: '💊', color: '#2ecc71' }, // Зеленый
+  Здоровье: { emoji: '💊', color: '#2ecc71' },
+  Транспорт: { emoji: '🚗', color: '#e67e22' }, // Оранжевый
+  Подарки: { emoji: '🎁', color: '#9b59b6' }, // Фиолетовый
+  ЖКХ: { emoji: '🏠', color: '#e74c3c' }, // Красный
+  Интернет: { emoji: '', color: '#1abc9c' }, // Бирюзовый
+  Кредит: { emoji: '💳', color: '#c0392b' }, // Темно-красный
+  Одежда: { emoji: '👕', color: '#f1c40f' }, // Желтый
+  Развлечения: { emoji: '🎬', color: '#8e44ad' }, // Темно-фиолетовый
+};
+
+function getCategoryStyle(name) {
+  // Сначала ищем точное совпадение
+  if (categoryConfig[name]) return categoryConfig[name];
+
+  // Если не нашли — ищем по ключевому слову (для "Транспорт/Топливо", "Аптека/Лекарства" и т.д.)
+  const lowerName = name.toLowerCase();
+  for (const key in categoryConfig) {
+    if (lowerName.includes(key.toLowerCase())) {
+      return categoryConfig[key];
+    }
+  }
+
+  // Если вообще ничего не нашли — стандартная иконка
+  return { emoji: '📦', color: '#95a5a6' };
+}
+
+/**
+ * Рисует круговую диаграмму расходов
+ */
+export function renderStatsChart(settings, transactions) {
+  const canvas = document.getElementById('expense-chart');
+  if (!canvas) {
+    console.error('❌ Canvas не найден!');
+    return;
+  }
+
+  // ... остальной код функции без изменений ...
+  if (!canvas) return;
+
+  // 1. Получаем транзакции только за текущий период (от пенсии до пенсии)
+  const { startDate, endDate } = getCurrentPeriod(settings.pensionDay);
+
+  const periodExpenses = transactions.filter((t) => {
+    const tDate = new Date(t.date);
+    // Берем только расходы (не доходы) и только за текущий период
+    return t.type !== 'income' && tDate >= startDate && tDate <= endDate;
+  });
+
+  // 2. Группируем суммы по категориям
+  const categoryTotals = {};
+  periodExpenses.forEach((t) => {
+    categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+  });
+
+  // 3. Подготавливаем данные для Chart.js
+  const labels = [];
+  const data = [];
+  const backgroundColors = [];
+
+  Object.keys(categoryTotals).forEach((cat) => {
+    const style = getCategoryStyle(cat);
+    labels.push(cat); 
+    data.push(categoryTotals[cat]);
+    backgroundColors.push(style.color);
+  });
+
+  // 4. Если расходов нет, очищаем холст и выходим
+  if (data.length === 0) {
+    if (window.expenseChartInstance) {
+      window.expenseChartInstance.destroy();
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      'Нет расходов за этот период',
+      canvas.width / 2,
+      canvas.height / 2,
+    );
+    return;
+  }
+
+  // 5. Уничтожаем старую диаграмму, если она была (иначе будет ошибка)
+  if (window.expenseChartInstance) {
+    window.expenseChartInstance.destroy();
+  }
+
+  // 6. Рисуем новую диаграмму
+  window.expenseChartInstance = new Chart(canvas, {
+    type: 'pie', // Тип графика: круговая диаграмма
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: backgroundColors,
+          borderWidth: 2,
+          borderColor: '#ffffff', // Белые разделители между секторами
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { size: 14, family: "'Segoe UI', sans-serif" },
+            padding: 20,
+            usePointStyle: true, // Цветные квадратики вместо кругов
+          },
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleFont: { size: 16 },
+          bodyFont: { size: 14 },
+          padding: 12,
+          callbacks: {
+            // Форматируем подсказку при наведении (добавляем эмодзи здесь)
+            label: function (context) {
+              const categoryName = context.label; // Чистое название, например "Продукты"
+              const style = getCategoryStyle(categoryName); // Получаем эмодзи для этой категории
+              const value = context.parsed;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+
+              // Возвращаем красивую строку: Эмодзи + Название: Сумма (Процент)
+              return `${style.emoji} ${categoryName}: ${formatMoney(value)} (${percentage}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
 }

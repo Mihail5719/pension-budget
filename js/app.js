@@ -1,19 +1,25 @@
 import { loadData, saveData } from './storage.js';
-import { renderAll, renderTodayScreen, renderTransactionList, renderSettings } from './ui.js';
+import {
+  renderAll,
+  renderTodayScreen,
+  renderTransactionList,
+  renderSettings,
+  renderStatsChart,
+} from './ui.js';
 import { formatDateKey } from './utils.js';
 
 // Список категорий расходов
 const EXPENSE_CATEGORIES = [
-    { id: 'products', name: '🛒 Продукты', emoji: '🛒' },
-    { id: 'pharmacy', name: '💊 Аптека/Лекарства', emoji: '💊' },
-    { id: 'transport', name: '🚗 Транспорт/Топливо', emoji: '🚗' },
-    { id: 'utilities', name: '🏠 ЖКХ', emoji: '🏠' },
-    { id: 'communication', name: '📱 Связь', emoji: '📱' },
-    { id: 'health', name: '🩺 Здоровье/Врачи', emoji: '🩺' },
-    { id: 'gifts', name: '🎁 Подарки', emoji: '' },
-    { id: 'home', name: '🏡 Для дома', emoji: '🏡' },
-    { id: 'clothes', name: '👕 Одежда', emoji: '👕' },
-    { id: 'other', name: '📦 Другое', emoji: '📦' }
+    { id: 'products', name: 'Продукты', emoji: '🛒' },
+    { id: 'pharmacy', name: 'Аптека/Лекарства', emoji: '' },
+    { id: 'transport', name: 'Транспорт/Топливо', emoji: '🚗' },
+    { id: 'utilities', name: 'ЖКХ', emoji: '🏠' },
+    { id: 'communication', name: 'Связь', emoji: '📱' },
+    { id: 'health', name: 'Здоровье/Врачи', emoji: '🩺' },
+    { id: 'gifts', name: 'Подарки', emoji: '🎁' },
+    { id: 'home', name: 'Для дома', emoji: '🏡' },
+    { id: 'clothes', name: 'Одежда', emoji: '👕' },
+    { id: 'other', name: 'Другое', emoji: '📦' }
 ];
 
 // Список категорий доходов
@@ -242,8 +248,20 @@ let expenseModal, expenseCategorySelect, expenseAmountInput, expenseSaveBtn, exp
 // Элементы модального окна доходов
 let incomeModal, incomeCategorySelect, incomeAmountInput, incomeSaveBtn, incomeCancelBtn;
 
-// Открытие модального окна расходов
+// Открытие модального окна расходов с гарантированным заполнением категорий
 function openExpenseModal() {
+    // 1. Очищаем список (на случай, если он уже был заполнен)
+    expenseCategorySelect.innerHTML = '';
+
+    // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
+    EXPENSE_CATEGORIES.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.name; // Сохраняем чистое имя (без эмодзи)
+        option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Показываем с эмодзи
+        expenseCategorySelect.appendChild(option);
+    });
+
+    // 3. Открываем окно и ставим фокус на список
     expenseModal.classList.add('is-open');
     expenseCategorySelect.focus();
 }
@@ -446,42 +464,42 @@ let editingTransactionId = null;
  * @param {number} transactionId - ID транзакции для редактирования
  */
 function openEditModal(transactionId) {
-    // Находим транзакцию по ID
-    const transaction = appData.transactions.find(t => t.id === transactionId);
-    if (!transaction) return;
+  // Находим транзакцию по ID
+  const transaction = appData.transactions.find((t) => t.id === transactionId);
+  if (!transaction) return;
 
-    // Сохраняем ID для последующего сохранения
-    editingTransactionId = transactionId;
+  // Сохраняем ID для последующего сохранения
+  editingTransactionId = transactionId;
 
-    // Определяем тип транзакции (расход или доход)
-    const isIncome = transaction.type === 'income';
-    const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  // Определяем тип транзакции (расход или доход)
+  const isIncome = transaction.type === 'income';
+  const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
-    // Заполняем выпадающий список категориями
-    const categorySelect = document.getElementById('edit-category');
-    categorySelect.innerHTML = '';
-    categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category.id;
-        option.textContent = category.name;
-        // Выбираем текущую категорию транзакции
-        if (category.name === transaction.category) {
-            option.selected = true;
-        }
-        categorySelect.appendChild(option);
-    });
+  // Заполняем выпадающий список категориями
+  const categorySelect = document.getElementById('edit-category');
+  categorySelect.innerHTML = '';
+  categories.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category.id;
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Добавили эмодзи
+    // Выбираем текущую категорию транзакции
+    if (category.name === transaction.category) {
+      option.selected = true;
+    }
+    categorySelect.appendChild(option);
+  });
 
-    // Заполняем сумму
-    document.getElementById('edit-amount').value = transaction.amount;
+  // Заполняем сумму
+  document.getElementById('edit-amount').value = transaction.amount;
 
-    // Заполняем дату (формат YYYY-MM-DD для input type="date")
-    const transactionDate = new Date(transaction.date);
-    const dateStr = transactionDate.toISOString().split('T')[0];
-    document.getElementById('edit-date').value = dateStr;
+  // Заполняем дату (формат YYYY-MM-DD для input type="date")
+  const transactionDate = new Date(transaction.date);
+  const dateStr = transactionDate.toISOString().split('T')[0];
+  document.getElementById('edit-date').value = dateStr;
 
-    // Открываем модальное окно
-    document.getElementById('edit-modal').classList.add('is-open');
-    document.getElementById('edit-amount').focus();
+  // Открываем модальное окно
+  document.getElementById('edit-modal').classList.add('is-open');
+  document.getElementById('edit-amount').focus();
 }
 
 /**
@@ -675,3 +693,43 @@ if (btnStartSetup) {
         window.location.hash = '#screen-settings';
     });
 }
+
+// === УНИВЕРСАЛЬНАЯ НАВИГАЦИЯ ПО ВСЕМ ВКЛАДКАМ ===
+document.addEventListener('click', (e) => {
+  const navBtn = e.target.closest('.bottom-nav__item');
+  if (!navBtn) return;
+
+  const screenId = navBtn.dataset.screen;
+  if (!screenId) return;
+
+  // Убираем active у всех кнопок
+  document.querySelectorAll('.bottom-nav__item').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  navBtn.classList.add('active');
+
+  // Скрываем все экраны
+  document.querySelectorAll('.screen').forEach(screen => {
+    screen.style.display = 'none';
+    screen.classList.remove('active');
+  });
+
+  // Показываем нужный экран
+  const targetScreen = document.getElementById(screenId);
+  if (targetScreen) {
+    targetScreen.style.display = 'block';
+    targetScreen.classList.add('active');
+  }
+
+  // Если открыли Статистику — рисуем график
+  if (screenId === 'screen-stats') {
+    setTimeout(() => {
+      const savedData = localStorage.getItem('pensionBudget');
+      
+      if (savedData && typeof renderStatsChart === 'function') {
+        const data = JSON.parse(savedData);
+        renderStatsChart(data.settings, data.transactions);
+      }
+    }, 100);
+  }
+});

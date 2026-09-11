@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мой бюджет</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js для графиков -->
+    <script src="js/chart.min.js"></script>
 </head>
 
 <body>
@@ -15,49 +17,49 @@
             <p class="header__subtitle">Пенсия: 23 числа</p>
 
             <!-- Кнопка переключения темы -->
-    <button class="theme-toggle" id="theme-toggle" title="Переключить тему">
-        <span class="theme-icon">🌙</span>
-    </button>
+            <button class="theme-toggle" id="theme-toggle" title="Переключить тему">
+                <span class="theme-icon">🌙</span>
+            </button>
         </header>
 
         <main class="main">
             <!-- Приветственный экран -->
-<section class="screen screen--welcome" id="screen-welcome">
-    <div class="welcome-container">
-        <div class="welcome-icon">💰</div>
-        <h1 class="welcome-title">Добро пожаловать!</h1>
-        <p class="welcome-text">
-            Это приложение поможет вам контролировать бюджет и безопасно тратить пенсию.
-        </p>
-        
-        <div class="welcome-steps">
-            <div class="welcome-step">
-                <span class="step-number">1</span>
-                <span class="step-text">Перейдите в «Настройки»</span>
-            </div>
-            <div class="welcome-step">
-                <span class="step-number">2</span>
-                <span class="step-text">Укажите размер пенсии</span>
-            </div>
-            <div class="welcome-step">
-                <span class="step-number">3</span>
-                <span class="step-text">Добавьте обязательные платежи</span>
-            </div>
-            <div class="welcome-step">
-                <span class="step-number">4</span>
-                <span class="step-text">Вернитесь на главный экран</span>
-            </div>
-        </div>
-        
-        <button class="btn btn--primary btn--large welcome-btn" id="btn-start-setup">
-            Начать настройку
-        </button>
-    </div>
-</section>
+            <section class="screen screen--welcome" id="screen-welcome">
+                <div class="welcome-container">
+                    <div class="welcome-icon">💰</div>
+                    <h1 class="welcome-title">Добро пожаловать!</h1>
+                    <p class="welcome-text">
+                        Это приложение поможет вам контролировать бюджет и безопасно тратить пенсию.
+                    </p>
+
+                    <div class="welcome-steps">
+                        <div class="welcome-step">
+                            <span class="step-number">1</span>
+                            <span class="step-text">Перейдите в «Настройки»</span>
+                        </div>
+                        <div class="welcome-step">
+                            <span class="step-number">2</span>
+                            <span class="step-text">Укажите размер пенсии</span>
+                        </div>
+                        <div class="welcome-step">
+                            <span class="step-number">3</span>
+                            <span class="step-text">Добавьте обязательные платежи</span>
+                        </div>
+                        <div class="welcome-step">
+                            <span class="step-number">4</span>
+                            <span class="step-text">Вернитесь на главный экран</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn--primary btn--large welcome-btn" id="btn-start-setup">
+                        Начать настройку
+                    </button>
+                </div>
+            </section>
             <!-- Экран 1: Сегодня -->
             <section class="screen screen--today" id="screen-today">
                 <h2 class="screen__title screen__title--hidden">Главный экран</h2>
-            
+
                 <div class="today-card">
                     <div class="today-card__label">Осталось до пенсии</div>
                     <div class="today-card__amount" id="remaining-amount">0 ₽</div>
@@ -66,18 +68,18 @@
                     <div class="today-card__amount today-card__amount--secondary" id="daily-limit">0 ₽</div>
                     <div class="today-card__hint">чтобы хватило до пенсии</div>
                 </div>
-            
+
                 <!-- Блок "Сегодня к оплате" (внутри секции, сразу после карточки) -->
                 <div id="today-payments-container" class="today-payments"></div>
-            
+
                 <button class="btn btn--primary btn--large" id="btn-add-expense">
                     Записать расход
                 </button>
-            
+
                 <button class="btn btn--success btn--large" id="btn-add-income">
                     Добавить доход
                 </button>
-            
+
                 <div class="quick-stats">
                     <div class="stat">
                         <span class="stat__label">Дней осталось</span>
@@ -89,7 +91,7 @@
                     </div>
                 </div>
             </section>
-            
+
             <!-- Экран 2: История -->
             <section class="screen screen--history" id="screen-history">
                 <h2 class="screen__title">История расходов</h2>
@@ -97,40 +99,40 @@
                     <!-- Транзакции будут добавляться сюда из JS -->
                 </div>
             </section>
-        
+
             <!-- Экран 3: Настройки -->
             <section class="screen screen--settings" id="screen-settings">
                 <h2 class="screen__title">Настройки</h2>
-        
+
                 <div class="settings-group">
                     <label class="settings-label">
                         <span class="settings-label__text">Размер пенсии</span>
-                        <input type="number" class="settings-input" id="input-pension" placeholder="0.00" inputmode="decimal" min="0"
-                            step="0.01">
+                        <input type="number" class="settings-input" id="input-pension" placeholder="0.00"
+                            inputmode="decimal" min="0" step="0.01">
                     </label>
-        
+
                     <label class="settings-label">
                         <span class="settings-label__text">День получения</span>
                         <input type="number" class="settings-input" id="input-pension-day" min="1" max="31">
                     </label>
-        
+
                     <label class="settings-label">
                         <span class="settings-label__text">Неприкосновенный запас</span>
-                        <input type="number" class="settings-input" id="input-reserve" placeholder="0.00" inputmode="decimal" min="0"
-                            step="0.01">
+                        <input type="number" class="settings-input" id="input-reserve" placeholder="0.00"
+                            inputmode="decimal" min="0" step="0.01">
                     </label>
                 </div>
-        
+
                 <h3 class="settings-subtitle">Обязательные платежи</h3>
-        
+
                 <div class="fixed-expenses" id="fixed-expenses-list">
                     <!-- Платежи будут добавляться сюда из JS -->
                 </div>
-        
+
                 <button class="btn btn--secondary" id="btn-add-payment">
                     Добавить платёж
                 </button>
-                                <!-- ✅ Кнопки инструкции, экспорта и импорта -->
+                <!-- ✅ Кнопки инструкции, экспорта и импорта -->
                 <div class="menu__actions">
                     <a href="guide.html" class="action-btn" target="_blank" title="Открыть инструкцию">
                         <span class="btn-icon">📖</span>
@@ -148,51 +150,62 @@
                     <input type="file" id="import-file" accept=".json" hidden>
                 </div>
             </section>
+            <!-- Экран 4: Статистика -->
+            <section class="screen screen--stats" id="screen-stats">
+                <h2 class="screen__title">Статистика расходов</h2>
+                <div class="stats-card">
+                    <canvas id="expense-chart"></canvas>
+                </div>
+            </section>
         </main>
 
         <nav class="bottom-nav">
-            <a href="#screen-today" class="bottom-nav__item bottom-nav__item--active">
+            <button class="bottom-nav__item" data-screen="screen-today">
                 <span class="bottom-nav__icon">🏠</span>
                 <span class="bottom-nav__label">Сегодня</span>
-            </a>
-            <a href="#screen-history" class="bottom-nav__item">
+            </button>
+            <button class="bottom-nav__item" data-screen="screen-history">
                 <span class="bottom-nav__icon">📋</span>
                 <span class="bottom-nav__label">История</span>
-            </a>
-            <a href="#screen-settings" class="bottom-nav__item">
+            </button>
+            <button class="bottom-nav__item" data-screen="screen-stats">
+                <span class="bottom-nav__icon">📊</span>
+                <span class="bottom-nav__label">Статистика</span>
+            </button>
+            <button class="bottom-nav__item" data-screen="screen-settings">
                 <span class="bottom-nav__icon">⚙️</span>
                 <span class="bottom-nav__label">Настройки</span>
-            </a>
+            </button>
         </nav>
     </div>
-    
-<!-- Модальное окно для добавления расхода -->
-<div class="modal" id="expense-modal">
-    <div class="modal__overlay"></div>
-    <div class="modal__content">
-        <h2 class="modal__title">Записать расход</h2>
 
-        <label class="modal__label">
-            <span class="modal__label-text">Категория</span>
-            <select class="modal__select" id="expense-category">
-                <!-- Категории будут добавлены через JavaScript -->
-            </select>
-        </label>
+    <!-- Модальное окно для добавления расхода -->
+    <div class="modal" id="expense-modal">
+        <div class="modal__overlay"></div>
+        <div class="modal__content">
+            <h2 class="modal__title">Записать расход</h2>
 
-        <label class="modal__label">
-            <span class="modal__label-text">Сумма (₽)</span>
-            <input type="number" class="modal__input" id="expense-amount" placeholder="0.00" inputmode="decimal" min="0"
-                step="0.01">
-        </label>
+            <label class="modal__label">
+                <span class="modal__label-text">Категория</span>
+                <select class="modal__select" id="expense-category">
+                    <!-- Категории будут добавлены через JavaScript -->
+                </select>
+            </label>
 
-        <div class="modal__buttons">
-            <button class="btn btn--secondary" id="btn-cancel-expense">Отмена</button>
-            <button class="btn btn--primary" id="btn-save-expense">Записать</button>
+            <label class="modal__label">
+                <span class="modal__label-text">Сумма (₽)</span>
+                <input type="number" class="modal__input" id="expense-amount" placeholder="0.00" inputmode="decimal"
+                    min="0" step="0.01">
+            </label>
+
+            <div class="modal__buttons">
+                <button class="btn btn--secondary" id="btn-cancel-expense">Отмена</button>
+                <button class="btn btn--primary" id="btn-save-expense">Записать</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Модальное окно для добавления дохода -->
+    <!-- Модальное окно для добавления дохода -->
     <div class="modal" id="income-modal">
         <div class="modal__overlay"></div>
         <div class="modal__content">
@@ -203,8 +216,8 @@
             </label>
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
-                <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal" min="0"
-                    step="0.01">
+                <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal"
+                    min="0" step="0.01">
             </label>
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-income">Отмена</button>
@@ -220,11 +233,11 @@
     <div class="modal" id="edit-modal">
         <!-- Затемнённый фон (оверлей) -->
         <div class="modal__overlay"></div>
-    
+
         <!-- Содержимое модального окна -->
         <div class="modal__content">
             <h3 class="modal__title">Редактировать запись</h3>
-    
+
             <!-- Выпадающий список категорий -->
             <label class="modal__label">
                 <span class="modal__label-text">Категория:</span>
@@ -232,20 +245,20 @@
                     <!-- Категории заполняются через JavaScript -->
                 </select>
             </label>
-    
+
             <!-- Поле ввода суммы -->
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽):</span>
                 <input type="number" class="modal__input" id="edit-amount" placeholder="0" inputmode="numeric" min="1">
             </label>
-    
+
             <!-- Поле выбора даты -->
             <label class="modal__label">
                 <span class="modal__label-text">Дата:</span>
                 <input type="date" class="modal__input" id="edit-date"
                     style="font-size: 18px; font-weight: 400; text-align: left;">
             </label>
-    
+
             <!-- Кнопки подтверждения и отмены -->
             <div class="modal__buttons">
                 <button class="btn btn--primary" id="btn-save-edit">
@@ -256,9 +269,9 @@
                 </button>
             </div>
         </div>
-    </div> 
+    </div>
 
-    <script type="module" src="js/app.js"></script>     
+    <script type="module" src="js/app.js"></script>
 </body>
 
 </html>
