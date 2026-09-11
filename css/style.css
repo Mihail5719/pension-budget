@@ -1234,3 +1234,53 @@ body.dark-theme .stat:hover {
   font-weight: 600;
   color: var(--color-danger);
 }
+
+/* Кнопки действий в блоке платежей */
+.today-payment-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.today-payment-item__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-paid,
+.btn-postpone {
+  background: none;
+  border: 2px solid;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-paid {
+  border-color: var(--color-success, #27ae60);
+  color: var(--color-success, #27ae60);
+}
+
+.btn-paid:hover {
+  background-color: var(--color-success, #27ae60);
+  color: white;
+}
+
+.btn-postpone {
+  border-color: var(--color-primary, #3498db);
+  color: var(--color-primary, #3498db);
+}
+
+.btn-postpone:hover {
+  background-color: var(--color-primary, #3498db);
+  color: white;
+}

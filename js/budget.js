@@ -81,11 +81,23 @@ export function getIndicatorState(dailyLimit, freeBudget) {
 
 /**
  * Возвращает список обязательных платежей, которые нужно оплатить сегодня
- * @param {Array} fixedExpenses - массив обязательных платежей
- * @returns {Array} - платежи на сегодня
+ * Исключает отложенные до завтра
  */
 export function getTodayPayments(fixedExpenses) {
-  const today = new Date().getDate(); // текущее число месяца (1-31)
+  const today = new Date().getDate();
+  const todayStr = new Date().toISOString().split('T')[0];
   
-  return fixedExpenses.filter(expense => expense.day === today);
+  // Получаем отложенные платежи
+  const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+  const postponed = appData.postponedPayments || {};
+  
+  return fixedExpenses.filter(expense => {
+    // Платёж должен быть на сегодня
+    if (expense.day !== today) return false;
+    
+    // Платёж не должен быть отложен на сегодня
+    if (postponed[expense.id] === todayStr) return false;
+    
+    return true;
+  });
 }

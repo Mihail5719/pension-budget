@@ -125,35 +125,126 @@ export function renderAll(data) {
  */
 function renderTodayPayments(payments) {
   const container = document.getElementById('today-payments-container');
-  if (!container) return; // Если контейнера нет, ничего не делаем
-  
-  // Очищаем контейнер перед отрисовкой
+  if (!container) return;
+
+  // Очищаем контейнер
   container.innerHTML = '';
-  
-  if (payments.length === 0) {
+
+  // Фильтруем платежи, которые ещё не оплачены сегодня
+  const unpaidPayments = payments.filter(p => !isPaymentPaidToday(p.id));
+
+  if (unpaidPayments.length === 0) {
     container.innerHTML = '<p class="today-payments__empty">Сегодня платежей нет 🎉</p>';
     return;
   }
-  
+
   // Заголовок блока
   const title = document.createElement('h3');
   title.className = 'today-payments__title';
   title.textContent = 'Сегодня к оплате';
   container.appendChild(title);
-  
+
   // Список платежей
   const list = document.createElement('div');
   list.className = 'today-payments__list';
-  
-  payments.forEach(payment => {
+
+  unpaidPayments.forEach(payment => {
     const item = document.createElement('div');
     item.className = 'today-payment-item';
     item.innerHTML = `
-      <span class="today-payment-item__name">${payment.name}</span>
-      <span class="today-payment-item__amount">${formatMoney(payment.amount)}</span>
+      <div class="today-payment-item__info">
+        <span class="today-payment-item__name">${payment.name}</span>
+        <span class="today-payment-item__amount">${formatMoney(payment.amount)}</span>
+      </div>
+      <div class="today-payment-item__actions">
+        <button class="btn-paid" data-action="mark-paid" data-id="${payment.id}" title="Отметить как оплачено">✓</button>
+        <button class="btn-postpone" data-action="postpone" data-id="${payment.id}" title="Отложить до завтра">⏸</button>
+      </div>
     `;
     list.appendChild(item);
   });
-  
+
   container.appendChild(list);
+
+  // Назначаем обработчики кликов
+  container.querySelectorAll('[data-action="mark-paid"]').forEach(btn => {
+    btn.addEventListener('click', handleMarkPaid);
+  });
+  container.querySelectorAll('[data-action="postpone"]').forEach(btn => {
+    btn.addEventListener('click', handlePostpone);
+  });
+}
+
+/**
+ * Проверяет, был ли платёж уже оплачен сегодня
+ */
+function isPaymentPaidToday(paymentId) {
+  const today = new Date().toISOString().split('T')[0];
+  const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+  const transactions = appData.transactions || [];
+  
+  return transactions.some(t => 
+    t.date === today && 
+    t.paymentId === paymentId
+  );
+}
+
+/**
+ * Обработчик кнопки "Оплачено"
+ */
+function handleMarkPaid(event) {
+  const paymentId = parseInt(event.currentTarget.dataset.id);
+  const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+  const payment = appData.fixedExpenses.find(p => p.id === paymentId);
+  
+  if (!payment) return;
+  
+  if (!confirm(`Отметить "${payment.name}" (${formatMoney(payment.amount)}) как оплаченное?`)) {
+    return;
+  }
+  
+  const today = new Date().toISOString().split('T')[0];
+  
+  const transaction = {
+    id: Date.now(),
+    type: 'expense',
+    category: payment.name,
+    amount: payment.amount,
+    date: today,
+    paymentId: paymentId,
+    note: 'Автоматически: обязательный платёж'
+  };
+  
+  appData.transactions = appData.transactions || [];
+  appData.transactions.push(transaction);
+  localStorage.setItem('pensionBudget', JSON.stringify(appData));
+  
+  // Обновляем все экраны
+  renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions);
+  
+  // Обновляем экран Истории (если функция существует)
+  if (typeof renderTransactionList === 'function') {
+    renderTransactionList(appData.transactions);
+  }
+  if (typeof renderHistoryScreen === 'function') {
+    renderHistoryScreen(appData.transactions);
+  }
+}
+
+/**
+ * Обработчик кнопки "Отложить"
+ */
+function handlePostpone(event) {
+  const paymentId = parseInt(event.currentTarget.dataset.id);
+  const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+  const payment = appData.fixedExpenses.find(p => p.id === paymentId);
+  
+  if (!payment) return;
+  
+  const postponed = appData.postponedPayments || {};
+  postponed[paymentId] = new Date().toISOString().split('T')[0];
+  appData.postponedPayments = postponed;
+  localStorage.setItem('pensionBudget', JSON.stringify(appData));
+  
+  renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions);
 }
