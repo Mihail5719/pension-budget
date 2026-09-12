@@ -67,9 +67,14 @@ export function renderTransactionList(transactions, pensionDay) {
     const amountPrefix = isIncome ? '+' : '-';
     const deleteAction = isIncome ? 'delete-income' : 'delete-transaction';
 
+    // === НОВОЕ: Добавляем эмодзи к названию категории ===
+    const catStyle = categoryConfig[transaction.category] || { emoji: '📦', color: '#95a5a6' };
+    const displayName = `${catStyle.emoji} ${transaction.category}`;
+    // ====================================================
+
     itemEl.innerHTML = `
     <div class="transaction__info">
-        <span class="transaction__category">${transaction.category}</span>
+        <span class="transaction__category">${displayName}</span>
         <span class="transaction__date">${formatDateOnly(transaction.date)}</span>
     </div>
     <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
@@ -264,15 +269,15 @@ function handlePostpone(event) {
 // Настройки внешнего вида для категорий
 const categoryConfig = {
   Продукты: { emoji: '🛒', color: '#3498db' }, // Синий
-  Аптека: { emoji: '💊', color: '#2ecc71' }, // Зеленый
-  Здоровье: { emoji: '💊', color: '#2ecc71' },
-  Транспорт: { emoji: '🚗', color: '#e67e22' }, // Оранжевый
-  Подарки: { emoji: '🎁', color: '#9b59b6' }, // Фиолетовый
+  'Аптека/Лекарства': { emoji: '💊', color: '#2ecc71' }, // Зелёный
+  'Транспорт/Топливо': { emoji: '🚗', color: '#e67e22' }, // Оранжевый
   ЖКХ: { emoji: '🏠', color: '#e74c3c' }, // Красный
-  Интернет: { emoji: '', color: '#1abc9c' }, // Бирюзовый
-  Кредит: { emoji: '💳', color: '#c0392b' }, // Темно-красный
-  Одежда: { emoji: '👕', color: '#f1c40f' }, // Желтый
-  Развлечения: { emoji: '🎬', color: '#8e44ad' }, // Темно-фиолетовый
+  Связь: { emoji: '📱', color: '#1abc9c' }, // Бирюзовый
+  'Здоровье/Врачи': { emoji: '🩺', color: '#9b59b6' }, // Фиолетовый
+  Подарки: { emoji: '🎁', color: '#f39c12' }, // Оранжевый
+  'Для дома': { emoji: '🏡', color: '#2c3e50' }, // Тёмно-синий
+  Одежда: { emoji: '', color: '#f1c40f' }, // Жёлтый
+  Другое: { emoji: '📦', color: '#95a5a6' }, // Серый
 };
 
 function getCategoryStyle(name) {
