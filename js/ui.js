@@ -394,20 +394,34 @@ export function renderStatsChart(settings, transactions) {
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           titleFont: {
-            size: window.innerWidth < 400 ? 14 : 16, // Уменьшаем шрифт заголовка на мобильных
+            size: window.innerWidth < 400 ? 13 : 16,
           },
           bodyFont: {
-            size: window.innerWidth < 400 ? 12 : 14, // Уменьшаем шрифт текста на мобильных
+            size: window.innerWidth < 400 ? 11 : 14,
           },
-          padding: 12,
+          padding: window.innerWidth < 400 ? 8 : 12,
           callbacks: {
+            // Сокращаем названия категорий для мобильных
             label: function (context) {
               const categoryName = context.label;
               const style = getCategoryStyle(categoryName);
               const value = context.parsed;
               const total = context.dataset.data.reduce((a, b) => a + b, 0);
               const percentage = ((value / total) * 100).toFixed(1);
-              return `${style.emoji} ${categoryName}: ${formatMoney(value)} (${percentage}%)`;
+
+              // Сокращаем длинные названия для мобильных
+              let shortName = categoryName;
+              if (window.innerWidth < 400) {
+                const shortNames = {
+                  'Аптека/Лекарства': 'Аптека',
+                  'Транспорт/Топливо': 'Транспорт',
+                  'Здоровье/Врачи': 'Здоровье',
+                  'Помощь от детей/родственников': 'Помощь',
+                };
+                shortName = shortNames[categoryName] || categoryName;
+              }
+
+              return `${style.emoji} ${shortName}: ${formatMoney(value)} (${percentage}%)`;
             },
           },
         },
