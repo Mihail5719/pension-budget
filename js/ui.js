@@ -266,18 +266,24 @@ function handlePostpone(event) {
   );
 }
 
-// Настройки внешнего вида для категорий
+// Настройки внешнего вида для категорий (расходы + доходы)
 const categoryConfig = {
-  Продукты: { emoji: '🛒', color: '#3498db' }, // Синий
-  'Аптека/Лекарства': { emoji: '💊', color: '#2ecc71' }, // Зелёный
-  'Транспорт/Топливо': { emoji: '🚗', color: '#e67e22' }, // Оранжевый
-  ЖКХ: { emoji: '🏠', color: '#e74c3c' }, // Красный
-  Связь: { emoji: '📱', color: '#1abc9c' }, // Бирюзовый
-  'Здоровье/Врачи': { emoji: '🩺', color: '#9b59b6' }, // Фиолетовый
-  Подарки: { emoji: '🎁', color: '#f39c12' }, // Оранжевый
-  'Для дома': { emoji: '🏡', color: '#2c3e50' }, // Тёмно-синий
-  Одежда: { emoji: '', color: '#f1c40f' }, // Жёлтый
-  Другое: { emoji: '📦', color: '#95a5a6' }, // Серый
+  // Расходы
+  'Продукты': { emoji: '🛒', color: '#3498db' },
+  'Аптека/Лекарства': { emoji: '💊', color: '#2ecc71' },
+  'Транспорт/Топливо': { emoji: '🚗', color: '#e67e22' },
+  'ЖКХ': { emoji: '🏠', color: '#e74c3c' },
+  'Связь': { emoji: '📱', color: '#1abc9c' },
+  'Здоровье/Врачи': { emoji: '🩺', color: '#9b59b6' },
+  'Подарки': { emoji: '🎁', color: '#f39c12' },
+  'Для дома': { emoji: '🏡', color: '#2c3e50' }, // ← Исправлено: добавлен эмодзи 🏡
+  'Одежда': { emoji: '👕', color: '#f1c40f' },
+  'Другое': { emoji: '📦', color: '#95a5a6' },
+  
+  // Доходы
+  'Возврат долга': { emoji: '💰', color: '#27ae60' },
+  'Подработка': { emoji: '💼', color: '#16a085' },
+  'Помощь от детей/родственников': { emoji: '👪', color: '#8e44ad' }, // ← Исправлено: эмодзи семьи
 };
 
 function getCategoryStyle(name) {
@@ -387,19 +393,20 @@ export function renderStatsChart(settings, transactions) {
         },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleFont: { size: 16 },
-          bodyFont: { size: 14 },
+          titleFont: {
+            size: window.innerWidth < 400 ? 14 : 16, // ← Уменьшаем для мобильных
+          },
+          bodyFont: {
+            size: window.innerWidth < 400 ? 12 : 14, // ← Уменьшаем для мобильных
+          },
           padding: 12,
           callbacks: {
-            // Форматируем подсказку при наведении (добавляем эмодзи здесь)
             label: function (context) {
-              const categoryName = context.label; // Чистое название, например "Продукты"
-              const style = getCategoryStyle(categoryName); // Получаем эмодзи для этой категории
+              const categoryName = context.label;
+              const style = getCategoryStyle(categoryName);
               const value = context.parsed;
               const total = context.dataset.data.reduce((a, b) => a + b, 0);
               const percentage = ((value / total) * 100).toFixed(1);
-
-              // Возвращаем красивую строку: Эмодзи + Название: Сумма (Процент)
               return `${style.emoji} ${categoryName}: ${formatMoney(value)} (${percentage}%)`;
             },
           },

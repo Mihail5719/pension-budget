@@ -24,11 +24,11 @@ const EXPENSE_CATEGORIES = [
 
 // Список категорий доходов
 const INCOME_CATEGORIES = [
-    { id: 'gift', name: '🎁 Подарок', emoji: '🎁' },
-    { id: 'help', name: '👨‍‍👧 Помощь от детей/родственников', emoji: '👨👩‍👧' },
-    { id: 'work', name: '💼 Подработка', emoji: '💼' },
-    { id: 'debt', name: '💰 Возврат долга', emoji: '💰' },
-    { id: 'other', name: '📦 Другое', emoji: '📦' }
+  { id: 'gift', name: 'Подарки', emoji: '🎁' },
+  { id: 'help', name: '👨‍‍👧 Помощь от детей/родственников', emoji: '👨👩‍👧' },
+  { id: 'work', name: '💼 Подработка', emoji: '💼' },
+  { id: 'debt', name: '💰 Возврат долга', emoji: '💰' },
+  { id: 'other', name: '📦 Другое', emoji: '📦' },
 ];
 
 let appData; // Глобальное состояние приложения
@@ -193,8 +193,18 @@ function setupEventListeners() {
 
 // Открытие модального окна доходов
 function openIncomeModal() {
-    incomeModal.classList.add('is-open');
-    incomeCategorySelect.focus();
+  // Очищаем и заполняем список категориями с эмодзи
+  incomeCategorySelect.innerHTML = '';
+
+  INCOME_CATEGORIES.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category.name;
+    option.textContent = `${category.emoji} ${category.name}`.trim();
+    incomeCategorySelect.appendChild(option);
+  });
+
+  incomeModal.classList.add('is-open');
+  incomeCategorySelect.focus();
 }
 
 // Закрытие модального окна доходов
