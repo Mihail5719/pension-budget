@@ -394,10 +394,10 @@ export function renderStatsChart(settings, transactions) {
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           titleFont: {
-            size: window.innerWidth < 400 ? 14 : 16, // ← Уменьшаем для мобильных
+            size: window.innerWidth < 400 ? 14 : 16, // Уменьшаем шрифт заголовка на мобильных
           },
           bodyFont: {
-            size: window.innerWidth < 400 ? 12 : 14, // ← Уменьшаем для мобильных
+            size: window.innerWidth < 400 ? 12 : 14, // Уменьшаем шрифт текста на мобильных
           },
           padding: 12,
           callbacks: {
