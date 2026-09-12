@@ -642,17 +642,35 @@ body.dark-theme .today-card {
     grid-template-columns: 1fr;
   }
 
-  .bottom-nav {
+    .bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    justify-content: space-around;
+    justify-content: flex-start;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 8px 4px;
+  }
+
+  .bottom-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .bottom-nav__item {
-    padding: var(--spacing-sm);
+    flex: 0 0 auto;
+    min-width: 80px;
+    padding: 8px 4px;
+  }
+
+  .bottom-nav__icon {
+    font-size: 20px;
+  }
+
+  .bottom-nav__label {
+    font-size: 11px;
   }
 }
 
@@ -744,34 +762,6 @@ body.dark-theme .today-card {
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
-}
-
-/* Адаптация для мобильных */
-@media (max-width: 768px) {
-  .modal__content {
-    width: 95%;
-    max-width: none;
-    margin: 20px;
-    max-height: 90vh;   /* ← ДОБАВИТЬ */
-    padding: 16px;      /* ← ДОБАВИТЬ: чуть меньше отступы */
-  }
-
-  .modal__title {
-    font-size: 20px;    /* ← ДОБАВИТЬ: уменьшаем заголовок */
-    margin-bottom: 12px;
-  }
-
-  .modal__buttons {
-    grid-template-columns: 1fr;
-  }
-
-  .modal__buttons .btn--secondary {
-    order: 2;
-  }
-
-  .modal__buttons .btn--primary {
-    order: 1;
-  }
 }
 
 /* 
@@ -1295,55 +1285,6 @@ body.dark-theme .stat:hover {
   box-shadow: 0 4px 12px var(--shadow);
 }
 
-@media (max-width: 768px) {
-  .stats-card {
-    padding: 15px;
-    margin: 10px;
-  }
-}
 
-/* Адаптация навигации для мобильных */
-@media (max-width: 768px) {
-  .bottom-nav {
-    display: flex;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; /* Плавная прокрутка на iOS */
-    scrollbar-width: none; /* Скрыть скроллбар Firefox */
-  }
-  
-  .bottom-nav::-webkit-scrollbar {
-    display: none; /* Скрыть скроллбар Chrome/Safari */
-  }
-  
-  .bottom-nav__item {
-    flex: 0 0 auto;
-    min-width: 85px;
-    padding: 8px 4px;
-  }
-  
-  .bottom-nav__icon {
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
-  
-  .bottom-nav__label {
-    font-size: 11px;
-  }
-}
 
-/* Для очень маленьких экранов (менее 400px) */
-@media (max-width: 400px) {
-  .bottom-nav__item {
-    min-width: 70px;
-    padding: 6px 2px;
-  }
-  
-  .bottom-nav__icon {
-    font-size: 18px;
-  }
-  
-  .bottom-nav__label {
-    font-size: 10px;
-  }
-}
  
