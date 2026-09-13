@@ -311,9 +311,6 @@ export function renderStatsChart(settings, transactions) {
     return;
   }
 
-  // ... остальной код функции без изменений ...
-  if (!canvas) return;
-
   // 1. Получаем транзакции только за текущий период (от пенсии до пенсии)
   const { startDate, endDate } = getCurrentPeriod(settings.pensionDay);
 
@@ -336,7 +333,7 @@ export function renderStatsChart(settings, transactions) {
 
   Object.keys(categoryTotals).forEach((cat) => {
     const style = getCategoryStyle(cat);
-    labels.push(cat); 
+    labels.push(cat);
     data.push(categoryTotals[cat]);
     backgroundColors.push(style.color);
   });
@@ -359,14 +356,28 @@ export function renderStatsChart(settings, transactions) {
     return;
   }
 
-  // 5. Уничтожаем старую диаграмму, если она была (иначе будет ошибка)
+  // 5. Уничтожаем старую диаграмму, если она была
   if (window.expenseChartInstance) {
     window.expenseChartInstance.destroy();
   }
 
+  // === НОВОЕ: Определяем мобильное устройство и топ-3 категории ===
+  const isMobile = window.innerWidth < 768;
+  
+  // Функция для получения топ-N категорий по сумме расходов
+  function getTopCategories(topN) {
+    const sorted = Object.entries(categoryTotals)
+      .sort((a, b) => b[1] - a[1])
+      .map(([category, sum]) => ({ category, sum }));
+    return sorted.slice(0, topN).map(item => item.category);
+  }
+
+  const topCategories = isMobile ? getTopCategories(3) : null;
+  // ====================================================================
+
   // 6. Рисуем новую диаграмму
   window.expenseChartInstance = new Chart(canvas, {
-    type: 'pie', // Тип графика: круговая диаграмма
+    type: 'pie',
     data: {
       labels: labels,
       datasets: [
@@ -374,7 +385,7 @@ export function renderStatsChart(settings, transactions) {
           data: data,
           backgroundColor: backgroundColors,
           borderWidth: 2,
-          borderColor: '#ffffff', // Белые разделители между секторами
+          borderColor: '#ffffff',
         },
       ],
     },
@@ -385,9 +396,36 @@ export function renderStatsChart(settings, transactions) {
         legend: {
           position: 'bottom',
           labels: {
-            font: { size: 14, family: "'Segoe UI', sans-serif" },
+            font: { 
+              size: isMobile ? 12 : 14, 
+              family: "'Segoe UI', sans-serif" 
+            },
             padding: 20,
-            usePointStyle: true, // Цветные квадратики вместо кругов
+            usePointStyle: true,
+            // === НОВОЕ: Кастомизация легенды с эмодзи и фильтрацией ===
+            generateLabels: function(chart) {
+              const data = chart.data;
+              const allLabels = data.labels;
+              
+              // На мобильном показываем только топ-3
+              const visibleLabels = isMobile && topCategories
+                ? allLabels.filter(label => topCategories.includes(label))
+                : allLabels;
+              
+              return visibleLabels.map((label) => {
+                const catStyle = getCategoryStyle(label);
+                const originalIndex = allLabels.indexOf(label);
+                return {
+                  text: `${catStyle.emoji} ${label}`, // Добавляем эмодзи!
+                  fillStyle: catStyle.color,
+                  strokeStyle: catStyle.color,
+                  lineWidth: 0,
+                  hidden: false,
+                  index: originalIndex,
+                };
+              });
+            }
+            // ====================================================================
           },
         },
         tooltip: {
@@ -400,7 +438,6 @@ export function renderStatsChart(settings, transactions) {
           },
           padding: window.innerWidth < 400 ? 8 : 12,
           callbacks: {
-            // Сокращаем названия категорий для мобильных
             label: function (context) {
               const categoryName = context.label;
               const style = getCategoryStyle(categoryName);
