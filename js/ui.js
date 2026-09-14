@@ -1,9 +1,9 @@
-import { formatMoney, formatDateOnly, getCurrentPeriod } from './utils.js'; 
+import { formatMoney, formatDateOnly, getCurrentPeriod } from './utils.js';
 import {
   calculateDailyLimit,
   getIndicatorState,
   getTodayPayments,
-} from './budget.js'; 
+} from './budget.js';
 
 // Обновление экрана "Сегодня"
 export function renderTodayScreen(settings, fixedExpenses, transactions) {
@@ -68,7 +68,10 @@ export function renderTransactionList(transactions, pensionDay) {
     const deleteAction = isIncome ? 'delete-income' : 'delete-transaction';
 
     // === НОВОЕ: Добавляем эмодзи к названию категории ===
-    const catStyle = categoryConfig[transaction.category] || { emoji: '📦', color: '#95a5a6' };
+    const catStyle = categoryConfig[transaction.category] || {
+      emoji: '📦',
+      color: '#95a5a6',
+    };
     const displayName = `${catStyle.emoji} ${transaction.category}`;
     // ====================================================
 
@@ -311,6 +314,10 @@ export function renderStatsChart(settings, transactions) {
     return;
   }
 
+  // Определяем цвет текста легенды в зависимости от темы
+  const isDarkTheme = document.body.classList.contains('dark-theme');
+  const legendTextColor = isDarkTheme ? '#ffffff' : '#2c3e50';
+
   // 1. Получаем транзакции только за текущий период (от пенсии до пенсии)
   const { startDate, endDate } = getCurrentPeriod(settings.pensionDay);
 
@@ -363,13 +370,13 @@ export function renderStatsChart(settings, transactions) {
 
   // === НОВОЕ: Определяем мобильное устройство и топ-3 категории ===
   const isMobile = window.innerWidth < 768;
-  
+
   // Функция для получения топ-N категорий по сумме расходов
   function getTopCategories(topN) {
     const sorted = Object.entries(categoryTotals)
       .sort((a, b) => b[1] - a[1])
       .map(([category, sum]) => ({ category, sum }));
-    return sorted.slice(0, topN).map(item => item.category);
+    return sorted.slice(0, topN).map((item) => item.category);
   }
 
   const topCategories = isMobile ? getTopCategories(3) : null;
@@ -396,22 +403,24 @@ export function renderStatsChart(settings, transactions) {
         legend: {
           position: 'bottom',
           labels: {
-            font: { 
-              size: isMobile ? 12 : 14, 
-              family: "'Segoe UI', sans-serif" 
+            color: legendTextColor,
+            font: {
+              size: isMobile ? 12 : 14,
+              family: "'Segoe UI', sans-serif",
             },
             padding: 20,
             usePointStyle: true,
             // === НОВОЕ: Кастомизация легенды с эмодзи и фильтрацией ===
-            generateLabels: function(chart) {
+            generateLabels: function (chart) {
               const data = chart.data;
               const allLabels = data.labels;
-              
+
               // На мобильном показываем только топ-3
-              const visibleLabels = isMobile && topCategories
-                ? allLabels.filter(label => topCategories.includes(label))
-                : allLabels;
-              
+              const visibleLabels =
+                isMobile && topCategories
+                  ? allLabels.filter((label) => topCategories.includes(label))
+                  : allLabels;
+
               return visibleLabels.map((label) => {
                 const catStyle = getCategoryStyle(label);
                 const originalIndex = allLabels.indexOf(label);
@@ -422,9 +431,10 @@ export function renderStatsChart(settings, transactions) {
                   lineWidth: 0,
                   hidden: false,
                   index: originalIndex,
+                  fontColor: legendTextColor,
                 };
               });
-            }
+            },
             // ====================================================================
           },
         },

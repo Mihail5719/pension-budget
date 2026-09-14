@@ -34,23 +34,23 @@ const INCOME_CATEGORIES = [
 let appData; // Глобальное состояние приложения
 
 function init() {
-    // Приветственный экран
-const hasSettings = localStorage.getItem('pensionBudget');
-const welcomeScreen = document.getElementById('screen-welcome');
-const todayScreen = document.getElementById('screen-today');
+  // Приветственный экран
+  const hasSettings = localStorage.getItem('pensionBudget');
+  const welcomeScreen = document.getElementById('screen-welcome');
+  const todayScreen = document.getElementById('screen-today');
 
-if (!hasSettings && welcomeScreen && todayScreen) {
+  if (!hasSettings && welcomeScreen && todayScreen) {
     todayScreen.classList.remove('active');
     welcomeScreen.classList.add('active');
     window.location.hash = '#screen-welcome';
-} else {
+  } else {
     if (!window.location.hash || window.location.hash === '#') {
-        window.location.hash = '#screen-today';
-    }
-}
- // Если хэш не задан — показываем главный экран
-  if (!window.location.hash || window.location.hash === '#') {
       window.location.hash = '#screen-today';
+    }
+  }
+  // Если хэш не задан — показываем главный экран
+  if (!window.location.hash || window.location.hash === '#') {
+    window.location.hash = '#screen-today';
   }
 
   // Загружаем данные
@@ -210,83 +210,95 @@ function openIncomeModal() {
 
 // Закрытие модального окна доходов
 function closeIncomeModal() {
-    incomeModal.classList.remove('is-open');
-    incomeCategorySelect.value = 'gift'; // Сброс на первую категорию
-    incomeAmountInput.value = '';
+  incomeModal.classList.remove('is-open');
+  incomeCategorySelect.value = 'gift'; // Сброс на первую категорию
+  incomeAmountInput.value = '';
 }
 
 // Сохранение дохода
 function saveIncome() {
-    const categoryId = incomeCategorySelect.value;
-    const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
-    
-    if (isNaN(amount) || amount <= 0) {
-        alert('Пожалуйста, введите корректную сумму');
-        incomeAmountInput.focus();
-        return;
-    }
-    
-    // Находим название категории
-    const category = INCOME_CATEGORIES.find(c => c.id === categoryId);
-    const categoryName = category ? category.name : categoryId;
-    
-    // Создаём транзакцию с типом "income"
-    const transaction = {
-        id: Date.now(),
-        date: new Date().toISOString(),
-        category: categoryName,
-        amount: amount,
-        type: 'income' // Важно! Отличает доход от расхода
-    };
-    
-    // Добавляем в данные
-    appData.transactions.push(transaction);
-    
-    // Сохраняем
-    saveData(appData);
-    
-    // Закрываем модалку и перерисовываем
-    closeIncomeModal();
-    renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions);
-    renderTransactionList(appData.transactions, appData.settings.pensionDay);
-    
-    console.log('Добавлен доход:', transaction);
+  const categoryId = incomeCategorySelect.value;
+  const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
+
+  if (isNaN(amount) || amount <= 0) {
+    alert('Пожалуйста, введите корректную сумму');
+    incomeAmountInput.focus();
+    return;
+  }
+
+  // Находим название категории
+  const category = INCOME_CATEGORIES.find((c) => c.id === categoryId);
+  const categoryName = category ? category.name : categoryId;
+
+  // Создаём транзакцию с типом "income"
+  const transaction = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    category: categoryName,
+    amount: amount,
+    type: 'income', // Важно! Отличает доход от расхода
+  };
+
+  // Добавляем в данные
+  appData.transactions.push(transaction);
+
+  // Сохраняем
+  saveData(appData);
+
+  // Закрываем модалку и перерисовываем
+  closeIncomeModal();
+  renderTodayScreen(
+    appData.settings,
+    appData.fixedExpenses,
+    appData.transactions,
+  );
+  renderTransactionList(appData.transactions, appData.settings.pensionDay);
+
+  console.log('Добавлен доход:', transaction);
 }
 
 // Элементы модального окна расходов
-let expenseModal, expenseCategorySelect, expenseAmountInput, expenseSaveBtn, expenseCancelBtn;
+let expenseModal,
+  expenseCategorySelect,
+  expenseAmountInput,
+  expenseSaveBtn,
+  expenseCancelBtn;
 
 // Элементы модального окна доходов
-let incomeModal, incomeCategorySelect, incomeAmountInput, incomeSaveBtn, incomeCancelBtn;
+let incomeModal,
+  incomeCategorySelect,
+  incomeAmountInput,
+  incomeSaveBtn,
+  incomeCancelBtn;
 
 // Открытие модального окна расходов с гарантированным заполнением категорий
 function openExpenseModal() {
-    // 1. Очищаем список (на случай, если он уже был заполнен)
-    expenseCategorySelect.innerHTML = '';
+  // 1. Очищаем список (на случай, если он уже был заполнен)
+  expenseCategorySelect.innerHTML = '';
 
-    // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
-    EXPENSE_CATEGORIES.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category.name; // Сохраняем чистое имя (без эмодзи)
-        option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Показываем с эмодзи
-        expenseCategorySelect.appendChild(option);
-    });
+  // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
+  EXPENSE_CATEGORIES.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category.name; // Сохраняем чистое имя (без эмодзи)
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Показываем с эмодзи
+    expenseCategorySelect.appendChild(option);
+  });
 
-    // 3. Открываем окно и ставим фокус на список
-    expenseModal.classList.add('is-open');
-    expenseCategorySelect.focus();
+  // 3. Открываем окно и ставим фокус на список
+  expenseModal.classList.add('is-open');
+  expenseCategorySelect.focus();
 }
 
 // Закрытие модального окна расходов
 function closeExpenseModal() {
-    expenseModal.classList.remove('is-open');
-    expenseCategorySelect.value = 'products'; // Сброс на первую категорию
-    expenseAmountInput.value = '';
+  expenseModal.classList.remove('is-open');
+  expenseCategorySelect.value = 'products'; // Сброс на первую категорию
+  expenseAmountInput.value = '';
 }
 
 // Обработчик добавления расхода (новая версия с модальным окном)
 function handleAddExpense() {
-    openExpenseModal();
+  openExpenseModal();
 }
 
 // Сохранение расхода
@@ -517,134 +529,144 @@ function openEditModal(transactionId) {
  * Закрыть модальное окно редактирования
  */
 function closeEditModal() {
-    document.getElementById('edit-modal').classList.remove('is-open');
-    editingTransactionId = null;
+  document.getElementById('edit-modal').classList.remove('is-open');
+  editingTransactionId = null;
 }
 
 /**
  * Сохранить изменения транзакции
  */
 function saveEditTransaction() {
-    if (!editingTransactionId) return;
+  if (!editingTransactionId) return;
 
-    // Получаем новые значения
-    const categoryId = document.getElementById('edit-category').value;
+  // Получаем новые значения
+  const categoryId = document.getElementById('edit-category').value;
   const amount = parseFloat(
     document.getElementById('edit-amount').value.replace(',', '.'),
   );
-    const dateStr = document.getElementById('edit-date').value;
+  const dateStr = document.getElementById('edit-date').value;
 
-    // Валидация суммы
-    if (isNaN(amount) || amount <= 0) {
-        alert('Пожалуйста, введите корректную сумму');
-        document.getElementById('edit-amount').focus();
-        return;
-    }
+  // Валидация суммы
+  if (isNaN(amount) || amount <= 0) {
+    alert('Пожалуйста, введите корректную сумму');
+    document.getElementById('edit-amount').focus();
+    return;
+  }
 
-    // Валидация даты
-    if (!dateStr) {
-        alert('Пожалуйста, выберите дату');
-        return;
-    }
+  // Валидация даты
+  if (!dateStr) {
+    alert('Пожалуйста, выберите дату');
+    return;
+  }
 
-    // Находим транзакцию
-    const transactionIndex = appData.transactions.findIndex(t => t.id === editingTransactionId);
-    if (transactionIndex === -1) {
-        alert('Транзакция не найдена');
-        return;
-    }
+  // Находим транзакцию
+  const transactionIndex = appData.transactions.findIndex(
+    (t) => t.id === editingTransactionId,
+  );
+  if (transactionIndex === -1) {
+    alert('Транзакция не найдена');
+    return;
+  }
 
-    // Определяем тип транзакции (сохраняем оригинальный тип)
-    const originalTransaction = appData.transactions[transactionIndex];
-    const isIncome = originalTransaction.type === 'income';
-    const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  // Определяем тип транзакции (сохраняем оригинальный тип)
+  const originalTransaction = appData.transactions[transactionIndex];
+  const isIncome = originalTransaction.type === 'income';
+  const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
-    // Находим название категории
-    const category = categories.find(c => c.id === categoryId);
-    const categoryName = category ? category.name : categoryId;
+  // Находим название категории
+  const category = categories.find((c) => c.id === categoryId);
+  const categoryName = category ? category.name : categoryId;
 
-    // Создаём новую дату (сохраняем оригинальное время)
-    const originalDate = new Date(originalTransaction.date);
-    const newDate = new Date(dateStr);
-    newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), originalDate.getSeconds());
+  // Создаём новую дату (сохраняем оригинальное время)
+  const originalDate = new Date(originalTransaction.date);
+  const newDate = new Date(dateStr);
+  newDate.setHours(
+    originalDate.getHours(),
+    originalDate.getMinutes(),
+    originalDate.getSeconds(),
+  );
 
-    // Обновляем транзакцию
-    appData.transactions[transactionIndex] = {
-        ...originalTransaction,  // Сохраняем id и type
-        category: categoryName,
-        amount: amount,
-        date: newDate.toISOString()
-    };
+  // Обновляем транзакцию
+  appData.transactions[transactionIndex] = {
+    ...originalTransaction, // Сохраняем id и type
+    category: categoryName,
+    amount: amount,
+    date: newDate.toISOString(),
+  };
 
-    // Сохраняем данные
-    saveData(appData);
+  // Сохраняем данные
+  saveData(appData);
 
-    // Закрываем модалку и перерисовываем интерфейс
-    closeEditModal();
-    renderAll(appData);
+  // Закрываем модалку и перерисовываем интерфейс
+  closeEditModal();
+  renderAll(appData);
 
-    console.log('Транзакция обновлена:', appData.transactions[transactionIndex]);
+  console.log('Транзакция обновлена:', appData.transactions[transactionIndex]);
 }
 
 // === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===
 
 // Экспорт данных в JSON-файл
 function handleExport() {
-    const dataStr = JSON.stringify(appData, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `budget-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    alert('✅ Данные успешно сохранены в файл!');
+  const dataStr = JSON.stringify(appData, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `budget-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  alert('✅ Данные успешно сохранены в файл!');
 }
 
 // Импорт данных из JSON-файла
 function handleImport() {
-    document.getElementById('import-file').click(); 
+  document.getElementById('import-file').click();
 }
 
 function processImportedFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const importedData = JSON.parse(e.target.result);
-            
-            // Проверяем структуру данных
-            if (!importedData.settings || !importedData.fixedExpenses || !importedData.transactions) {
-                throw new Error('Неверный формат файла');
-            }
-            
-            // Подтверждение
-            if (!confirm('⚠️ Это заменит все текущие данные. Продолжить?')) {
-                return;
-            }
-            
-            // Заменяем данные
-            appData = importedData;
-            saveData(appData);
-            
-            // Перерисовываем всё
-            renderAll(appData);
-            
-            alert('✅ Данные успешно восстановлены!');
-        } catch (error) {
-            alert('❌ Ошибка при импорте: ' + error.message);
-        }
-    };
-    reader.readAsText(file);
-    
-    // Сбрасываем input, чтобы можно было импортировать тот же файл повторно
-    event.target.value = '';
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+
+      // Проверяем структуру данных
+      if (
+        !importedData.settings ||
+        !importedData.fixedExpenses ||
+        !importedData.transactions
+      ) {
+        throw new Error('Неверный формат файла');
+      }
+
+      // Подтверждение
+      if (!confirm('⚠️ Это заменит все текущие данные. Продолжить?')) {
+        return;
+      }
+
+      // Заменяем данные
+      appData = importedData;
+      saveData(appData);
+
+      // Перерисовываем всё
+      renderAll(appData);
+
+      alert('✅ Данные успешно восстановлены!');
+    } catch (error) {
+      alert('❌ Ошибка при импорте: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+
+  // Сбрасываем input, чтобы можно было импортировать тот же файл повторно
+  event.target.value = '';
 }
 
 // Запускаем приложение после загрузки DOM
@@ -653,38 +675,52 @@ document.addEventListener('DOMContentLoaded', init);
 // Привязываем обработку файла к скрытому полю импорта
 const importFileInput = document.getElementById('import-file');
 if (importFileInput) {
-    importFileInput.addEventListener('change', processImportedFile);
+  importFileInput.addEventListener('change', processImportedFile);
 }
 
 // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    const themeToggle = document.getElementById('theme-toggle');
-    
-    // Если кнопки нет на странице, выходим
-    if (!themeToggle) return;
-    
-    const themeIcon = themeToggle.querySelector('.theme-icon');
-    
-    // Применяем сохранённую тему при загрузке
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark-theme');
-        themeIcon.textContent = '☀️';
-    } else {
-        themeIcon.textContent = '🌙';
-    }
-    
-    // Обработчик переключения по клику
+  const savedTheme = localStorage.getItem('theme');
+  const themeToggle = document.getElementById('theme-toggle');
+
+  // Если кнопки нет на странице, выходим
+  if (!themeToggle) return;
+
+  const themeIcon = themeToggle.querySelector('.theme-icon');
+
+  // Применяем сохранённую тему при загрузке
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+    themeIcon.textContent = '☀️';
+  } else {
+    themeIcon.textContent = '🌙';
+  }
+
+  // Обработчик переключения по клику
     themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-theme');
-        
-        if (document.body.classList.contains('dark-theme')) {
-            localStorage.setItem('theme', 'dark');
-            themeIcon.textContent = '☀️';
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeIcon.textContent = '🌙';
-        }
+      // 1. Переключаем тему
+      document.body.classList.toggle('dark-theme');
+
+      if (document.body.classList.contains('dark-theme')) {
+        localStorage.setItem('theme', 'dark');
+        themeIcon.textContent = '☀️';
+      } else {
+        localStorage.setItem('theme', 'light');
+        themeIcon.textContent = '🌙';
+      }
+
+      // 2. === ГАРАНТИРОВАННАЯ ПЕРЕРИСОВКА ДИАГРАММЫ ===
+      if (window.expenseChartInstance) {
+        // Полностью уничтожаем старую диаграмму
+        window.expenseChartInstance.destroy();
+
+        // Рисуем новую с правильными цветами темы
+        // ВНИМАНИЕ: замените appData.settings и appData.transactions
+        // на те переменные, которые вы используете в своём коде для хранения данных!
+        // (например, state.settings, store.transactions и т.д.)
+        renderStatsChart(appData.settings, appData.transactions);
+      }
+      // =================================
     });
 }
 
@@ -694,15 +730,15 @@ initTheme();
 // Кнопка "Начать настройку"
 const btnStartSetup = document.getElementById('btn-start-setup');
 if (btnStartSetup) {
-    btnStartSetup.addEventListener('click', () => {
-        // Скрываем приветственный экран
-        const welcomeScreen = document.getElementById('screen-welcome');
-        if (welcomeScreen) {
-            welcomeScreen.classList.remove('active');
-        }
-        // Переходим в настройки
-        window.location.hash = '#screen-settings';
-    });
+  btnStartSetup.addEventListener('click', () => {
+    // Скрываем приветственный экран
+    const welcomeScreen = document.getElementById('screen-welcome');
+    if (welcomeScreen) {
+      welcomeScreen.classList.remove('active');
+    }
+    // Переходим в настройки
+    window.location.hash = '#screen-settings';
+  });
 }
 
 // === УНИВЕРСАЛЬНАЯ НАВИГАЦИЯ ПО ВСЕМ ВКЛАДКАМ ===
@@ -714,13 +750,13 @@ document.addEventListener('click', (e) => {
   if (!screenId) return;
 
   // Убираем active у всех кнопок
-  document.querySelectorAll('.bottom-nav__item').forEach(btn => {
+  document.querySelectorAll('.bottom-nav__item').forEach((btn) => {
     btn.classList.remove('active');
   });
   navBtn.classList.add('active');
 
   // Скрываем все экраны
-  document.querySelectorAll('.screen').forEach(screen => {
+  document.querySelectorAll('.screen').forEach((screen) => {
     screen.style.display = 'none';
     screen.classList.remove('active');
   });
@@ -736,7 +772,7 @@ document.addEventListener('click', (e) => {
   if (screenId === 'screen-stats') {
     setTimeout(() => {
       const savedData = localStorage.getItem('pensionBudget');
-      
+
       if (savedData && typeof renderStatsChart === 'function') {
         const data = JSON.parse(savedData);
         renderStatsChart(data.settings, data.transactions);
