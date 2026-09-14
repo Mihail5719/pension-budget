@@ -189,6 +189,37 @@ function setupEventListeners() {
 
   // Делегирование событий для кнопок удаления
   document.addEventListener('click', handleDeleteClick);
+
+  // === Обработчик кнопки "Отметить поступление пенсии" ===
+  const btnMarkPension = document.getElementById('btn-mark-pension');
+  if (btnMarkPension) {
+    btnMarkPension.addEventListener('click', () => {
+      if (
+        confirm(
+          'Отметить поступление пенсии сегодня?\n\nДневной лимит будет пересчитан с учётом остатка.',
+        )
+      ) {
+        // 1. Сохраняем текущую дату как начало нового периода
+        appData.settings.currentPeriodStart = new Date().toISOString();
+
+        // 2. Сохраняем данные
+        saveData(appData);
+
+        // 3. Перерисовываем экран "Сегодня" (кнопка превратится в текст статуса)
+        renderTodayScreen(
+          appData.settings,
+          appData.fixedExpenses,
+          appData.transactions,
+        );
+
+        // 4. Если открыта статистика, обновляем и её
+        if (window.expenseChartInstance) {
+          renderStatsChart(appData.settings, appData.transactions);
+        }
+      }
+    });
+  }
+  // ======================================================
 }
 
 // Открытие модального окна доходов
@@ -697,31 +728,31 @@ function initTheme() {
   }
 
   // Обработчик переключения по клику
-    themeToggle.addEventListener('click', () => {
-      // 1. Переключаем тему
-      document.body.classList.toggle('dark-theme');
+  themeToggle.addEventListener('click', () => {
+    // 1. Переключаем тему
+    document.body.classList.toggle('dark-theme');
 
-      if (document.body.classList.contains('dark-theme')) {
-        localStorage.setItem('theme', 'dark');
-        themeIcon.textContent = '☀️';
-      } else {
-        localStorage.setItem('theme', 'light');
-        themeIcon.textContent = '🌙';
-      }
+    if (document.body.classList.contains('dark-theme')) {
+      localStorage.setItem('theme', 'dark');
+      themeIcon.textContent = '☀️';
+    } else {
+      localStorage.setItem('theme', 'light');
+      themeIcon.textContent = '🌙';
+    }
 
-      // 2. === ГАРАНТИРОВАННАЯ ПЕРЕРИСОВКА ДИАГРАММЫ ===
-      if (window.expenseChartInstance) {
-        // Полностью уничтожаем старую диаграмму
-        window.expenseChartInstance.destroy();
+    // 2. === ГАРАНТИРОВАННАЯ ПЕРЕРИСОВКА ДИАГРАММЫ ===
+    if (window.expenseChartInstance) {
+      // Полностью уничтожаем старую диаграмму
+      window.expenseChartInstance.destroy();
 
-        // Рисуем новую с правильными цветами темы
-        // ВНИМАНИЕ: замените appData.settings и appData.transactions
-        // на те переменные, которые вы используете в своём коде для хранения данных!
-        // (например, state.settings, store.transactions и т.д.)
-        renderStatsChart(appData.settings, appData.transactions);
-      }
-      // =================================
-    });
+      // Рисуем новую с правильными цветами темы
+      // ВНИМАНИЕ: замените appData.settings и appData.transactions
+      // на те переменные, которые вы используете в своём коде для хранения данных!
+      // (например, state.settings, store.transactions и т.д.)
+      renderStatsChart(appData.settings, appData.transactions);
+    }
+    // =================================
+  });
 }
 
 // Вызываем функцию инициализации темы

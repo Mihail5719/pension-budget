@@ -19,18 +19,40 @@ export function getSpentInCurrentPeriod(transactions, pensionDay) {
 
 // Главный расчёт: сколько можно потратить сегодня
 export function calculateDailyLimit(settings, fixedExpenses, transactions) {
-  const { pensionAmount, reserveAmount, pensionDay } = settings;
+  const { pensionAmount, reserveAmount, pensionDay, currentPeriodStart } =
+    settings;
 
   const fixedTotal = getTotalFixedExpenses(fixedExpenses);
 
-  // Считаем расходы и доходы отдельно
-  const { startDate, endDate } = getCurrentPeriod(pensionDay);
+  // 1. Определяем даты периода
+  let startDate, endDate;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
+  if (currentPeriodStart) {
+    // НОВАЯ ЛОГИКА: используем фактическую дату начала периода
+    startDate = new Date(currentPeriodStart);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Следующая пенсия: +1 месяц, день = pensionDay
+    endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setDate(pensionDay);
+    endDate.setHours(23, 59, 59, 999); // Конец дня выплаты
+  } else {
+    // СТАРАЯ ЛОГИКА: для совместимости, если период ещё не отмечен
+    const period = getCurrentPeriod(pensionDay);
+    startDate = period.startDate;
+    endDate = period.endDate;
+  }
+
+  // 2. Фильтруем транзакции за текущий период
   const periodTransactions = transactions.filter((t) => {
     const tDate = new Date(t.date);
     return tDate >= startDate && tDate <= endDate;
   });
 
+  // 3. Считаем расходы и доходы отдельно
   const spent = periodTransactions
     .filter((t) => t.type !== 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -39,20 +61,18 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // Свободный бюджет = Пенсия + Доходы - Обязательные - НЗ
+  // 4. Свободный бюджет = Пенсия + Доходы - Обязательные - НЗ
   const freeBudget = pensionAmount + income - fixedTotal - reserveAmount;
 
-  // Остаток свободного бюджета после уже потраченного
+  // 5. Остаток свободного бюджета после уже потраченного
   const remaining = freeBudget - spent;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const daysLeft = Math.max(
-    Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) +
-      1,
-    1,
-  );
+  // 6. Считаем оставшиеся дни (полные дни + сегодняшний)
+  const diffTime = endDate.getTime() - today.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const daysLeft = Math.max(diffDays, 1); // +1 чтобы включить сегодня
 
+  // 7. Дневной лимит
   const dailyLimit = remaining / daysLeft;
 
   return {
@@ -63,8 +83,8 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     freeBudget,
     daysLeft,
     fixedTotal,
-    periodStart: formatDateKey(startDate),
-    periodEnd: formatDateKey(endDate),
+    periodStart: startDate.toISOString().split('T')[0],
+    periodEnd: endDate.toISOString().split('T')[0],
   };
 }
 

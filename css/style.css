@@ -1285,6 +1285,105 @@ body.dark-theme .stat:hover {
   box-shadow: 0 4px 12px var(--shadow);
 }
 
+/* Кнопка отметки пенсии */
+.btn-mark-pension {
+  width: 100%;
+  padding: 14px;
+  margin-top: 16px;
+  background-color: #27ae60; /* Яркий зелёный */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+}
+
+.btn-mark-pension:hover {
+  background-color: #219150;
+}
+
+.btn-mark-pension:active {
+  transform: scale(0.98);
+}
+
+/* Текст статуса получения пенсии */
+.pension-status-text {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: rgba(39, 174, 96, 0.1); /* Полупрозрачный зелёный фон */
+  color: #27ae60;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Адаптация для тёмной темы */
+.dark-theme .pension-status-text {
+  background-color: rgba(39, 174, 96, 0.15);
+  color: #2ecc71;
+}
+
+/* Блок текущего периода */
+.pension-period-block {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.pension-period-block h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.period-info {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.period-info__row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.period-info__row:last-child {
+  margin-bottom: 0;
+}
+
+.period-info__label {
+  opacity: 0.9;
+}
+
+.period-info__value {
+  font-weight: 600;
+}
+
+/* Кнопка в блоке периода */
+.btn-new-period {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-new-period:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 
 
  

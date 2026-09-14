@@ -66,6 +66,15 @@
                     <div class="today-card__indicator" id="indicator"></div>
                     <div class="today-card__label today-card__label--small">Безопасный дневной лимит</div>
                     <div class="today-card__amount today-card__amount--secondary" id="daily-limit">0 ₽</div>
+
+                    <!-- Кнопка отметки пенсии (показывается, если пенсия еще не отмечена) -->
+                    <button id="btn-mark-pension" class="btn-mark-pension" style="display: none;">
+                        🟢 Отметить поступление пенсии
+                    </button>
+
+                    <!-- Текст статуса (показывается, когда пенсия уже отмечена) -->
+                    <div id="pension-status-text" class="pension-status-text" style="display: none;"></div>
+
                     <div class="today-card__hint">чтобы хватило до пенсии</div>
                 </div>
 
@@ -149,7 +158,15 @@
                     <!-- Скрытое поле для выбора файла -->
                     <input type="file" id="import-file" accept=".json" hidden>
                 </div>
+                <!-- ✅ БЛОК ТЕКУЩЕГО ПЕРИОДА ПЕНСИИ  -->
+                <div class="pension-period-block">
+                    <h3>📅 Текущий период пенсии</h3>
+                    <div id="period-info" class="period-info">
+                        <!-- Сюда будет подставляться информация из JS -->
+                    </div>
+                </div>
             </section>
+
             <!-- Экран 4: Статистика -->
             <section class="screen screen--stats" id="screen-stats">
                 <h2 class="screen__title">Статистика расходов</h2>

@@ -37,6 +37,44 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   // Обновляем подзаголовок в шапке
   const headerSubtitle = document.querySelector('.header__subtitle');
   headerSubtitle.textContent = `Пенсия: ${settings.pensionDay} числа`;
+
+  // === НОВОЕ: Логика кнопки "Пенсия пришла" ===
+  const btnMarkPension = document.getElementById('btn-mark-pension');
+  const pensionStatusText = document.getElementById('pension-status-text');
+
+  if (btnMarkPension && pensionStatusText) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // Проверяем, отмечена ли пенсия в текущем месяце
+    let isMarked = false;
+    if (settings.currentPeriodStart) {
+      const startDate = new Date(settings.currentPeriodStart);
+      if (
+        startDate.getMonth() === currentMonth &&
+        startDate.getFullYear() === currentYear
+      ) {
+        isMarked = true;
+      }
+    }
+
+    if (isMarked) {
+      // Пенсия уже отмечена: скрываем кнопку, показываем статус
+      btnMarkPension.style.display = 'none';
+      pensionStatusText.style.display = 'block';
+
+      // Форматируем дату (ДД.ММ.ГГГГ)
+      const d = new Date(settings.currentPeriodStart);
+      const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+      pensionStatusText.textContent = `✅ Пенсия получена: ${dateStr}`;
+    } else {
+      // Пенсия еще не отмечена: показываем кнопку, скрываем статус
+      btnMarkPension.style.display = 'block';
+      pensionStatusText.style.display = 'none';
+    }
+  }
+  // ==========================================
 }
 
 // Отрисовка списка транзакций
@@ -119,6 +157,9 @@ export function renderSettings(settings, fixedExpenses) {
 `;
     listEl.appendChild(itemEl);
   });
+
+  // Отображаем информацию о текущем периоде
+  renderPensionPeriodInfo(settings);
 }
 
 // Обновление всей страницы
@@ -474,4 +515,66 @@ export function renderStatsChart(settings, transactions) {
       },
     },
   });
+}
+
+/**
+ * Отображает информацию о текущем периоде пенсии в настройках
+ */
+export function renderPensionPeriodInfo(settings) {
+  const periodInfoEl = document.getElementById('period-info');
+  if (!periodInfoEl) return;
+
+  if (settings.currentPeriodStart) {
+    const startDate = new Date(settings.currentPeriodStart);
+    const pensionDay = settings.pensionDay;
+
+    // Рассчитываем дату следующей пенсии
+    const nextPensionDate = new Date(startDate);
+    nextPensionDate.setMonth(nextPensionDate.getMonth() + 1);
+    nextPensionDate.setDate(pensionDay);
+
+    // Считаем дни до следующей пенсии
+    const today = new Date();
+    const daysLeft = Math.ceil(
+      (nextPensionDate - today) / (1000 * 60 * 60 * 24),
+    );
+
+    // Форматируем даты
+    const formatDate = (date) => {
+      return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+    };
+
+    periodInfoEl.innerHTML = `
+      <div class="period-info__row">
+        <span class="period-info__label">Начало периода:</span>
+        <span class="period-info__value">${formatDate(startDate)}</span>
+      </div>
+      <div class="period-info__row">
+        <span class="period-info__label">Следующая пенсия:</span>
+        <span class="period-info__value">${formatDate(nextPensionDate)}</span>
+      </div>
+      <div class="period-info__row">
+        <span class="period-info__label">Осталось дней:</span>
+        <span class="period-info__value">${daysLeft > 0 ? daysLeft : 0}</span>
+      </div>
+      <button class="btn-new-period" id="btn-new-period">
+        🔄 Начать новый период с сегодня
+      </button>
+    `;
+
+    // Добавляем обработчик кнопки
+    document.getElementById('btn-new-period').addEventListener('click', () => {
+      if (
+        confirm(
+          'Начать новый период с сегодняшнего дня?\n\nТекущий период будет завершён.',
+        )
+      ) {
+        // Здесь будет логика начала нового периода
+        alert('Функция в разработке! Используйте кнопку на главном экране.');
+      }
+    });
+  } else {
+    periodInfoEl.innerHTML =
+      '<em>Период ещё не начат. Отметьте поступление пенсии на главном экране.</em>';
+  }
 }
