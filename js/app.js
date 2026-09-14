@@ -5,6 +5,7 @@ import {
   renderTransactionList,
   renderSettings,
   renderStatsChart,
+  renderPensionPeriodInfo,
 } from './ui.js';
 import { formatDateKey } from './utils.js';
 
@@ -55,6 +56,7 @@ function init() {
 
   // Загружаем данные
   appData = loadData();
+  window.appData = appData; // Делаем appData глобальной для ui.js
 
   // Отрисовываем всё
   renderAll(appData);
@@ -220,6 +222,63 @@ function setupEventListeners() {
     });
   }
   // ======================================================
+  // === Обработчик изменения/сброса даты пенсии на главном экране ===
+  const btnEditPensionDate = document.getElementById('btn-edit-pension-date');
+  if (btnEditPensionDate) {
+    btnEditPensionDate.addEventListener('click', () => {
+      const currentDate = appData.settings.currentPeriodStart
+        ? appData.settings.currentPeriodStart.split('T')[0]
+        : '';
+
+      const userChoice = prompt(
+        'Введите новую дату (в формате ГГГГ-ММ-ДД, например 2026-09-23)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ПОЛНОСТЬЮ ОТМЕНИТЬ отметку.',
+        currentDate,
+      );
+
+      if (userChoice === null) {
+        return; // Пользователь нажал "Отмена"
+      }
+
+      if (userChoice.trim() === '') {
+        // Пользователь стёр всё и нажал ОК -> Сброс
+        if (
+          confirm('Отменить отметку о получении пенсии? Кнопка появится снова.')
+        ) {
+          delete appData.settings.currentPeriodStart;
+          saveData(appData);
+          renderTodayScreen(
+            appData.settings,
+            appData.fixedExpenses,
+            appData.transactions,
+          );
+          renderPensionPeriodInfo(appData.settings);
+          if (window.expenseChartInstance)
+            renderStatsChart(appData.settings, appData.transactions);
+        }
+      } else {
+        // Пользователь ввёл дату -> Проверка и сохранение
+        const newDate = new Date(userChoice);
+        if (!isNaN(newDate.getTime())) {
+          appData.settings.currentPeriodStart = newDate.toISOString();
+          saveData(appData);
+          renderTodayScreen(
+            appData.settings,
+            appData.fixedExpenses,
+            appData.transactions,
+          );
+          renderPensionPeriodInfo(appData.settings);
+          if (window.expenseChartInstance)
+            renderStatsChart(appData.settings, appData.transactions);
+          alert('✅ Дата успешно изменена!');
+        } else {
+          alert(
+            '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
+          );
+        }
+      }
+    });
+  }
+  // ================================================================
 }
 
 // Открытие модального окна доходов
@@ -684,6 +743,7 @@ function processImportedFile(event) {
 
       // Заменяем данные
       appData = importedData;
+      window.appData = appData; // Синхронизируем с глобальной
       saveData(appData);
 
       // Перерисовываем всё
@@ -800,14 +860,24 @@ document.addEventListener('click', (e) => {
   }
 
   // Если открыли Статистику — рисуем график
-  if (screenId === 'screen-stats') {
+      if (screenId === 'screen-stats') {
     setTimeout(() => {
       const savedData = localStorage.getItem('pensionBudget');
-
       if (savedData && typeof renderStatsChart === 'function') {
         const data = JSON.parse(savedData);
         renderStatsChart(data.settings, data.transactions);
       }
     }, 100);
   }
-});
+
+  // === НОВОЕ: Если открыли Настройки — обновляем блок периода ===
+  if (screenId === 'screen-settings') {
+    setTimeout(() => {
+      if (typeof renderPensionPeriodInfo === 'function' && window.appData) {
+        renderPensionPeriodInfo(window.appData.settings);
+      }
+    }, 100);
+  }
+  // ================================================================
+
+});  // ← закрывающая скобка обработчика

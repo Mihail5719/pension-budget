@@ -1384,6 +1384,44 @@ body.dark-theme .stat:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Статус получения пенсии с кнопкой изменения */
+.pension-status-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 12px;
+  background-color: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dark-theme .pension-status-text {
+  background-color: rgba(39, 174, 96, 0.15);
+  color: #2ecc71;
+}
+
+.btn-edit-pension {
+  background: none;
+  border: 1px solid currentColor;
+  color: inherit;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: all 0.2s;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.btn-edit-pension:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 
 
  

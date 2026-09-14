@@ -1,3 +1,4 @@
+import { saveData } from './storage.js';
 import { formatMoney, formatDateOnly, getCurrentPeriod } from './utils.js';
 import {
   calculateDailyLimit,
@@ -41,8 +42,9 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   // === НОВОЕ: Логика кнопки "Пенсия пришла" ===
   const btnMarkPension = document.getElementById('btn-mark-pension');
   const pensionStatusText = document.getElementById('pension-status-text');
+  const pensionDateDisplay = document.getElementById('pension-date-display');
 
-  if (btnMarkPension && pensionStatusText) {
+  if (btnMarkPension && pensionStatusText && pensionDateDisplay) {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
@@ -62,12 +64,14 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     if (isMarked) {
       // Пенсия уже отмечена: скрываем кнопку, показываем статус
       btnMarkPension.style.display = 'none';
-      pensionStatusText.style.display = 'block';
+      pensionStatusText.style.display = 'flex'; // Используем flex для выравнивания текста и кнопки
 
       // Форматируем дату (ДД.ММ.ГГГГ)
       const d = new Date(settings.currentPeriodStart);
       const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
-      pensionStatusText.textContent = `✅ Пенсия получена: ${dateStr}`;
+
+      // Вставляем текст в span, а кнопка "Изменить" уже есть в HTML рядом с ним
+      pensionDateDisplay.textContent = `✅ Пенсия получена: ${dateStr}`;
     } else {
       // Пенсия еще не отмечена: показываем кнопку, скрываем статус
       btnMarkPension.style.display = 'block';
@@ -524,9 +528,13 @@ export function renderPensionPeriodInfo(settings) {
   const periodInfoEl = document.getElementById('period-info');
   if (!periodInfoEl) return;
 
-  if (settings.currentPeriodStart) {
-    const startDate = new Date(settings.currentPeriodStart);
-    const pensionDay = settings.pensionDay;
+  // Явно используем глобальный window.appData, который мы создали в app.js
+  const currentAppData = window.appData || { settings: settings };
+  const appSettings = currentAppData.settings;
+
+  if (appSettings.currentPeriodStart) {
+    const startDate = new Date(appSettings.currentPeriodStart);
+    const pensionDay = appSettings.pensionDay;
 
     // Рассчитываем дату следующей пенсии
     const nextPensionDate = new Date(startDate);
@@ -535,9 +543,9 @@ export function renderPensionPeriodInfo(settings) {
 
     // Считаем дни до следующей пенсии
     const today = new Date();
-    const daysLeft = Math.ceil(
-      (nextPensionDate - today) / (1000 * 60 * 60 * 24),
-    );
+    today.setHours(0, 0, 0, 0);
+    const diffTime = nextPensionDate - today;
+    const daysLeft = Math.max(Math.floor(diffTime / (1000 * 60 * 60 * 24)), 0);
 
     // Форматируем даты
     const formatDate = (date) => {
@@ -555,24 +563,77 @@ export function renderPensionPeriodInfo(settings) {
       </div>
       <div class="period-info__row">
         <span class="period-info__label">Осталось дней:</span>
-        <span class="period-info__value">${daysLeft > 0 ? daysLeft : 0}</span>
+        <span class="period-info__value">${daysLeft}</span>
       </div>
       <button class="btn-new-period" id="btn-new-period">
-        🔄 Начать новый период с сегодня
+        🔄 Изменить или сбросить период
       </button>
     `;
 
     // Добавляем обработчик кнопки
-    document.getElementById('btn-new-period').addEventListener('click', () => {
-      if (
-        confirm(
-          'Начать новый период с сегодняшнего дня?\n\nТекущий период будет завершён.',
-        )
-      ) {
-        // Здесь будет логика начала нового периода
-        alert('Функция в разработке! Используйте кнопку на главном экране.');
-      }
-    });
+    const btnNewPeriod = document.getElementById('btn-new-period');
+    if (btnNewPeriod) {
+      // Клонируем, чтобы удалить старые обработчики при перерисовке
+      const freshBtn = btnNewPeriod.cloneNode(true);
+      btnNewPeriod.parentNode.replaceChild(freshBtn, btnNewPeriod);
+      
+      freshBtn.addEventListener('click', () => {
+        // Явно читаем из window.appData
+        const currentDate = window.appData && window.appData.settings.currentPeriodStart 
+          ? window.appData.settings.currentPeriodStart.split('T')[0] 
+          : '';
+        
+        const userChoice = prompt(
+          'Введите новую дату начала периода (в формате ГГГГ-ММ-ДД, например 2026-09-23)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ПОЛНОСТЬЮ СБРОСИТЬ отметку.',
+          currentDate
+        );
+
+        if (userChoice === null) {
+          return; // Пользователь нажал "Отмена"
+        } 
+        
+        if (userChoice.trim() === '') {
+          // Сброс отметки
+          if (confirm('Сбросить отметку о получении пенсии? Кнопка на главном экране появится снова.')) {
+            if (window.appData) {
+              // 1. Удаляем поле
+              delete window.appData.settings.currentPeriodStart;
+              
+              // 2. Сохраняем (функция saveData теперь импортирована)
+              saveData(window.appData);
+              
+              // 3. Перерисовываем всё
+              renderPensionPeriodInfo(window.appData.settings);
+              renderTodayScreen(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+              
+              if (window.expenseChartInstance) {
+                renderStatsChart(window.appData.settings, window.appData.transactions);
+              }
+            }
+          }
+        } else {
+          // Изменение даты
+          const newDate = new Date(userChoice);
+          if (!isNaN(newDate.getTime())) {
+            if (window.appData) {
+              window.appData.settings.currentPeriodStart = newDate.toISOString();
+              saveData(window.appData);
+              
+              renderPensionPeriodInfo(window.appData.settings);
+              renderTodayScreen(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+              
+              if (window.expenseChartInstance) {
+                renderStatsChart(window.appData.settings, window.appData.transactions);
+              }
+              
+              alert('✅ Период успешно обновлён!');
+            }
+          } else {
+            alert('❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).');
+          }
+        }
+      });
+    }
   } else {
     periodInfoEl.innerHTML =
       '<em>Период ещё не начат. Отметьте поступление пенсии на главном экране.</em>';

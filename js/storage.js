@@ -3,12 +3,13 @@ const STORAGE_KEY = 'pensionBudget';
 // Структура данных по умолчанию (используется при первом запуске)
 const defaultData = {
   settings: {
-    pensionAmount: 0,        // ← Ноль вместо 18500
-    pensionDay: 1,           // ← 1 вместо 15
-    reserveAmount: 0,        // ← Ноль вместо 2000
+    pensionAmount: 0, // ← Ноль вместо 18500
+    pensionDay: 1, // ← 1 вместо 15
+    reserveAmount: 0, // ← Ноль вместо
+    currentPeriodStart: null, 
   },
-  fixedExpenses: [],         // ← Пустой массив вместо платежей
-  transactions: [],          // ← История пуста
+  fixedExpenses: [], // ← Пустой массив вместо платежей
+  transactions: [], // ← История пуста
 };
 
 export function loadData() {
