@@ -30,7 +30,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   today.setHours(0, 0, 0, 0);
 
   if (currentPeriodStart) {
-    // НОВАЯ ЛОГИКА: используем фактическую дату начала периода
+    // ПЕНСИЯ ПОЛУЧЕНА: используем фактическую дату начала периода
     startDate = new Date(currentPeriodStart);
     startDate.setHours(0, 0, 0, 0);
 
@@ -38,9 +38,9 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + 1);
     endDate.setDate(pensionDay);
-    endDate.setHours(23, 59, 59, 999); // Конец дня выплаты
+    endDate.setHours(23, 59, 59, 999);
   } else {
-    // СТАРАЯ ЛОГИКА: для совместимости, если период ещё не отмечен
+    // ПЕНСИЯ ЕЩЁ НЕ ПОЛУЧЕНА: считаем до следующего 23-го числа
     const period = getCurrentPeriod(pensionDay);
     startDate = period.startDate;
     endDate = period.endDate;
@@ -52,7 +52,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     return tDate >= startDate && tDate <= endDate;
   });
 
-  // 3. Считаем расходы и доходы отдельно
+  // 3. Считаем расходы и доходы
   const spent = periodTransactions
     .filter((t) => t.type !== 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -61,16 +61,28 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // 4. Свободный бюджет = Пенсия + Доходы - Обязательные - НЗ
-  const freeBudget = pensionAmount + income - fixedTotal - reserveAmount;
+  // 4. === КЛЮЧЕВОЕ ИЗМЕНЕНИЕ ===
+  let freeBudget;
+
+  if (currentPeriodStart) {
+    // ПЕНСИЯ ПОЛУЧЕНА: считаем полный бюджет
+    freeBudget = pensionAmount + income - fixedTotal - reserveAmount;
+  } else {
+    // ПЕНСИЯ ЕЩЁ НЕ ПОЛУЧЕНА: считаем только текущий остаток
+    // (без будущей пенсии, потому что её ещё нет физически)
+    freeBudget = income - fixedTotal - reserveAmount - spent;
+
+    // Если остаток отрицательный, лимит = 0
+    if (freeBudget < 0) freeBudget = 0;
+  }
 
   // 5. Остаток свободного бюджета после уже потраченного
   const remaining = freeBudget - spent;
 
-  // 6. Считаем оставшиеся дни (полные дни + сегодняшний)
+  // 6. Считаем оставшиеся дни
   const diffTime = endDate.getTime() - today.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const daysLeft = Math.max(diffDays, 1); // +1 чтобы включить сегодня
+  const daysLeft = Math.max(diffDays, 1);
 
   // 7. Дневной лимит
   const dailyLimit = remaining / daysLeft;
@@ -106,18 +118,18 @@ export function getIndicatorState(dailyLimit, freeBudget) {
 export function getTodayPayments(fixedExpenses) {
   const today = new Date().getDate();
   const todayStr = new Date().toISOString().split('T')[0];
-  
+
   // Получаем отложенные платежи
   const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
   const postponed = appData.postponedPayments || {};
-  
-  return fixedExpenses.filter(expense => {
+
+  return fixedExpenses.filter((expense) => {
     // Платёж должен быть на сегодня
     if (expense.day !== today) return false;
-    
+
     // Платёж не должен быть отложен на сегодня
     if (postponed[expense.id] === todayStr) return false;
-    
+
     return true;
   });
 }
