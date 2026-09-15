@@ -648,6 +648,15 @@ export function renderPensionPeriodInfo(settings) {
                             window.appData.settings.initialBalance.toFixed(2),
                             '₽',
                           );
+                          // === Синхронизация поля настроек ===
+                          const initialInput = document.getElementById(
+                            'input-initial-balance',
+                          );
+                          if (initialInput) {
+                            initialInput.value =
+                              window.appData.settings.initialBalance;
+                          }
+                          // ====================================
                         }
                         // =====================================================
                         window.appData.settings.currentPeriodStart =

@@ -301,6 +301,14 @@ function setupEventListeners() {
                       appData.settings.initialBalance.toFixed(2),
                       '₽',
                     );
+                    // === Синхронизация поля настроек ===
+                    const initialInput = document.getElementById(
+                      'input-initial-balance',
+                    );
+                    if (initialInput) {
+                      initialInput.value = appData.settings.initialBalance;
+                    }
+                    // ====================================
                   }
                   // =====================================================
                   appData.settings.currentPeriodStart = newDate.toISOString();
