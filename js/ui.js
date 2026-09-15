@@ -624,24 +624,57 @@ export function renderPensionPeriodInfo(settings) {
           }
         } else {
           // Изменение даты
-          const newDate = new Date(userChoice);
-          if (!isNaN(newDate.getTime())) {
-            if (window.appData) {
-              window.appData.settings.currentPeriodStart = newDate.toISOString();
-              saveData(window.appData);
-              
-              renderPensionPeriodInfo(window.appData.settings);
-              renderTodayScreen(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
-              
-              if (window.expenseChartInstance) {
-                renderStatsChart(window.appData.settings, window.appData.transactions);
-              }
-              
-              alert('✅ Период успешно обновлён!');
-            }
-          } else {
-            alert('❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).');
-          }
+                    const newDate = new Date(userChoice);
+                    if (!isNaN(newDate.getTime())) {
+                      if (window.appData) {
+                        // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
+                        const oldStart = window.appData.settings
+                          .currentPeriodStart
+                          ? new Date(window.appData.settings.currentPeriodStart)
+                          : null;
+                        if (
+                          oldStart &&
+                          newDate.getTime() > oldStart.getTime()
+                        ) {
+                          const oldBalance = calculateDailyLimit(
+                            window.appData.settings,
+                            window.appData.fixedExpenses,
+                            window.appData.transactions,
+                          );
+                          window.appData.settings.initialBalance =
+                            oldBalance.currentBalance - oldBalance.fixedTotal;
+                          console.log(
+                            '🔄 Перенос остатка:',
+                            window.appData.settings.initialBalance.toFixed(2),
+                            '₽',
+                          );
+                        }
+                        // =====================================================
+                        window.appData.settings.currentPeriodStart =
+                          newDate.toISOString();
+                        saveData(window.appData);
+
+                        renderPensionPeriodInfo(window.appData.settings);
+                        renderTodayScreen(
+                          window.appData.settings,
+                          window.appData.fixedExpenses,
+                          window.appData.transactions,
+                        );
+
+                        if (window.expenseChartInstance) {
+                          renderStatsChart(
+                            window.appData.settings,
+                            window.appData.transactions,
+                          );
+                        }
+
+                        alert('✅ Период успешно обновлён!');
+                      }
+                    } else {
+                      alert(
+                        '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
+                      );
+                    }
         }
       });
     }

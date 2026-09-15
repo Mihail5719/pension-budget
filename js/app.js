@@ -8,6 +8,7 @@ import {
   renderPensionPeriodInfo,
 } from './ui.js';
 import { formatDateKey } from './utils.js';
+import { calculateDailyLimit } from './budget.js';
 
 // Список категорий расходов
 const EXPENSE_CATEGORIES = [
@@ -152,7 +153,7 @@ function setupEventListeners() {
   // Поля ввода в настройках
   document
     .getElementById('input-initial-balance')
-    .addEventListener('change', handleSettingsChange); 
+    .addEventListener('change', handleSettingsChange);
   document
     .getElementById('input-pension')
     .addEventListener('change', handleSettingsChange);
@@ -199,11 +200,32 @@ function setupEventListeners() {
   const btnMarkPension = document.getElementById('btn-mark-pension');
   if (btnMarkPension) {
     btnMarkPension.addEventListener('click', () => {
+      // === ПЕРЕНОС ОСТАТКА (если это не первый период) ===
+      let newInitialBalance = appData.settings.initialBalance;
+      if (appData.settings.currentPeriodStart) {
+        const oldBalance = calculateDailyLimit(
+          appData.settings,
+          appData.fixedExpenses,
+          appData.transactions,
+        );
+        // Новый начальный остаток = текущий баланс - обязательные платежи
+        newInitialBalance = oldBalance.currentBalance - oldBalance.fixedTotal;
+        console.log('🔄 Перенос остатка:', newInitialBalance);
+      }
+      // ==========================================
+
+      const transferMessage = appData.settings.currentPeriodStart
+        ? `\n\nОстаток с прошлого периода (${newInitialBalance.toFixed(2)} ₽) будет перенесён как начальный баланс.`
+        : '';
+
       if (
         confirm(
-          'Отметить поступление пенсии сегодня?\n\nДневной лимит будет пересчитан с учётом остатка.',
+          `Отметить поступление пенсии сегодня?${transferMessage}\n\nДневной лимит будет пересчитан с учётом остатка.`,
         )
       ) {
+        // Устанавливаем новый начальный баланс
+        appData.settings.initialBalance = newInitialBalance;
+
         // 1. Сохраняем текущую дату как начало нового периода
         appData.settings.currentPeriodStart = new Date().toISOString();
 
@@ -260,24 +282,43 @@ function setupEventListeners() {
         }
       } else {
         // Пользователь ввёл дату -> Проверка и сохранение
-        const newDate = new Date(userChoice);
-        if (!isNaN(newDate.getTime())) {
-          appData.settings.currentPeriodStart = newDate.toISOString();
-          saveData(appData);
-          renderTodayScreen(
-            appData.settings,
-            appData.fixedExpenses,
-            appData.transactions,
-          );
-          renderPensionPeriodInfo(appData.settings);
-          if (window.expenseChartInstance)
-            renderStatsChart(appData.settings, appData.transactions);
-          alert('✅ Дата успешно изменена!');
-        } else {
-          alert(
-            '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
-          );
-        }
+                const newDate = new Date(userChoice);
+                if (!isNaN(newDate.getTime())) {
+                  // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
+                  const oldStart = appData.settings.currentPeriodStart
+                    ? new Date(appData.settings.currentPeriodStart)
+                    : null;
+                  if (oldStart && newDate.getTime() > oldStart.getTime()) {
+                    const oldBalance = calculateDailyLimit(
+                      appData.settings,
+                      appData.fixedExpenses,
+                      appData.transactions,
+                    );
+                    appData.settings.initialBalance =
+                      oldBalance.currentBalance - oldBalance.fixedTotal;
+                    console.log(
+                      '🔄 Перенос остатка:',
+                      appData.settings.initialBalance.toFixed(2),
+                      '₽',
+                    );
+                  }
+                  // =====================================================
+                  appData.settings.currentPeriodStart = newDate.toISOString();
+                  saveData(appData);
+                  renderTodayScreen(
+                    appData.settings,
+                    appData.fixedExpenses,
+                    appData.transactions,
+                  );
+                  renderPensionPeriodInfo(appData.settings);
+                  if (window.expenseChartInstance)
+                    renderStatsChart(appData.settings, appData.transactions);
+                  alert('✅ Дата успешно изменена!');
+                } else {
+                  alert(
+                    '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
+                  );
+                }
       }
     });
   }
