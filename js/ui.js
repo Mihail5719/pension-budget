@@ -136,6 +136,8 @@ export function renderTransactionList(transactions, pensionDay) {
 // Отрисовка настроек
 export function renderSettings(settings, fixedExpenses) {
   // Заполняем поля ввода
+  document.getElementById('input-initial-balance').value =
+    settings.initialBalance || 0;
   document.getElementById('input-pension').value =
     settings.pensionAmount.toFixed(2);
   document.getElementById('input-pension-day').value = settings.pensionDay;

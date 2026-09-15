@@ -6,7 +6,8 @@ const defaultData = {
     pensionAmount: 0, // ← Ноль вместо 18500
     pensionDay: 1, // ← 1 вместо 15
     reserveAmount: 0, // ← Ноль вместо
-    currentPeriodStart: null, 
+    initialBalance: 0,
+    currentPeriodStart: null,
   },
   fixedExpenses: [], // ← Пустой массив вместо платежей
   transactions: [], // ← История пуста

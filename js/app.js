@@ -151,6 +151,9 @@ function setupEventListeners() {
 
   // Поля ввода в настройках
   document
+    .getElementById('input-initial-balance')
+    .addEventListener('change', handleSettingsChange); 
+  document
     .getElementById('input-pension')
     .addEventListener('change', handleSettingsChange);
   document
@@ -427,6 +430,10 @@ function saveExpense() {
 }
 // Обработчик изменения настроек
 function handleSettingsChange() {
+  const initialBalance = parseFloat(
+    document.getElementById('input-initial-balance').value.replace(',', '.')
+  ) || 0;
+
   const pensionAmount = parseFloat(
     document.getElementById('input-pension').value.replace(',', '.'),
   );
@@ -453,6 +460,7 @@ function handleSettingsChange() {
   }
 
   // Обновляем данные
+  appData.settings.initialBalance = initialBalance;  // ← НОВАЯ СТРОКА
   appData.settings.pensionAmount = pensionAmount;
   appData.settings.pensionDay = pensionDay;
   appData.settings.reserveAmount = reserveAmount;

@@ -19,8 +19,13 @@ export function getSpentInCurrentPeriod(transactions, pensionDay) {
 
 // Главный расчёт: сколько можно потратить сегодня
 export function calculateDailyLimit(settings, fixedExpenses, transactions) {
-  const { pensionAmount, reserveAmount, pensionDay, currentPeriodStart } =
-    settings;
+  const {
+    pensionAmount,
+    reserveAmount,
+    pensionDay,
+    currentPeriodStart,
+    initialBalance = 0, // ← Учитываем начальный остаток
+  } = settings;
 
   const fixedTotal = getTotalFixedExpenses(fixedExpenses);
 
@@ -40,7 +45,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     endDate.setDate(pensionDay);
     endDate.setHours(23, 59, 59, 999);
   } else {
-    // ПЕНСИЯ ЕЩЁ НЕ ПОЛУЧЕНА: считаем до следующего 23-го числа
+    // ПЕНСИЯ ЕЩЁ НЕ ПОЛУЧЕНА: считаем до следующего pensionDay
     const period = getCurrentPeriod(pensionDay);
     startDate = period.startDate;
     endDate = period.endDate;
@@ -52,7 +57,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     return tDate >= startDate && tDate <= endDate;
   });
 
-  // 3. Считаем расходы и доходы
+  // 3. Считаем доходы и расходы
   const spent = periodTransactions
     .filter((t) => t.type !== 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -61,30 +66,24 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // 4. === КЛЮЧЕВОЕ ИЗМЕНЕНИЕ ===
-  let freeBudget;
+  // 4. === БУХГАЛТЕРСКИЙ РАСЧЁТ ===
+  // Если пенсия получена — добавляем её к балансу
+  // Текущий баланс = Начальный остаток + (Пенсия если отмечена) + Доходы - Расходы
+  const currentBalance =
+    initialBalance + (currentPeriodStart ? pensionAmount : 0) + income - spent;
 
-  if (currentPeriodStart) {
-    // ПЕНСИЯ ПОЛУЧЕНА: считаем полный бюджет
-    freeBudget = pensionAmount + income - fixedTotal - reserveAmount;
-  } else {
-    // ПЕНСИЯ ЕЩЁ НЕ ПОЛУЧЕНА: считаем только текущий остаток
-    // (без будущей пенсии, потому что её ещё нет физически)
-    freeBudget = income - fixedTotal - reserveAmount - spent;
+  // Свободный бюджет = Текущий баланс - НЗ
+  const freeBudget = currentBalance - reserveAmount;
 
-    // Если остаток отрицательный, лимит = 0
-    if (freeBudget < 0) freeBudget = 0;
-  }
+  // Остаток после потраченного (свободные деньги)
+  const remaining = freeBudget;
 
-  // 5. Остаток свободного бюджета после уже потраченного
-  const remaining = freeBudget - spent;
-
-  // 6. Считаем оставшиеся дни
+  // 5. Считаем оставшиеся дни
   const diffTime = endDate.getTime() - today.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const daysLeft = Math.max(diffDays, 1);
 
-  // 7. Дневной лимит
+  // 6. Дневной лимит
   const dailyLimit = remaining / daysLeft;
 
   return {
@@ -93,6 +92,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     spent,
     income,
     freeBudget,
+    currentBalance, // ← Добавляем текущий баланс
     daysLeft,
     fixedTotal,
     periodStart: startDate.toISOString().split('T')[0],
