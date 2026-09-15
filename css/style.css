@@ -1433,6 +1433,39 @@ body.dark-theme .stat:hover {
   grid-column: 2; /* Размещаем во второй колонке */
 }
 
+/* Блок предупреждения */
+.warning-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: rgba(255, 152, 0, 0.1);
+  border-left: 4px solid #ff9800;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #e65100;
+}
+
+.dark-theme .warning-block {
+  background-color: rgba(255, 152, 0, 0.15);
+  color: #ffb74d;
+}
+
+.warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.warning-text {
+  line-height: 1.4;
+}
+
+.warning-text strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
 
 
  

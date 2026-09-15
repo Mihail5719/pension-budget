@@ -78,6 +78,15 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
       pensionStatusText.style.display = 'none';
     }
   }
+    // === Проверка: есть ли НЗ ===
+  const noReserveWarning = document.getElementById('no-reserve-warning');
+  if (noReserveWarning) {
+    if (settings.reserveAmount <= 0) {
+      noReserveWarning.style.display = 'flex';
+    } else {
+      noReserveWarning.style.display = 'none';
+    }
+  }
   // ==========================================
 }
 

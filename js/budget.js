@@ -72,8 +72,9 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   const currentBalance =
     initialBalance + (currentPeriodStart ? pensionAmount : 0) + income - spent;
 
-  // Свободный бюджет = Текущий баланс - НЗ
-  const freeBudget = currentBalance - reserveAmount;
+  // Свободный бюджет = Текущий баланс - НЗ - Обязательные платежи
+  // (Обязательные платежи вычитаем, потому что они гарантированно будут списаны)
+  const freeBudget = currentBalance - reserveAmount - fixedTotal;
 
   // Остаток после потраченного (свободные деньги)
   const remaining = freeBudget;
