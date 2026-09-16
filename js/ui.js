@@ -78,7 +78,7 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
       pensionStatusText.style.display = 'none';
     }
   }
-    // === Проверка: есть ли НЗ ===
+  // === Проверка: есть ли НЗ ===
   const noReserveWarning = document.getElementById('no-reserve-warning');
   if (noReserveWarning) {
     if (settings.reserveAmount <= 0) {
@@ -88,6 +88,11 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     }
   }
   // ==========================================
+  // === Логика кнопки "Использовать НЗ" ===
+  const btnUseReserve = document.getElementById('btn-use-reserve');
+  if (btnUseReserve) {
+    btnUseReserve.style.display = settings.reserveAmount > 0 ? 'block' : 'none';
+  }
 }
 
 // Отрисовка списка транзакций
@@ -109,6 +114,9 @@ export function renderTransactionList(transactions, pensionDay) {
     const itemEl = document.createElement('div');
     itemEl.className = 'transaction';
     itemEl.dataset.id = transaction.id;
+    if (transaction.type === 'reserve') {
+      itemEl.classList.add('transaction--reserve');
+    }
 
     // Определяем тип операции
     const isIncome = transaction.type === 'income';

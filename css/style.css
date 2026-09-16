@@ -1162,7 +1162,8 @@ body.dark-theme .stat:hover {
 
 /* === Блок "Сегодня к оплате" === */
 .today-payments {
-  margin: 20px 0;
+  max-width: 400px;
+  margin: 20px auto;
   padding: 16px;
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
@@ -1519,6 +1520,26 @@ body.dark-theme .stat:hover {
   .today-card__label--small {
     font-size: 12px;
   }
+}
+
+.btn.btn--warning {
+  background: #ff9800;
+  color: #ffffff;
+  border: none;
+}
+
+body.dark-theme .btn.btn--warning {
+  background: #2d2d2d;
+  color: #ffb74d;
+  border: 1px solid #ff9800;
+}
+
+.transaction--reserve .btn-edit {
+  display: none;
+}
+
+.transaction--reserve {
+  border-left: 4px solid #ff9800;
 }
 
 

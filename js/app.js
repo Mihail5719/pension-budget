@@ -107,6 +107,12 @@ function setupEventListeners() {
   const btnAddIncome = document.getElementById('btn-add-income');
   btnAddIncome.addEventListener('click', openIncomeModal);
 
+  // === Кнопка "Использовать НЗ" ===
+  const btnUseReserve = document.getElementById('btn-use-reserve');
+  if (btnUseReserve) {
+    btnUseReserve.addEventListener('click', useReserve);
+  }
+
   // Кнопки в модальном окне расходов
   expenseSaveBtn.addEventListener('click', saveExpense);
   expenseCancelBtn.addEventListener('click', closeExpenseModal);
@@ -282,51 +288,51 @@ function setupEventListeners() {
         }
       } else {
         // Пользователь ввёл дату -> Проверка и сохранение
-                const newDate = new Date(userChoice);
-                if (!isNaN(newDate.getTime())) {
-                  // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
-                  const oldStart = appData.settings.currentPeriodStart
-                    ? new Date(appData.settings.currentPeriodStart)
-                    : null;
-                  if (oldStart && newDate.getTime() > oldStart.getTime()) {
-                    const oldBalance = calculateDailyLimit(
-                      appData.settings,
-                      appData.fixedExpenses,
-                      appData.transactions,
-                    );
-                    appData.settings.initialBalance =
-                      oldBalance.currentBalance - oldBalance.fixedTotal;
-                    console.log(
-                      '🔄 Перенос остатка:',
-                      appData.settings.initialBalance.toFixed(2),
-                      '₽',
-                    );
-                    // === Синхронизация поля настроек ===
-                    const initialInput = document.getElementById(
-                      'input-initial-balance',
-                    );
-                    if (initialInput) {
-                      initialInput.value = appData.settings.initialBalance;
-                    }
-                    // ====================================
-                  }
-                  // =====================================================
-                  appData.settings.currentPeriodStart = newDate.toISOString();
-                  saveData(appData);
-                  renderTodayScreen(
-                    appData.settings,
-                    appData.fixedExpenses,
-                    appData.transactions,
-                  );
-                  renderPensionPeriodInfo(appData.settings);
-                  if (window.expenseChartInstance)
-                    renderStatsChart(appData.settings, appData.transactions);
-                  alert('✅ Дата успешно изменена!');
-                } else {
-                  alert(
-                    '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
-                  );
-                }
+        const newDate = new Date(userChoice);
+        if (!isNaN(newDate.getTime())) {
+          // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
+          const oldStart = appData.settings.currentPeriodStart
+            ? new Date(appData.settings.currentPeriodStart)
+            : null;
+          if (oldStart && newDate.getTime() > oldStart.getTime()) {
+            const oldBalance = calculateDailyLimit(
+              appData.settings,
+              appData.fixedExpenses,
+              appData.transactions,
+            );
+            appData.settings.initialBalance =
+              oldBalance.currentBalance - oldBalance.fixedTotal;
+            console.log(
+              '🔄 Перенос остатка:',
+              appData.settings.initialBalance.toFixed(2),
+              '₽',
+            );
+            // === Синхронизация поля настроек ===
+            const initialInput = document.getElementById(
+              'input-initial-balance',
+            );
+            if (initialInput) {
+              initialInput.value = appData.settings.initialBalance;
+            }
+            // ====================================
+          }
+          // =====================================================
+          appData.settings.currentPeriodStart = newDate.toISOString();
+          saveData(appData);
+          renderTodayScreen(
+            appData.settings,
+            appData.fixedExpenses,
+            appData.transactions,
+          );
+          renderPensionPeriodInfo(appData.settings);
+          if (window.expenseChartInstance)
+            renderStatsChart(appData.settings, appData.transactions);
+          alert('✅ Дата успешно изменена!');
+        } else {
+          alert(
+            '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
+          );
+        }
       }
     });
   }
@@ -477,6 +483,99 @@ function saveExpense() {
 
   console.log('Добавлен расход:', transaction);
 }
+
+// === Использование Неприкосновенного запаса ===
+function useReserve() {
+  const currentReserve = appData.settings.reserveAmount || 0;
+  
+  if (currentReserve <= 0) {
+    alert('❌ Неприкосновенный запас равен нулю. Брать нечего!');
+    return;
+  }
+
+  // 1. Запрос суммы
+  const amountStr = prompt(
+    `🔓 Использование НЗ\n\n` +
+    `Текущий НЗ: ${currentReserve} ₽\n\n` +
+    `На какую сумму взять из НЗ?\n` +
+    `(Введите число, например: 1500)`,
+    ''
+  );
+  
+  if (amountStr === null) return; // Отмена
+  
+  const amount = parseFloat(amountStr.replace(',', '.'));
+  
+  if (isNaN(amount) || amount <= 0) {
+    alert('❌ Введите корректную положительную сумму');
+    return;
+  }
+  
+  if (amount > currentReserve) {
+    if (!confirm(`⚠️ Внимание!\n\nВы хотите взять ${amount} ₽, но НЗ всего ${currentReserve} ₽.\n\nВзять только ${currentReserve} ₽ (весь НЗ)?`)) {
+      return;
+    }
+    // Берём только то, что есть
+    amount = currentReserve;
+  }
+
+  // 2. Запрос причины (необязательно)
+  const reason = prompt(
+    '📝 На что берёте из НЗ? (необязательно)\n\nНапример: "ремонт холодильника"',
+    ''
+  );
+  
+  if (reason === null) return; // Отмена
+  
+  const categorySuffix = reason && reason.trim() ? `: ${reason.trim()}` : '';
+  
+  // 3. Предупреждение и подтверждение
+  if (!confirm(
+    `🔓 Подтвердите использование НЗ:\n\n` +
+    `Сумма: ${amount} ₽\n` +
+    `Причина: ${reason || 'не указана'}\n\n` +
+    `Неприкосновенный запас УМЕНЬШИТСЯ с ${currentReserve} ₽ до ${currentReserve - amount} ₽.\n` +
+    `Дневной лимит НЕ изменится.\n\n` +
+    `Продолжить?`
+  )) {
+    return;
+  }
+
+  // 4. Создаём транзакцию (особый тип 'reserve')
+  const transaction = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    category: `🔓 Из НЗ${categorySuffix}`,
+    amount: amount,
+    type: 'reserve', // новый тип транзакции
+  };
+
+  appData.transactions.push(transaction);
+
+  // 5. Уменьшаем НЗ
+  appData.settings.reserveAmount = currentReserve - amount;
+  const reserveInput =
+    document.getElementById('input-reserve') ||
+    document.getElementById('input-reserve-amount');
+  if (reserveInput) {
+    reserveInput.value = appData.settings.reserveAmount;
+  }
+
+  // 6. Сохраняем
+  saveData(appData);
+
+  // 7. Перерисовываем
+  renderTodayScreen(
+    appData.settings,
+    appData.fixedExpenses,
+    appData.transactions,
+  );
+  renderTransactionList(appData.transactions, appData.settings.pensionDay);
+
+  console.log('🔓 Использован НЗ:', transaction);
+  console.log('Новый НЗ:', appData.settings.reserveAmount);
+}
+
 // Обработчик изменения настроек
 function handleSettingsChange() {
   const initialBalance = parseFloat(
@@ -583,10 +682,29 @@ function handleDeleteClick(event) {
   // Удаление транзакции (расхода)
   if (target.dataset.action === 'delete-transaction') {
     const transactionId = parseInt(target.dataset.id);
+    // Находим транзакцию ДО удаления, чтобы узнать её тип и сумму
+    const transaction = appData.transactions.find(
+      (t) => t.id === transactionId,
+    );
+
     if (confirm('Удалить эту запись о расходе?')) {
       appData.transactions = appData.transactions.filter(
         (t) => t.id !== transactionId,
       );
+
+      // === ВОССТАНОВЛЕНИЕ НЗ при удалении записи о снятии ===
+      if (transaction && transaction.type === 'reserve') {
+        appData.settings.reserveAmount += transaction.amount;
+        const reserveInput =
+          document.getElementById('input-reserve') ||
+          document.getElementById('input-reserve-amount');
+        if (reserveInput) {
+          reserveInput.value = appData.settings.reserveAmount;
+        }
+        console.log('🔓 НЗ восстановлен:', appData.settings.reserveAmount);
+      }
+      // =====================================================
+
       saveData(appData);
       renderAll(appData);
       console.log('Транзакция удалена:', transactionId);
