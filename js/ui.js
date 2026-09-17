@@ -132,11 +132,15 @@ export function renderTransactionList(transactions, pensionDay) {
       color: '#95a5a6',
     };
     const displayName = `${catStyle.emoji} ${transaction.category}`;
+    const subLine = transaction.subcategory
+      ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
+      : '';
     // ====================================================
 
     itemEl.innerHTML = `
     <div class="transaction__info">
         <span class="transaction__category">${displayName}</span>
+        ${subLine}
         <span class="transaction__date">${formatDateOnly(transaction.date)}</span>
     </div>
     <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>

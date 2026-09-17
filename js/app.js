@@ -22,7 +22,83 @@ const EXPENSE_CATEGORIES = [
   { id: 'home', name: 'Для дома', emoji: '🏡' },
   { id: 'clothes', name: 'Одежда', emoji: '👕' },
   { id: 'other', name: 'Другое', emoji: '📦' },
+  { id: 'study', name: 'Учёба', emoji: '🎓' },
+  { id: 'savings', name: 'Накопления', emoji: '🏦' },
 ];
+
+// Подкатегории для категорий расходов
+const SUBCATEGORIES = {
+  products: [
+    { id: 'meat', name: 'Мясо и рыба' },
+    { id: 'veg', name: 'Овощи и фрукты' },
+    { id: 'dairy', name: 'Молочное' },
+    { id: 'bread', name: 'Хлеб и бакалея' },
+    { id: 'other', name: 'Другое' },
+  ],
+  pharmacy: [
+    { id: 'rx', name: 'По рецепту' },
+    { id: 'vitamins', name: 'Витамины' },
+    { id: 'firstaid', name: 'Первая помощь' },
+    { id: 'other', name: 'Другое' },
+  ],
+  transport: [
+    { id: 'fuel', name: 'Бензин' },
+    { id: 'public', name: 'Проезд' },
+    { id: 'taxi', name: 'Такси' },
+    { id: 'other', name: 'Другое' },
+  ],
+  utilities: [
+    { id: 'elec', name: 'Электричество' },
+    { id: 'water', name: 'Вода' },
+    { id: 'heat', name: 'Отопление' },
+    { id: 'other', name: 'Другое' },
+  ],
+  communication: [
+    { id: 'mobile', name: 'Мобильный' },
+    { id: 'internet', name: 'Интернет' },
+    { id: 'other', name: 'Другое' },
+  ],
+  health: [
+    { id: 'consult', name: 'Консультации' },
+    { id: 'tests', name: 'Анализы' },
+    { id: 'procedures', name: 'Процедуры' },
+    { id: 'other', name: 'Другое' },
+  ],
+
+  gifts: [
+    { id: 'birthday', name: 'Дни рождения' },
+    { id: 'holiday', name: 'Праздники' },
+    { id: 'grandkids', name: 'Внукам' },
+    { id: 'other', name: 'Другое' },
+  ],
+  home: [
+    { id: 'furniture', name: 'Мебель' },
+    { id: 'repair', name: 'Ремонт' },
+    { id: 'chem', name: 'Бытовая химия' },
+    { id: 'other', name: 'Другое' },
+  ],
+  clothes: [
+    { id: 'daily', name: 'Повседневная' },
+    { id: 'season', name: 'Сезонная' },
+    { id: 'shoes', name: 'Обувь' },
+    { id: 'other', name: 'Другое' },
+  ],
+  study: [
+    { id: 'courses', name: 'Курсы' },
+    { id: 'books', name: 'Книги' },
+    { id: 'other', name: 'Другое' },
+  ],
+  savings: [
+    { id: 'bank', name: 'На счёт в банке' },
+    { id: 'cash', name: 'Наличные в копилку' },
+    { id: 'other', name: 'Другое' },
+  ],
+  other: [
+    { id: 'unexpected', name: 'Непредвиденное' },
+    { id: 'hobby', name: 'Хобби' },
+    { id: 'other', name: 'Прочее' },
+  ],
+};
 
 // Список категорий доходов
 const INCOME_CATEGORIES = [
@@ -83,14 +159,6 @@ function setupEventListeners() {
   incomeSaveBtn = document.getElementById('btn-save-income');
   incomeCancelBtn = document.getElementById('btn-cancel-income');
 
-  // Заполняем выпадающий список категориями расходов
-  EXPENSE_CATEGORIES.forEach((category) => {
-    const option = document.createElement('option');
-    option.value = category.id;
-    option.textContent = category.name;
-    expenseCategorySelect.appendChild(option);
-  });
-
   // Заполняем выпадающий список категориями доходов
   INCOME_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
@@ -113,7 +181,29 @@ function setupEventListeners() {
     btnUseReserve.addEventListener('click', useReserve);
   }
 
-  // Кнопки в модальном окне расходов
+  expenseCategorySelect.addEventListener('change', () => {
+    fillSubcategories(expenseCategorySelect.value);
+  });
+
+  // При смене категории в модалке редактирования — пересоздаём подкатегории
+  const editCategorySelect = document.getElementById('edit-category');
+  editCategorySelect.addEventListener('change', () => {
+    const categoryId = editCategorySelect.value;
+    const subSelect = document.getElementById('edit-subcategory');
+    subSelect.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '-- выберите подкатегорию --';
+    subSelect.appendChild(placeholder);
+    const subs = SUBCATEGORIES[categoryId] || [];
+    subs.forEach((sub) => {
+      const option = document.createElement('option');
+      option.value = sub.id;
+      option.textContent = sub.name;
+      subSelect.appendChild(option);
+    });
+  });
+
   expenseSaveBtn.addEventListener('click', saveExpense);
   expenseCancelBtn.addEventListener('click', closeExpenseModal);
 
@@ -419,15 +509,32 @@ let incomeModal,
   incomeSaveBtn,
   incomeCancelBtn;
 
+// Заполняем селект подкатегорий по выбранной категории
+function fillSubcategories(categoryId) {
+  const select = document.getElementById('expense-subcategory');
+  select.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '-- выберите подкатегорию --';
+  select.appendChild(placeholder);
+  const subs = SUBCATEGORIES[categoryId] || [];
+  subs.forEach((sub) => {
+    const option = document.createElement('option');
+    option.value = sub.id;
+    option.textContent = sub.name;
+    select.appendChild(option);
+  });
+}
+
 // Открытие модального окна расходов с гарантированным заполнением категорий
 function openExpenseModal() {
   // 1. Очищаем список (на случай, если он уже был заполнен)
   expenseCategorySelect.innerHTML = '';
 
-  // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
+  // // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
   EXPENSE_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
-    option.value = category.name; // Сохраняем чистое имя (без эмодзи)
+    option.value = category.id; // Сохраняем чистое имя (без эмодзи)
     option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Показываем с эмодзи
     expenseCategorySelect.appendChild(option);
   });
@@ -435,6 +542,7 @@ function openExpenseModal() {
   // 3. Открываем окно и ставим фокус на список
   expenseModal.classList.add('is-open');
   expenseCategorySelect.focus();
+  fillSubcategories(expenseCategorySelect.value);
 }
 
 // Закрытие модального окна расходов
@@ -460,6 +568,17 @@ function saveExpense() {
     return;
   }
 
+  const subSelect = document.getElementById('expense-subcategory');
+  const subId = subSelect.value;
+  if (!subId) {
+    alert('Пожалуйста, выберите подкатегорию');
+    subSelect.focus();
+    return;
+  }
+  const subs = SUBCATEGORIES[categoryId] || [];
+  const sub = subs.find((s) => s.id === subId);
+  const subName = sub ? sub.name : subId;
+
   const category = EXPENSE_CATEGORIES.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
 
@@ -467,6 +586,7 @@ function saveExpense() {
     id: Date.now(),
     date: new Date().toISOString(),
     category: categoryName,
+    subcategory: subName,
     amount: amount,
     type: 'expense', // Добавили тип
   };
@@ -487,7 +607,7 @@ function saveExpense() {
 // === Использование Неприкосновенного запаса ===
 function useReserve() {
   const currentReserve = appData.settings.reserveAmount || 0;
-  
+
   if (currentReserve <= 0) {
     alert('❌ Неприкосновенный запас равен нулю. Брать нечего!');
     return;
@@ -496,23 +616,27 @@ function useReserve() {
   // 1. Запрос суммы
   const amountStr = prompt(
     `🔓 Использование НЗ\n\n` +
-    `Текущий НЗ: ${currentReserve} ₽\n\n` +
-    `На какую сумму взять из НЗ?\n` +
-    `(Введите число, например: 1500)`,
-    ''
+      `Текущий НЗ: ${currentReserve} ₽\n\n` +
+      `На какую сумму взять из НЗ?\n` +
+      `(Введите число, например: 1500)`,
+    '',
   );
-  
+
   if (amountStr === null) return; // Отмена
-  
+
   const amount = parseFloat(amountStr.replace(',', '.'));
-  
+
   if (isNaN(amount) || amount <= 0) {
     alert('❌ Введите корректную положительную сумму');
     return;
   }
-  
+
   if (amount > currentReserve) {
-    if (!confirm(`⚠️ Внимание!\n\nВы хотите взять ${amount} ₽, но НЗ всего ${currentReserve} ₽.\n\nВзять только ${currentReserve} ₽ (весь НЗ)?`)) {
+    if (
+      !confirm(
+        `⚠️ Внимание!\n\nВы хотите взять ${amount} ₽, но НЗ всего ${currentReserve} ₽.\n\nВзять только ${currentReserve} ₽ (весь НЗ)?`,
+      )
+    ) {
       return;
     }
     // Берём только то, что есть
@@ -522,22 +646,24 @@ function useReserve() {
   // 2. Запрос причины (необязательно)
   const reason = prompt(
     '📝 На что берёте из НЗ? (необязательно)\n\nНапример: "ремонт холодильника"',
-    ''
+    '',
   );
-  
+
   if (reason === null) return; // Отмена
-  
+
   const categorySuffix = reason && reason.trim() ? `: ${reason.trim()}` : '';
-  
+
   // 3. Предупреждение и подтверждение
-  if (!confirm(
-    `🔓 Подтвердите использование НЗ:\n\n` +
-    `Сумма: ${amount} ₽\n` +
-    `Причина: ${reason || 'не указана'}\n\n` +
-    `Неприкосновенный запас УМЕНЬШИТСЯ с ${currentReserve} ₽ до ${currentReserve - amount} ₽.\n` +
-    `Дневной лимит НЕ изменится.\n\n` +
-    `Продолжить?`
-  )) {
+  if (
+    !confirm(
+      `🔓 Подтвердите использование НЗ:\n\n` +
+        `Сумма: ${amount} ₽\n` +
+        `Причина: ${reason || 'не указана'}\n\n` +
+        `Неприкосновенный запас УМЕНЬШИТСЯ с ${currentReserve} ₽ до ${currentReserve - amount} ₽.\n` +
+        `Дневной лимит НЕ изменится.\n\n` +
+        `Продолжить?`,
+    )
+  ) {
     return;
   }
 
@@ -578,9 +704,10 @@ function useReserve() {
 
 // Обработчик изменения настроек
 function handleSettingsChange() {
-  const initialBalance = parseFloat(
-    document.getElementById('input-initial-balance').value.replace(',', '.')
-  ) || 0;
+  const initialBalance =
+    parseFloat(
+      document.getElementById('input-initial-balance').value.replace(',', '.'),
+    ) || 0;
 
   const pensionAmount = parseFloat(
     document.getElementById('input-pension').value.replace(',', '.'),
@@ -608,7 +735,7 @@ function handleSettingsChange() {
   }
 
   // Обновляем данные
-  appData.settings.initialBalance = initialBalance;  // ← НОВАЯ СТРОКА
+  appData.settings.initialBalance = initialBalance; // ← НОВАЯ СТРОКА
   appData.settings.pensionAmount = pensionAmount;
   appData.settings.pensionDay = pensionDay;
   appData.settings.reserveAmount = reserveAmount;
@@ -777,6 +904,37 @@ function openEditModal(transactionId) {
     categorySelect.appendChild(option);
   });
 
+  // Заполняем подкатегории (только для расходов)
+  const subcategoryLabel = document.getElementById('edit-subcategory-label');
+  const subcategorySelect = document.getElementById('edit-subcategory');
+  if (isIncome) {
+    subcategoryLabel.style.display = 'none';
+  } else {
+    subcategoryLabel.style.display = 'block';
+    subcategorySelect.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '-- выберите подкатегорию --';
+    subcategorySelect.appendChild(placeholder);
+    const currentCategory = EXPENSE_CATEGORIES.find(
+      (c) => c.name === transaction.category,
+    );
+    const currentCategoryId = currentCategory ? currentCategory.id : '';
+    const subs = SUBCATEGORIES[currentCategoryId] || [];
+    subs.forEach((sub) => {
+      const option = document.createElement('option');
+      option.value = sub.id;
+      option.textContent = sub.name;
+      subcategorySelect.appendChild(option);
+    });
+    if (transaction.subcategory) {
+      const currentSub = subs.find((s) => s.name === transaction.subcategory);
+      if (currentSub) {
+        subcategorySelect.value = currentSub.id;
+      }
+    }
+  }
+
   // Заполняем сумму
   document.getElementById('edit-amount').value = transaction.amount;
 
@@ -842,6 +1000,22 @@ function saveEditTransaction() {
   const category = categories.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
 
+  // Определяем подкатегорию (только для расходов)
+  let subName = originalTransaction.subcategory || '';
+  if (!isIncome) {
+    const subSelect = document.getElementById('edit-subcategory');
+    const subId = subSelect.value;
+    if (!subId) {
+      alert('Пожалуйста, выберите подкатегорию');
+      subSelect.focus();
+      return;
+    }
+    const currentCategoryId = category ? category.id : categoryId;
+    const subs = SUBCATEGORIES[currentCategoryId] || [];
+    const sub = subs.find((s) => s.id === subId);
+    subName = sub ? sub.name : subId;
+  }
+
   // Создаём новую дату (сохраняем оригинальное время)
   const originalDate = new Date(originalTransaction.date);
   const newDate = new Date(dateStr);
@@ -855,6 +1029,7 @@ function saveEditTransaction() {
   appData.transactions[transactionIndex] = {
     ...originalTransaction, // Сохраняем id и type
     category: categoryName,
+    subcategory: subName,
     amount: amount,
     date: newDate.toISOString(),
   };
@@ -1035,7 +1210,7 @@ document.addEventListener('click', (e) => {
   }
 
   // Если открыли Статистику — рисуем график
-      if (screenId === 'screen-stats') {
+  if (screenId === 'screen-stats') {
     setTimeout(() => {
       const savedData = localStorage.getItem('pensionBudget');
       if (savedData && typeof renderStatsChart === 'function') {
@@ -1054,5 +1229,4 @@ document.addEventListener('click', (e) => {
     }, 100);
   }
   // ================================================================
-
-});  // ← закрывающая скобка обработчика
+}); // ← закрывающая скобка обработчика
