@@ -340,11 +340,11 @@ function handlePostpone(event) {
 const categoryConfig = {
   // Расходы (чередование: тёмный / светлый)
   Продукты: { emoji: '🛒', color: '#c0392b' }, // 🔴 ТЁМНО-красный
-  'Аптека/Лекарства': { emoji: '💊', color: '#2ecc71' }, // 🟢 СВЕТЛО-зелёный
-  'Транспорт/Топливо': { emoji: '🚗', color: '#e67e22' }, // 🟠 ТЁМНО-оранжевый
+  'Аптека': { emoji: '💊', color: '#2ecc71' }, // 🟢 СВЕТЛО-зелёный
+  'Транспорт': { emoji: '🚗', color: '#e67e22' }, // 🟠 ТЁМНО-оранжевый
   ЖКХ: { emoji: '🏠', color: '#d2b4de' }, // 🟣 СВЕТЛО-фиолетовый (лавандовый)
   Связь: { emoji: '📱', color: '#2980b9' }, // 🔵 ТЁМНО-синий
-  'Здоровье/Врачи': { emoji: '🩺', color: '#a8e6cf' }, // 🟩 СВЕТЛО-мятный
+  'Здоровье': { emoji: '🩺', color: '#a8e6cf' }, // 🟩 СВЕТЛО-мятный
   Подарки: { emoji: '🎁', color: '#f1c40f' }, // 🟡 СВЕТЛО-жёлтый
   'Для дома': { emoji: '🏡', color: '#2c3e50' }, // ⚫ ТЁМНО-графитовый
   Одежда: { emoji: '👕', color: '#fd79a8' }, //  СВЕТЛО-розовый
@@ -360,7 +360,7 @@ function getCategoryStyle(name) {
   // Сначала ищем точное совпадение
   if (categoryConfig[name]) return categoryConfig[name];
 
-  // Если не нашли — ищем по ключевому слову (для "Транспорт/Топливо", "Аптека/Лекарства" и т.д.)
+  // Если не нашли — ищем по ключевому слову (для "Транспорт", "Аптека" и т.д.)
   const lowerName = name.toLowerCase();
   for (const key in categoryConfig) {
     if (lowerName.includes(key.toLowerCase())) {
@@ -527,9 +527,6 @@ export function renderStatsChart(settings, transactions) {
               let shortName = categoryName;
               if (window.innerWidth < 400) {
                 const shortNames = {
-                  'Аптека/Лекарства': 'Аптека',
-                  'Транспорт/Топливо': 'Транспорт',
-                  'Здоровье/Врачи': 'Здоровье',
                   'Помощь от детей/родственников': 'Помощь',
                 };
                 shortName = shortNames[categoryName] || categoryName;

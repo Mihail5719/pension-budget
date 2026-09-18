@@ -13,11 +13,11 @@ import { calculateDailyLimit } from './budget.js';
 // Список категорий расходов
 const EXPENSE_CATEGORIES = [
   { id: 'products', name: 'Продукты', emoji: '🛒' },
-  { id: 'pharmacy', name: 'Аптека/Лекарства', emoji: '💊' },
-  { id: 'transport', name: 'Транспорт/Топливо', emoji: '🚗' },
+  { id: 'pharmacy', name: 'Аптека', emoji: '💊' },
+  { id: 'transport', name: 'Транспорт', emoji: '🚗' },
   { id: 'utilities', name: 'ЖКХ', emoji: '🏠' },
   { id: 'communication', name: 'Связь', emoji: '📱' },
-  { id: 'health', name: 'Здоровье/Врачи', emoji: '🩺' },
+  { id: 'health', name: 'Здоровье', emoji: '🩺' },
   { id: 'gifts', name: 'Подарки', emoji: '🎁' },
   { id: 'home', name: 'Для дома', emoji: '🏡' },
   { id: 'clothes', name: 'Одежда', emoji: '👕' },
@@ -90,7 +90,7 @@ const SUBCATEGORIES = {
   ],
   savings: [
     { id: 'bank', name: 'На счёт в банке' },
-    { id: 'cash', name: 'Наличные в копилку' },
+    { id: 'cash', name: 'Наличные' },
     { id: 'other', name: 'Другое' },
   ],
   other: [
@@ -134,6 +134,31 @@ function init() {
   // Загружаем данные
   appData = loadData();
   window.appData = appData; // Делаем appData глобальной для ui.js
+
+  // Одноразовая миграция: переименование старых имён
+  const CATEGORY_RENAME = {
+    'Аптека/Лекарства': 'Аптека',
+    'Транспорт/Топливо': 'Транспорт',
+    'Здоровье/Врачи': 'Здоровье',
+  };
+  const SUBCATEGORY_RENAME = {
+    'Наличные в копилку': 'Наличные',
+  };
+  let renamedAny = false;
+  appData.transactions.forEach((t) => {
+    if (CATEGORY_RENAME[t.category]) {
+      t.category = CATEGORY_RENAME[t.category];
+      renamedAny = true;
+    }
+    if (SUBCATEGORY_RENAME[t.subcategory]) {
+      t.subcategory = SUBCATEGORY_RENAME[t.subcategory];
+      renamedAny = true;
+    }
+  });
+  if (renamedAny) {
+    saveData(appData);
+    console.log('🔄 Миграция: имена обновлены');
+  }
 
   // Отрисовываем всё
   renderAll(appData);
