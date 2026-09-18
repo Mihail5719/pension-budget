@@ -1542,6 +1542,13 @@ body.dark-theme .btn.btn--warning {
   border-left: 4px solid #ff9800;
 }
 
+.transaction__subcategory {
+  font-size: 13px;
+  color: var(--text-secondary);
+  word-break: break-word;
+  line-height: 1.3;
+}
+
 
 
  
