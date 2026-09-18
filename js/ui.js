@@ -340,15 +340,17 @@ function handlePostpone(event) {
 const categoryConfig = {
   // Расходы (чередование: тёмный / светлый)
   Продукты: { emoji: '🛒', color: '#c0392b' }, // 🔴 ТЁМНО-красный
-  'Аптека': { emoji: '💊', color: '#2ecc71' }, // 🟢 СВЕТЛО-зелёный
-  'Транспорт': { emoji: '🚗', color: '#e67e22' }, // 🟠 ТЁМНО-оранжевый
+  Аптека: { emoji: '💊', color: '#2ecc71' }, // 🟢 СВЕТЛО-зелёный
+  Транспорт: { emoji: '🚗', color: '#e67e22' }, // 🟠 ТЁМНО-оранжевый
   ЖКХ: { emoji: '🏠', color: '#d2b4de' }, // 🟣 СВЕТЛО-фиолетовый (лавандовый)
   Связь: { emoji: '📱', color: '#2980b9' }, // 🔵 ТЁМНО-синий
-  'Здоровье': { emoji: '🩺', color: '#a8e6cf' }, // 🟩 СВЕТЛО-мятный
+  Здоровье: { emoji: '🩺', color: '#a8e6cf' }, // 🟩 СВЕТЛО-мятный
   Подарки: { emoji: '🎁', color: '#f1c40f' }, // 🟡 СВЕТЛО-жёлтый
   'Для дома': { emoji: '🏡', color: '#2c3e50' }, // ⚫ ТЁМНО-графитовый
   Одежда: { emoji: '👕', color: '#fd79a8' }, //  СВЕТЛО-розовый
   Другое: { emoji: '📦', color: '#b2bec3' }, // ⚪ СВЕТЛО-серый
+  Учёба: { emoji: '📚', color: '#9b59b6' },
+  Накопления: { emoji: '🐷', color: '#1abc9c' },
 
   // Доходы
   'Возврат долга': { emoji: '💰', color: '#27ae60' },
@@ -376,6 +378,7 @@ function getCategoryStyle(name) {
  * Рисует круговую диаграмму расходов
  */
 export function renderStatsChart(settings, transactions) {
+    renderSubcategoryBreakdown(settings, transactions);
   const canvas = document.getElementById('expense-chart');
   if (!canvas) {
     console.error('❌ Canvas не найден!');
@@ -700,4 +703,55 @@ export function renderPensionPeriodInfo(settings) {
     periodInfoEl.innerHTML =
       '<em>Период ещё не начат. Отметьте поступление пенсии на главном экране.</em>';
   }
+}
+
+/**
+ * Детализация расходов по подкатегориям (список с полосками)
+ */
+export function renderSubcategoryBreakdown(settings, transactions) {
+  const container = document.getElementById('subcategory-breakdown');
+  if (!container) return;
+  const { startDate, endDate } = getCurrentPeriod(settings.pensionDay);
+  const periodExpenses = transactions.filter((t) => {
+    const tDate = new Date(t.date);
+    return t.type !== 'income' && tDate >= startDate && tDate <= endDate;
+  });
+  if (periodExpenses.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  const byCat = {};
+  periodExpenses.forEach((t) => {
+    const sub = t.subcategory || 'Без подкатегории';
+    if (!byCat[t.category]) byCat[t.category] = { total: 0, subs: {} };
+    byCat[t.category].total += t.amount;
+    byCat[t.category].subs[sub] = (byCat[t.category].subs[sub] || 0) + t.amount;
+  });
+  const cats = Object.keys(byCat).sort(
+    (a, b) => byCat[b].total - byCat[a].total,
+  );
+  let html = '<h3 class="breakdown__title">По подкатегориям</h3>';
+  cats.forEach((cat) => {
+    const style = getCategoryStyle(cat);
+    const entry = byCat[cat];
+    html += '<div class="breakdown__card">';
+    html += '<div class="breakdown__header">';
+    html += `<span>${style.emoji} ${cat}</span>`;
+    html += `<span>${formatMoney(entry.total)}</span></div>`;
+    const subs = Object.keys(entry.subs).sort(
+      (a, b) => entry.subs[b] - entry.subs[a],
+    );
+    subs.forEach((sub) => {
+      const sum = entry.subs[sub];
+      const percent = Math.round((sum / entry.total) * 100);
+      html += '<div class="breakdown__row"><div class="breakdown__line">';
+      html += `<span>${sub}</span>`;
+      html += `<span>${formatMoney(sum)} (${percent}%)</span></div>`;
+      html += '<div class="breakdown__bar">';
+      html += `<div class="breakdown__bar-fill" style="width:${percent}%;background:${style.color}"></div>`;
+      html += '</div></div>';
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
 }

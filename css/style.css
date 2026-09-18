@@ -1567,6 +1567,52 @@ body.dark-theme .btn.btn--warning {
   margin: 16px auto;
 }
 
+/* === Детализация по подкатегориям === */
+.stats-breakdown {
+  max-width: 500px;
+  margin: 16px auto;
+}
+.breakdown__title {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+.breakdown__card {
+  background-color: var(--color-card);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+.breakdown__header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+.breakdown__line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.breakdown__bar {
+  height: 6px;
+  background-color: var(--color-background);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.breakdown__bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
 
 
  
