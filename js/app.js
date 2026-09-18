@@ -193,7 +193,7 @@ function setupEventListeners() {
     subSelect.innerHTML = '';
     const placeholder = document.createElement('option');
     placeholder.value = '';
-    placeholder.textContent = '-- выберите подкатегорию --';
+    placeholder.textContent = '-- выберите --';
     subSelect.appendChild(placeholder);
     const subs = SUBCATEGORIES[categoryId] || [];
     subs.forEach((sub) => {
@@ -515,7 +515,7 @@ function fillSubcategories(categoryId) {
   select.innerHTML = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
-  placeholder.textContent = '-- выберите подкатегорию --';
+  placeholder.textContent = '-- выберите --';
   select.appendChild(placeholder);
   const subs = SUBCATEGORIES[categoryId] || [];
   subs.forEach((sub) => {
@@ -914,7 +914,7 @@ function openEditModal(transactionId) {
     subcategorySelect.innerHTML = '';
     const placeholder = document.createElement('option');
     placeholder.value = '';
-    placeholder.textContent = '-- выберите подкатегорию --';
+    placeholder.textContent = '-- выберите --';
     subcategorySelect.appendChild(placeholder);
     const currentCategory = EXPENSE_CATEGORIES.find(
       (c) => c.name === transaction.category,
