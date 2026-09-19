@@ -390,7 +390,8 @@ export function renderStatsChart(settings, transactions) {
   const legendTextColor = isDarkTheme ? '#ffffff' : '#2c3e50';
 
   // 1. Получаем транзакции только за текущий период (от пенсии до пенсии)
-  const { startDate, endDate } = getCurrentPeriod(settings.pensionDay);
+  const startDate = new Date(settings.currentPeriodStart);
+  const { endDate } = getCurrentPeriod(settings.pensionDay);
 
   const periodExpenses = transactions.filter((t) => {
     const tDate = new Date(t.date);
@@ -711,7 +712,8 @@ export function renderPensionPeriodInfo(settings) {
 export function renderSubcategoryBreakdown(settings, transactions) {
   const container = document.getElementById('subcategory-breakdown');
   if (!container) return;
-  const { startDate, endDate } = getCurrentPeriod(settings.pensionDay);
+  const startDate = new Date(settings.currentPeriodStart);
+  const { endDate } = getCurrentPeriod(settings.pensionDay);
   const periodExpenses = transactions.filter((t) => {
     const tDate = new Date(t.date);
     return t.type !== 'income' && tDate >= startDate && tDate <= endDate;
