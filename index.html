@@ -187,6 +187,19 @@
                         <!-- Сюда будет подставляться информация из JS -->
                     </div>
                 </div>
+                <div class="delete-card">
+                    <h3 class="delete-card__title">🗑 Удалить записи за период</h3>
+                    <div class="delete-card__row">
+                        <label class="delete-card__label">От:
+                            <input type="date" id="delete-from" class="delete-card__input">
+                        </label>
+                        <label class="delete-card__label">До:
+                            <input type="date" id="delete-to" class="delete-card__input">
+                        </label>
+                    </div>
+                    <p id="delete-preview" class="delete-card__preview">Укажите обе даты</p>
+                    <button id="delete-range-btn" class="btn btn--danger">Удалить записи</button>
+                </div>
             </section>
 
             <!-- Экран 4: Статистика -->

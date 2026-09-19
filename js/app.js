@@ -7,7 +7,7 @@ import {
   renderStatsChart,
   renderPensionPeriodInfo,
 } from './ui.js';
-import { formatDateKey } from './utils.js';
+import { formatDateKey, getCurrentPeriod, formatMoney } from './utils.js';
 import { calculateDailyLimit } from './budget.js';
 
 // Список категорий расходов
@@ -165,6 +165,7 @@ function init() {
 
   // Навешиваем обработчики
   setupEventListeners();
+    initDeleteRange();
 
   console.log('Приложение инициализировано', appData);
 }
@@ -1255,3 +1256,89 @@ document.addEventListener('click', (e) => {
   }
   // ================================================================
 }); // ← закрывающая скобка обработчика
+
+function toInputDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function isInDeleteRange(t, from, to) {
+  const d = new Date(t.date);
+  const fromD = new Date(`${from}T00:00:00`);
+  const toD = new Date(`${to}T23:59:59`);
+  return d >= fromD && d <= toD;
+}
+
+function updateDeletePreview() {
+  const from = document.getElementById('delete-from').value;
+  const to = document.getElementById('delete-to').value;
+  const previewEl = document.getElementById('delete-preview');
+  if (!from || !to) {
+    previewEl.textContent = 'Укажите обе даты';
+    return;
+  }
+  const victims = appData.transactions.filter((t) =>
+    isInDeleteRange(t, from, to),
+  );
+  if (victims.length === 0) {
+    previewEl.textContent = 'В этом периоде записей нет';
+    return;
+  }
+  const expenseSum = victims
+    .filter((t) => t.type !== 'income')
+    .reduce((s, t) => s + t.amount, 0);
+  previewEl.textContent = `Будет удалено: ${victims.length} записей, расходы на ${formatMoney(expenseSum)}`;
+}
+
+function initDeleteRange() {
+  const fromInput = document.getElementById('delete-from');
+  const toInput = document.getElementById('delete-to');
+  if (!fromInput || !toInput) return;
+  if (appData.transactions.length > 0) {
+    const oldest = new Date(
+      Math.min(...appData.transactions.map((t) => new Date(t.date))),
+    );
+    fromInput.value = toInputDate(oldest);
+  }
+  const periodStart = new Date(appData.settings.currentPeriodStart);
+  toInput.value = toInputDate(new Date(periodStart.getTime() - 86400000));
+  fromInput.addEventListener('change', updateDeletePreview);
+  toInput.addEventListener('change', updateDeletePreview);
+  document
+    .getElementById('delete-range-btn')
+    .addEventListener('click', handleDeleteRange);
+  updateDeletePreview();
+}
+
+function handleDeleteRange() {
+  const from = document.getElementById('delete-from').value;
+  const to = document.getElementById('delete-to').value;
+  if (!from || !to) {
+    alert('Укажите обе даты периода');
+    return;
+  }
+  const victims = appData.transactions.filter((t) =>
+    isInDeleteRange(t, from, to),
+  );
+  if (victims.length === 0) {
+    alert('В выбранном периоде записей нет — удалять нечего');
+    return;
+  }
+  const expenseSum = victims
+    .filter((t) => t.type !== 'income')
+    .reduce((s, t) => s + t.amount, 0);
+  const message =
+    `Будет удалено записей: ${victims.length}\n` +
+    `Расходы на сумму: ${formatMoney(expenseSum)}\n\n` +
+    'Рекомендуем сначала сделать Экспорт!\nПродолжить?';
+  if (!confirm(message)) return;
+  appData.transactions = appData.transactions.filter(
+    (t) => !isInDeleteRange(t, from, to),
+  );
+  saveData(appData);
+  renderAll(appData);
+  updateDeletePreview();
+  alert(`Готово! Удалено записей: ${victims.length}`);
+}
