@@ -385,7 +385,11 @@ export function renderStatsChart(settings, transactions) {
     return;
   }
     const emptyMsg = document.getElementById('stats-empty');
+  if (emptyMsg) emptyMsg.hidden = true;
+    const emptyMsg = document.getElementById('stats-empty');
     if (emptyMsg) emptyMsg.hidden = true;
+    canvas.style.display = '';
+  
 
   // Определяем цвет текста легенды в зависимости от темы
   const isDarkTheme = document.body.classList.contains('dark-theme');
@@ -427,10 +431,11 @@ export function renderStatsChart(settings, transactions) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const emptyMsg = document.getElementById('stats-empty');
-        if (emptyMsg) emptyMsg.hidden = false;
+    if (emptyMsg) emptyMsg.hidden = false;
+    canvas.style.display = 'none';
         return;
   }
-
+     
   // 5. Уничтожаем старую диаграмму, если она была
   if (window.expenseChartInstance) {
     window.expenseChartInstance.destroy();
