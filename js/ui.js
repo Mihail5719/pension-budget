@@ -384,6 +384,8 @@ export function renderStatsChart(settings, transactions) {
     console.error('❌ Canvas не найден!');
     return;
   }
+    const emptyMsg = document.getElementById('stats-empty');
+    if (emptyMsg) emptyMsg.hidden = true;
 
   // Определяем цвет текста легенды в зависимости от темы
   const isDarkTheme = document.body.classList.contains('dark-theme');
@@ -422,17 +424,11 @@ export function renderStatsChart(settings, transactions) {
     if (window.expenseChartInstance) {
       window.expenseChartInstance.destroy();
     }
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#7f8c8d';
-    ctx.textAlign = 'center';
-    ctx.fillText(
-      'Нет расходов за этот период',
-      canvas.width / 2,
-      canvas.height / 2,
-    );
-    return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const emptyMsg = document.getElementById('stats-empty');
+        if (emptyMsg) emptyMsg.hidden = false;
+        return;
   }
 
   // 5. Уничтожаем старую диаграмму, если она была

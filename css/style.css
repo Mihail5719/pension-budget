@@ -1660,5 +1660,13 @@ body.dark-theme .btn.btn--warning {
   background-color: #c0392b;
 }
 
+/* === Надпись "нет расходов" === */
+.stats-empty {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 16px;
+  padding: 60px 16px;
+}
+
 
  
