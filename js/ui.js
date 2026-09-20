@@ -193,6 +193,7 @@ export function renderSettings(settings, fixedExpenses) {
 export function renderAll(data) {
   renderTodayScreen(data.settings, data.fixedExpenses, data.transactions);
   renderTransactionList(data.transactions, data.settings.pensionDay);
+  renderStatsChart(data.settings, data.transactions);
   renderSettings(data.settings, data.fixedExpenses);
 }
 
@@ -378,7 +379,7 @@ function getCategoryStyle(name) {
  * Рисует круговую диаграмму расходов
  */
 export function renderStatsChart(settings, transactions) {
-    renderSubcategoryBreakdown(settings, transactions);
+  renderSubcategoryBreakdown(settings, transactions);
   const canvas = document.getElementById('expense-chart');
   if (!canvas) {
     console.error('❌ Canvas не найден!');
