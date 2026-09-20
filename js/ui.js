@@ -386,8 +386,6 @@ export function renderStatsChart(settings, transactions) {
   }
     const emptyMsg = document.getElementById('stats-empty');
   if (emptyMsg) emptyMsg.hidden = true;
-    const emptyMsg = document.getElementById('stats-empty');
-    if (emptyMsg) emptyMsg.hidden = true;
     canvas.style.display = '';
   
 
