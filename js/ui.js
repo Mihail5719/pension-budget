@@ -108,6 +108,7 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
 export function renderTransactionList(transactions, pensionDay) {
   const listEl = document.getElementById('transaction-list');
   listEl.innerHTML = '';
+  
 
   if (transactions.length === 0) {
     listEl.innerHTML =
@@ -129,11 +130,11 @@ export function renderTransactionList(transactions, pensionDay) {
 
     // Определяем тип операции
     const incomeFlag = isIncome(transaction);
-    const amountClass = isIncome
+    const amountClass = incomeFlag
       ? 'transaction__amount--income'
       : 'transaction__amount';
-    const amountPrefix = isIncome ? '+' : '-';
-    const deleteAction = isIncome ? 'delete-income' : 'delete-transaction';
+    const amountPrefix = incomeFlag ? '+' : '-';
+    const deleteAction = incomeFlag ? 'delete-income' : 'delete-transaction';
 
     // === НОВОЕ: Добавляем эмодзи к названию категории ===
     const catStyle = categoryConfig[transaction.category] || {
@@ -161,8 +162,8 @@ export function renderTransactionList(transactions, pensionDay) {
 
     listEl.appendChild(itemEl);
   });
-}
-
+  }
+  
 // Отрисовка настроек
 export function renderSettings(settings, fixedExpenses) {
   // Заполняем поля ввода
