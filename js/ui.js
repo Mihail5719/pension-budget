@@ -401,7 +401,7 @@ export function renderStatsChart(settings, transactions) {
   const periodExpenses = transactions.filter((t) => {
     const tDate = new Date(t.date);
     // Берем только расходы (не доходы) и только за текущий период
-    return t.type !== 'income' && tDate >= startDate && tDate <= endDate;
+    return t.type === 'expense' && tDate >= startDate && tDate <= endDate;
   });
 
   // 2. Группируем суммы по категориям
@@ -716,7 +716,7 @@ export function renderSubcategoryBreakdown(settings, transactions) {
   const { endDate } = getCurrentPeriod(settings.pensionDay);
   const periodExpenses = transactions.filter((t) => {
     const tDate = new Date(t.date);
-    return t.type !== 'income' && tDate >= startDate && tDate <= endDate;
+    return t.type === 'expense' && tDate >= startDate && tDate <= endDate;
   });
   if (periodExpenses.length === 0) {
     container.innerHTML = '';

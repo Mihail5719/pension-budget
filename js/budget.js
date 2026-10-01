@@ -59,7 +59,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
 
   // 3. Считаем доходы и расходы
   const spent = periodTransactions
-    .filter((t) => t.type !== 'income')
+    .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const income = periodTransactions

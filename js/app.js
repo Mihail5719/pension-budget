@@ -1287,7 +1287,7 @@ function updateDeletePreview() {
     return;
   }
   const expenseSum = victims
-    .filter((t) => t.type !== 'income')
+    .filter((t) => t.type === 'expense')
     .reduce((s, t) => s + t.amount, 0);
   previewEl.textContent = `Будет удалено: ${victims.length} записей, расходы на ${formatMoney(expenseSum)}`;
 }
@@ -1327,7 +1327,7 @@ function handleDeleteRange() {
     return;
   }
   const expenseSum = victims
-    .filter((t) => t.type !== 'income')
+    .filter((t) => t.type === 'expense')
     .reduce((s, t) => s + t.amount, 0);
   const message =
     `Будет удалено записей: ${victims.length}\n` +
