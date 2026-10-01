@@ -6,6 +6,15 @@ import {
   getTodayPayments,
 } from './budget.js';
 
+// ─── Предикаты типов операций (v2.0, коммит 2) ───
+const isIncome = (t) => t.type === 'income';
+const isExpense = (t) => t.type === 'expense';
+const isCommitted = (t) => t.type === 'committed';
+// деньги, покинувшие кошелёк: влияют на баланс,
+// но в круг жизни попадает только isExpense
+const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
+// ─── конец блока предикатов ───
+
 // Обновление экрана "Сегодня"
 export function renderTodayScreen(settings, fixedExpenses, transactions) {
   const result = calculateDailyLimit(settings, fixedExpenses, transactions);
@@ -119,7 +128,7 @@ export function renderTransactionList(transactions, pensionDay) {
     }
 
     // Определяем тип операции
-    const isIncome = transaction.type === 'income';
+    const incomeFlag = isIncome(transaction);
     const amountClass = isIncome
       ? 'transaction__amount--income'
       : 'transaction__amount';
@@ -401,7 +410,7 @@ export function renderStatsChart(settings, transactions) {
   const periodExpenses = transactions.filter((t) => {
     const tDate = new Date(t.date);
     // Берем только расходы (не доходы) и только за текущий период
-    return t.type === 'expense' && tDate >= startDate && tDate <= endDate;
+    return isExpense(t) && tDate >= startDate && tDate <= endDate;
   });
 
   // 2. Группируем суммы по категориям
@@ -716,7 +725,7 @@ export function renderSubcategoryBreakdown(settings, transactions) {
   const { endDate } = getCurrentPeriod(settings.pensionDay);
   const periodExpenses = transactions.filter((t) => {
     const tDate = new Date(t.date);
-    return t.type === 'expense' && tDate >= startDate && tDate <= endDate;
+    return isExpense(t) && tDate >= startDate && tDate <= endDate;
   });
   if (periodExpenses.length === 0) {
     container.innerHTML = '';

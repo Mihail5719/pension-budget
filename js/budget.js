@@ -1,5 +1,14 @@
 import { getCurrentPeriod, formatDateKey } from './utils.js';
 
+// ─── Предикаты типов операций (v2.0, коммит 2) ───
+const isIncome = (t) => t.type === 'income';
+const isExpense = (t) => t.type === 'expense';
+const isCommitted = (t) => t.type === 'committed';
+// деньги, покинувшие кошелёк: влияют на баланс,
+// но в круг жизни попадает только isExpense
+const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
+// ─── конец блока предикатов ───
+
 // Сумма всех обязательных платежей
 export function getTotalFixedExpenses(fixedExpenses) {
   return fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
@@ -58,19 +67,28 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   });
 
   // 3. Считаем доходы и расходы
-  const spent = periodTransactions
-    .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    const spent = periodTransactions
+      .filter(isExpense)
+      .reduce((sum, t) => sum + t.amount, 0);
 
-  const income = periodTransactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+    // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи
+    // Используется для баланса; spent — только для статистики
+    const moneyOut = periodTransactions
+      .filter(isMoneyOut)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const income = periodTransactions
+      .filter(isIncome)
+      .reduce((sum, t) => sum + t.amount, 0);
 
   // 4. === БУХГАЛТЕРСКИЙ РАСЧЁТ ===
   // Если пенсия получена — добавляем её к балансу
   // Текущий баланс = Начальный остаток + (Пенсия если отмечена) + Доходы - Расходы
-  const currentBalance =
-    initialBalance + (currentPeriodStart ? pensionAmount : 0) + income - spent;
+    const currentBalance =
+      initialBalance +
+      (currentPeriodStart ? pensionAmount : 0) +
+      income -
+      moneyOut;
 
   // Свободный бюджет = Текущий баланс - НЗ - Обязательные платежи
   // (Обязательные платежи вычитаем, потому что они гарантированно будут списаны)

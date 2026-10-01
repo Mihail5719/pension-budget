@@ -10,6 +10,15 @@ import {
 import { formatDateKey, getCurrentPeriod, formatMoney } from './utils.js';
 import { calculateDailyLimit } from './budget.js';
 
+// ─── Предикаты типов операций (v2.0, коммит 2) ───
+const isIncome = (t) => t.type === 'income';
+const isExpense = (t) => t.type === 'expense';
+const isCommitted = (t) => t.type === 'committed';
+// деньги, покинувшие кошелёк: влияют на баланс,
+// но в круг жизни попадает только isExpense
+const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
+// ─── конец блока предикатов ───
+
 // Список категорий расходов
 const EXPENSE_CATEGORIES = [
   { id: 'products', name: 'Продукты', emoji: '🛒' },
@@ -913,8 +922,8 @@ function openEditModal(transactionId) {
   editingTransactionId = transactionId;
 
   // Определяем тип транзакции (расход или доход)
-  const isIncome = transaction.type === 'income';
-  const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const incomeFlag = isIncome(transaction);
+  const categories = incomeFlag ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   // Заполняем выпадающий список категориями
   const categorySelect = document.getElementById('edit-category');
@@ -1019,8 +1028,8 @@ function saveEditTransaction() {
 
   // Определяем тип транзакции (сохраняем оригинальный тип)
   const originalTransaction = appData.transactions[transactionIndex];
-  const isIncome = originalTransaction.type === 'income';
-  const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const incomeFlag = isIncome(originalTransaction);
+  const categories = incomeFlag ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   // Находим название категории
   const category = categories.find((c) => c.id === categoryId);
@@ -1287,7 +1296,7 @@ function updateDeletePreview() {
     return;
   }
   const expenseSum = victims
-    .filter((t) => t.type === 'expense')
+    .filter(isExpense)
     .reduce((s, t) => s + t.amount, 0);
   previewEl.textContent = `Будет удалено: ${victims.length} записей, расходы на ${formatMoney(expenseSum)}`;
 }
@@ -1327,7 +1336,7 @@ function handleDeleteRange() {
     return;
   }
   const expenseSum = victims
-    .filter((t) => t.type === 'expense')
+    .filter(isExpense)
     .reduce((s, t) => s + t.amount, 0);
   const message =
     `Будет удалено записей: ${victims.length}\n` +
