@@ -36,8 +36,6 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     initialBalance = 0, // ← Учитываем начальный остаток
   } = settings;
 
-  const fixedTotal = getTotalFixedExpenses(fixedExpenses);
-
   // 1. Определяем даты периода
   let startDate, endDate;
   const today = new Date();
@@ -66,29 +64,38 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     return tDate >= startDate && tDate <= endDate;
   });
 
+  // Резерв только по НЕоплаченным в текущем периоде платежам:
+  // оплата любого типа (старые expense и новые committed) снимает резерв
+  const paidIds = new Set(
+    periodTransactions.filter((t) => t.paymentId).map((t) => t.paymentId),
+  );
+  const fixedTotal = fixedExpenses
+    .filter((p) => !paidIds.has(p.id))
+    .reduce((sum, p) => sum + p.amount, 0);
+
   // 3. Считаем доходы и расходы
-    const spent = periodTransactions
-      .filter(isExpense)
-      .reduce((sum, t) => sum + t.amount, 0);
+  const spent = periodTransactions
+    .filter(isExpense)
+    .reduce((sum, t) => sum + t.amount, 0);
 
-    // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи
-    // Используется для баланса; spent — только для статистики
-    const moneyOut = periodTransactions
-      .filter(isMoneyOut)
-      .reduce((sum, t) => sum + t.amount, 0);
+  // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи
+  // Используется для баланса; spent — только для статистики
+  const moneyOut = periodTransactions
+    .filter(isMoneyOut)
+    .reduce((sum, t) => sum + t.amount, 0);
 
-    const income = periodTransactions
-      .filter(isIncome)
-      .reduce((sum, t) => sum + t.amount, 0);
+  const income = periodTransactions
+    .filter(isIncome)
+    .reduce((sum, t) => sum + t.amount, 0);
 
   // 4. === БУХГАЛТЕРСКИЙ РАСЧЁТ ===
   // Если пенсия получена — добавляем её к балансу
   // Текущий баланс = Начальный остаток + (Пенсия если отмечена) + Доходы - Расходы
-    const currentBalance =
-      initialBalance +
-      (currentPeriodStart ? pensionAmount : 0) +
-      income -
-      moneyOut;
+  const currentBalance =
+    initialBalance +
+    (currentPeriodStart ? pensionAmount : 0) +
+    income -
+    moneyOut;
 
   // Свободный бюджет = Текущий баланс - НЗ - Обязательные платежи
   // (Обязательные платежи вычитаем, потому что они гарантированно будут списаны)

@@ -297,7 +297,7 @@ function handleMarkPaid(event) {
 
   const transaction = {
     id: Date.now(),
-    type: 'expense',
+    type: 'committed',
     category: payment.name,
     amount: payment.amount,
     date: today,
