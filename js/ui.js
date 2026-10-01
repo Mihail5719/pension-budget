@@ -141,16 +141,23 @@ export function renderTransactionList(transactions, pensionDay) {
       emoji: '📦',
       color: '#95a5a6',
     };
-    const displayName = `${catStyle.emoji} ${transaction.category}`;
+    // v2.0: обязательные платежи получают значок 📋 и строку note
+    const committedFlag = isCommitted(transaction);
+    const emoji = committedFlag ? '📋' : catStyle.emoji;
+    const displayName = `${emoji} ${transaction.category}`;
     const subLine = transaction.subcategory
       ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
       : '';
+    const noteLine =
+      committedFlag && transaction.note
+        ? `<span class="transaction__subcategory">${transaction.note}</span>`
+        : '';
     // ====================================================
 
     itemEl.innerHTML = `
     <div class="transaction__info">
-        <span class="transaction__category">${displayName}</span>
-        ${subLine}
+                <span class="transaction__category">${displayName}</span>
+        ${subLine}${noteLine}
         <span class="transaction__date">${formatDateOnly(transaction.date)}</span>
     </div>
     <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
