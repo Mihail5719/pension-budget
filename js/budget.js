@@ -1,5 +1,14 @@
 import { getCurrentPeriod, formatDateKey } from './utils.js';
 
+// ─── Предикаты типов операций (v2.0, коммит 2) ───
+const isIncome = (t) => t.type === 'income';
+const isExpense = (t) => t.type === 'expense';
+const isCommitted = (t) => t.type === 'committed';
+// деньги, покинувшие кошелёк: влияют на баланс,
+// но в круг жизни попадает только isExpense
+const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
+// ─── конец блока предикатов ───
+
 // Сумма всех обязательных платежей
 export function getTotalFixedExpenses(fixedExpenses) {
   return fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
@@ -26,8 +35,6 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     currentPeriodStart,
     initialBalance = 0, // ← Учитываем начальный остаток
   } = settings;
-
-  const fixedTotal = getTotalFixedExpenses(fixedExpenses);
 
   // 1. Определяем даты периода
   let startDate, endDate;
@@ -57,23 +64,44 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     return tDate >= startDate && tDate <= endDate;
   });
 
+  // Резерв только по НЕоплаченным в текущем периоде платежам:
+  // оплата любого типа (старые expense и новые committed) снимает резерв
+  const paidIds = new Set(
+    periodTransactions.filter((t) => t.paymentId).map((t) => t.paymentId),
+  );
+  const fixedTotal = fixedExpenses
+    .filter((p) => !paidIds.has(p.id))
+    .reduce((sum, p) => sum + p.amount, 0);
+
   // 3. Считаем доходы и расходы
   const spent = periodTransactions
-    .filter((t) => t.type !== 'income')
+    .filter(isExpense)
+    .reduce((sum, t) => sum + t.amount, 0);
+  // Фиксированные платежи, оплаченные в периоде
+  const committedTotal = periodTransactions
+    .filter((t) => t.type === 'committed')
+    .reduce((sum, t) => sum + t.amount, 0);
+  // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи
+  // Используется для баланса; spent — только для статистики
+  const moneyOut = periodTransactions
+    .filter(isMoneyOut)
     .reduce((sum, t) => sum + t.amount, 0);
 
   const income = periodTransactions
-    .filter((t) => t.type === 'income')
+    .filter(isIncome)
     .reduce((sum, t) => sum + t.amount, 0);
 
   // 4. === БУХГАЛТЕРСКИЙ РАСЧЁТ ===
   // Если пенсия получена — добавляем её к балансу
   // Текущий баланс = Начальный остаток + (Пенсия если отмечена) + Доходы - Расходы
   const currentBalance =
-    initialBalance + (currentPeriodStart ? pensionAmount : 0) + income - spent;
+    initialBalance +
+    (currentPeriodStart ? pensionAmount : 0) +
+    income -
+    moneyOut;
 
-  // Свободный бюджет = Текущий баланс - НЗ - Обязательные платежи
-  // (Обязательные платежи вычитаем, потому что они гарантированно будут списаны)
+  // Свободный бюджет = Текущий баланс - НЗ - Фиксированные платежи
+  // (Фиксированные платежи вычитаем, потому что они гарантированно будут списаны)
   const freeBudget = currentBalance - reserveAmount - fixedTotal;
 
   // Остаток после потраченного (свободные деньги)
@@ -91,6 +119,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     dailyLimit,
     remaining,
     spent,
+    committedTotal,
     income,
     freeBudget,
     currentBalance, // ← Добавляем текущий баланс
