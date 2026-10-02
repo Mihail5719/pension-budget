@@ -108,7 +108,6 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
 export function renderTransactionList(transactions, pensionDay) {
   const listEl = document.getElementById('transaction-list');
   listEl.innerHTML = '';
-  
 
   if (transactions.length === 0) {
     listEl.innerHTML =
@@ -141,7 +140,7 @@ export function renderTransactionList(transactions, pensionDay) {
       emoji: '📦',
       color: '#95a5a6',
     };
-    // v2.0: обязательные платежи получают значок 📋 и строку note
+    // v2.0: фиксированные платежи получают значок 📋 и строку note
     const committedFlag = isCommitted(transaction);
     const emoji = committedFlag ? '📋' : catStyle.emoji;
     const displayName = `${emoji} ${transaction.category}`;
@@ -169,8 +168,8 @@ export function renderTransactionList(transactions, pensionDay) {
 
     listEl.appendChild(itemEl);
   });
-  }
-  
+}
+
 // Отрисовка настроек
 export function renderSettings(settings, fixedExpenses) {
   // Заполняем поля ввода
@@ -310,7 +309,7 @@ function handleMarkPaid(event) {
     amount: payment.amount,
     date: today,
     paymentId: paymentId,
-    note: 'Автоматически: обязательный платёж',
+    note: 'Автоматически: фиксированный платёж',
   };
 
   appData.transactions = appData.transactions || [];
@@ -402,10 +401,9 @@ export function renderStatsChart(settings, transactions) {
     console.error('❌ Canvas не найден!');
     return;
   }
-    const emptyMsg = document.getElementById('stats-empty');
+  const emptyMsg = document.getElementById('stats-empty');
   if (emptyMsg) emptyMsg.hidden = true;
-    canvas.style.display = '';
-  
+  canvas.style.display = '';
 
   // Определяем цвет текста легенды в зависимости от темы
   const isDarkTheme = document.body.classList.contains('dark-theme');
@@ -444,14 +442,14 @@ export function renderStatsChart(settings, transactions) {
     if (window.expenseChartInstance) {
       window.expenseChartInstance.destroy();
     }
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const emptyMsg = document.getElementById('stats-empty');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const emptyMsg = document.getElementById('stats-empty');
     if (emptyMsg) emptyMsg.hidden = false;
     canvas.style.display = 'none';
-        return;
+    return;
   }
-     
+
   // 5. Уничтожаем старую диаграмму, если она была
   if (window.expenseChartInstance) {
     window.expenseChartInstance.destroy();
@@ -617,103 +615,110 @@ export function renderPensionPeriodInfo(settings) {
       // Клонируем, чтобы удалить старые обработчики при перерисовке
       const freshBtn = btnNewPeriod.cloneNode(true);
       btnNewPeriod.parentNode.replaceChild(freshBtn, btnNewPeriod);
-      
+
       freshBtn.addEventListener('click', () => {
         // Явно читаем из window.appData
-        const currentDate = window.appData && window.appData.settings.currentPeriodStart 
-          ? window.appData.settings.currentPeriodStart.split('T')[0] 
-          : '';
-        
+        const currentDate =
+          window.appData && window.appData.settings.currentPeriodStart
+            ? window.appData.settings.currentPeriodStart.split('T')[0]
+            : '';
+
         const userChoice = prompt(
           'Введите новую дату начала периода (в формате ГГГГ-ММ-ДД, например 2026-09-23)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ПОЛНОСТЬЮ СБРОСИТЬ отметку.',
-          currentDate
+          currentDate,
         );
 
         if (userChoice === null) {
           return; // Пользователь нажал "Отмена"
-        } 
-        
+        }
+
         if (userChoice.trim() === '') {
           // Сброс отметки
-          if (confirm('Сбросить отметку о получении пенсии? Кнопка на главном экране появится снова.')) {
+          if (
+            confirm(
+              'Сбросить отметку о получении пенсии? Кнопка на главном экране появится снова.',
+            )
+          ) {
             if (window.appData) {
               // 1. Удаляем поле
               delete window.appData.settings.currentPeriodStart;
-              
+
               // 2. Сохраняем (функция saveData теперь импортирована)
               saveData(window.appData);
-              
+
               // 3. Перерисовываем всё
               renderPensionPeriodInfo(window.appData.settings);
-              renderTodayScreen(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
-              
+              renderTodayScreen(
+                window.appData.settings,
+                window.appData.fixedExpenses,
+                window.appData.transactions,
+              );
+
               if (window.expenseChartInstance) {
-                renderStatsChart(window.appData.settings, window.appData.transactions);
+                renderStatsChart(
+                  window.appData.settings,
+                  window.appData.transactions,
+                );
               }
             }
           }
         } else {
           // Изменение даты
-                    const newDate = new Date(userChoice);
-                    if (!isNaN(newDate.getTime())) {
-                      if (window.appData) {
-                        // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
-                        const oldStart = window.appData.settings
-                          .currentPeriodStart
-                          ? new Date(window.appData.settings.currentPeriodStart)
-                          : null;
-                        if (
-                          oldStart &&
-                          newDate.getTime() > oldStart.getTime()
-                        ) {
-                          const oldBalance = calculateDailyLimit(
-                            window.appData.settings,
-                            window.appData.fixedExpenses,
-                            window.appData.transactions,
-                          );
-                          window.appData.settings.initialBalance =
-                            oldBalance.currentBalance - oldBalance.fixedTotal;
-                          console.log(
-                            '🔄 Перенос остатка:',
-                            window.appData.settings.initialBalance.toFixed(2),
-                            '₽',
-                          );
-                          // === Синхронизация поля настроек ===
-                          const initialInput = document.getElementById(
-                            'input-initial-balance',
-                          );
-                          if (initialInput) {
-                            initialInput.value =
-                              window.appData.settings.initialBalance;
-                          }
-                          // ====================================
-                        }
-                        // =====================================================
-                        window.appData.settings.currentPeriodStart =
-                          newDate.toISOString();
-                        saveData(window.appData);
+          const newDate = new Date(userChoice);
+          if (!isNaN(newDate.getTime())) {
+            if (window.appData) {
+              // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
+              const oldStart = window.appData.settings.currentPeriodStart
+                ? new Date(window.appData.settings.currentPeriodStart)
+                : null;
+              if (oldStart && newDate.getTime() > oldStart.getTime()) {
+                const oldBalance = calculateDailyLimit(
+                  window.appData.settings,
+                  window.appData.fixedExpenses,
+                  window.appData.transactions,
+                );
+                window.appData.settings.initialBalance =
+                  oldBalance.currentBalance - oldBalance.fixedTotal;
+                console.log(
+                  '🔄 Перенос остатка:',
+                  window.appData.settings.initialBalance.toFixed(2),
+                  '₽',
+                );
+                // === Синхронизация поля настроек ===
+                const initialInput = document.getElementById(
+                  'input-initial-balance',
+                );
+                if (initialInput) {
+                  initialInput.value = window.appData.settings.initialBalance;
+                }
+                // ====================================
+              }
+              // =====================================================
+              window.appData.settings.currentPeriodStart =
+                newDate.toISOString();
+              saveData(window.appData);
 
-                        renderPensionPeriodInfo(window.appData.settings);
-                        renderTodayScreen(
-                          window.appData.settings,
-                          window.appData.fixedExpenses,
-                          window.appData.transactions,
-                        );
+              renderPensionPeriodInfo(window.appData.settings);
+              renderTodayScreen(
+                window.appData.settings,
+                window.appData.fixedExpenses,
+                window.appData.transactions,
+              );
 
-                        if (window.expenseChartInstance) {
-                          renderStatsChart(
-                            window.appData.settings,
-                            window.appData.transactions,
-                          );
-                        }
+              if (window.expenseChartInstance) {
+                renderStatsChart(
+                  window.appData.settings,
+                  window.appData.transactions,
+                );
+              }
 
-                        alert('✅ Период успешно обновлён!');
-                      }
-                    } else {
-                      alert(
-                        '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
-                      );
-                    }
+              alert('✅ Период успешно обновлён!');
+            }
+          } else {
+            alert(
+              '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
+            );
+          }
         }
       });
     }

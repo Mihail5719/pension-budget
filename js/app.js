@@ -339,7 +339,7 @@ function setupEventListeners() {
           appData.fixedExpenses,
           appData.transactions,
         );
-        // Новый начальный остаток = текущий баланс - обязательные платежи
+        // Новый начальный остаток = текущий баланс - фиксированные платежи
         newInitialBalance = oldBalance.currentBalance - oldBalance.fixedTotal;
         console.log('🔄 Перенос остатка:', newInitialBalance);
       }
@@ -1244,13 +1244,43 @@ document.addEventListener('click', (e) => {
     targetScreen.classList.add('active');
   }
 
-  // Если открыли Статистику — рисуем график
+  // Если открыли Статистику — рисуем график и отчёт периода
   if (screenId === 'screen-stats') {
     setTimeout(() => {
       const savedData = localStorage.getItem('pensionBudget');
-      if (savedData && typeof renderStatsChart === 'function') {
+      if (savedData) {
         const data = JSON.parse(savedData);
-        renderStatsChart(data.settings, data.transactions);
+
+        // 1. Рисуем график
+        if (typeof renderStatsChart === 'function') {
+          renderStatsChart(data.settings, data.transactions);
+        }
+
+        // 2. Заполняем отчёт "Нефиксированные / Фиксированные"
+        if (typeof calculateDailyLimit === 'function') {
+          const stats = calculateDailyLimit(
+            data.settings,
+            data.fixedExpenses,
+            data.transactions,
+          );
+          const summaryEl = document.getElementById('stats-period-summary');
+
+          if (summaryEl) {
+            const format =
+              typeof formatMoney === 'function'
+                ? formatMoney
+                : (val) => val.toFixed(2) + ' ₽';
+
+            summaryEl.innerHTML = `
+            <div style="margin-bottom: 8px; color: var(--color-text, #2c3e50);">
+              <strong>Нефиксированные:</strong> ${format(stats.spent)}
+            </div>
+            <div style="color: var(--color-text-secondary, #7f8c8d);">
+              <strong>Фиксированные:</strong> ${format(stats.committedTotal)}
+            </div>
+          `;
+          }
+        }
       }
     }, 100);
   }

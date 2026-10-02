@@ -77,7 +77,10 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   const spent = periodTransactions
     .filter(isExpense)
     .reduce((sum, t) => sum + t.amount, 0);
-
+  // Фиксированные платежи, оплаченные в периоде
+  const committedTotal = periodTransactions
+    .filter((t) => t.type === 'committed')
+    .reduce((sum, t) => sum + t.amount, 0);
   // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи
   // Используется для баланса; spent — только для статистики
   const moneyOut = periodTransactions
@@ -97,8 +100,8 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     income -
     moneyOut;
 
-  // Свободный бюджет = Текущий баланс - НЗ - Обязательные платежи
-  // (Обязательные платежи вычитаем, потому что они гарантированно будут списаны)
+  // Свободный бюджет = Текущий баланс - НЗ - Фиксированные платежи
+  // (Фиксированные платежи вычитаем, потому что они гарантированно будут списаны)
   const freeBudget = currentBalance - reserveAmount - fixedTotal;
 
   // Остаток после потраченного (свободные деньги)
@@ -116,6 +119,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     dailyLimit,
     remaining,
     spent,
+    committedTotal,
     income,
     freeBudget,
     currentBalance, // ← Добавляем текущий баланс
