@@ -6,12 +6,16 @@
  * @returns {string} - Отформатированная строка с копейками
  */
 export function formatMoney(amount) {
+  // 1. Сначала жестко округляем до копеек, чтобы убрать ошибки float
+  const cleanAmount = Math.round(amount * 100) / 100;
+
+  // 2. Потом красиво форматируем для экрана
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'RUB',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(cleanAmount);
 }
 
 // Получение строки даты в формате YYYY-MM-DD
