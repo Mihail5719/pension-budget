@@ -689,8 +689,7 @@ export function renderPensionPeriodInfo(settings) {
 
                 if (!userAgrees) return;
 
-                window.appData.settings.initialBalance =
-                  Math.round(carryOver * 100) / 100;
+                window.appData.settings.initialBalance = carryOver;
                 console.log(
                   ' Перенос остатка:',
                   window.appData.settings.initialBalance.toFixed(2),
