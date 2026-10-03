@@ -663,55 +663,59 @@ export function renderPensionPeriodInfo(settings) {
             }
           }
         } else {
-          // Изменение даты
           const newDate = new Date(userChoice);
           if (!isNaN(newDate.getTime())) {
             if (window.appData) {
-              // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
+              // === ЯВНЫЙ ПЕРЕНОС ОСТАТКА (Наблюдение 14) ===
               const oldStart = window.appData.settings.currentPeriodStart
                 ? new Date(window.appData.settings.currentPeriodStart)
                 : null;
+
               if (oldStart && newDate.getTime() > oldStart.getTime()) {
                 const oldBalance = calculateDailyLimit(
                   window.appData.settings,
                   window.appData.fixedExpenses,
                   window.appData.transactions,
                 );
-                window.appData.settings.initialBalance =
+                const carryOver =
                   oldBalance.currentBalance - oldBalance.fixedTotal;
+
+                const userAgrees = confirm(
+                  `Вы переносите период вперёд.\n\n` +
+                    `Нераспределённый остаток: ${carryOver.toFixed(2)} ₽\n` +
+                    `Он будет перенесён как начальный баланс нового периода.\n\n` +
+                    `Продолжить? (Нажмите "Отмена", чтобы изменить дату без переноса остатка)`,
+                );
+
+                if (!userAgrees) return;
+
+                window.appData.settings.initialBalance = carryOver;
                 console.log(
-                  '🔄 Перенос остатка:',
+                  ' Перенос остатка:',
                   window.appData.settings.initialBalance.toFixed(2),
                   '₽',
                 );
-                // === Синхронизация поля настроек ===
                 const initialInput = document.getElementById(
                   'input-initial-balance',
                 );
-                if (initialInput) {
-                  initialInput.value = window.appData.settings.initialBalance;
-                }
-                // ====================================
+                if (initialInput) initialInput.value = carryOver.toFixed(2);
               }
-              // =====================================================
+              // ==========================================
+
               window.appData.settings.currentPeriodStart =
                 newDate.toISOString();
               saveData(window.appData);
-
               renderPensionPeriodInfo(window.appData.settings);
               renderTodayScreen(
                 window.appData.settings,
                 window.appData.fixedExpenses,
                 window.appData.transactions,
               );
-
-              if (window.expenseChartInstance) {
+              if (window.expenseChartInstance)
                 renderStatsChart(
                   window.appData.settings,
                   window.appData.transactions,
                 );
-              }
-
               alert('✅ Период успешно обновлён!');
             }
           } else {

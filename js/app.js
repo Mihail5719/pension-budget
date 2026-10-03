@@ -391,12 +391,9 @@ function setupEventListeners() {
         currentDate,
       );
 
-      if (userChoice === null) {
-        return; // Пользователь нажал "Отмена"
-      }
+      if (userChoice === null) return;
 
       if (userChoice.trim() === '') {
-        // Пользователь стёр всё и нажал ОК -> Сброс
         if (
           confirm('Отменить отметку о получении пенсии? Кнопка появится снова.')
         ) {
@@ -412,36 +409,39 @@ function setupEventListeners() {
             renderStatsChart(appData.settings, appData.transactions);
         }
       } else {
-        // Пользователь ввёл дату -> Проверка и сохранение
         const newDate = new Date(userChoice);
         if (!isNaN(newDate.getTime())) {
-          // === ПЕРЕНОС ОСТАТКА (если период движется вперёд) ===
+          // === ЯВНЫЙ ПЕРЕНОС ОСТАТКА (Наблюдение 14) ===
           const oldStart = appData.settings.currentPeriodStart
             ? new Date(appData.settings.currentPeriodStart)
             : null;
+
           if (oldStart && newDate.getTime() > oldStart.getTime()) {
             const oldBalance = calculateDailyLimit(
               appData.settings,
               appData.fixedExpenses,
               appData.transactions,
             );
-            appData.settings.initialBalance =
-              oldBalance.currentBalance - oldBalance.fixedTotal;
+            const carryOver = oldBalance.currentBalance - oldBalance.fixedTotal;
+
+            const userAgrees = confirm(
+              `Вы переносите период вперёд.\n\n` +
+                `Нераспределённый остаток: ${carryOver.toFixed(2)} ₽\n` +
+                `Он будет перенесён как начальный баланс нового периода.\n\n` +
+                `Продолжить? (Нажмите "Отмена", чтобы изменить дату без переноса остатка)`,
+            );
+
+            if (!userAgrees) return;
+
+            appData.settings.initialBalance = carryOver;
             console.log(
               '🔄 Перенос остатка:',
               appData.settings.initialBalance.toFixed(2),
               '₽',
             );
-            // === Синхронизация поля настроек ===
-            const initialInput = document.getElementById(
-              'input-initial-balance',
-            );
-            if (initialInput) {
-              initialInput.value = appData.settings.initialBalance;
-            }
-            // ====================================
           }
-          // =====================================================
+          // ==========================================
+
           appData.settings.currentPeriodStart = newDate.toISOString();
           saveData(appData);
           renderTodayScreen(
