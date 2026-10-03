@@ -886,6 +886,43 @@ function handleDeleteClick(event) {
     }
   }
 
+  // Редактирование платежа
+  if (target.dataset.action === 'edit-payment') {
+    const paymentId = parseInt(target.dataset.id);
+    const payment = appData.fixedExpenses.find((p) => p.id === paymentId);
+
+    if (payment) {
+      const newName = prompt('Название платежа:', payment.name);
+      if (newName === null) return; // Отмена
+
+      const newAmountStr = prompt('Сумма:', payment.amount);
+      if (newAmountStr === null) return;
+
+      const newAmount = parseFloat(newAmountStr.replace(',', '.'));
+      if (isNaN(newAmount) || newAmount <= 0) {
+        alert('Некорректная сумма');
+        return;
+      }
+
+      const newDayStr = prompt('День месяца (1-28):', payment.day);
+      if (newDayStr === null) return;
+
+      const newDay = parseInt(newDayStr);
+      if (isNaN(newDay) || newDay < 1 || newDay > 28) {
+        alert('День должен быть от 1 до 28');
+        return;
+      }
+
+      // Обновляем данные
+      payment.name = newName.trim();
+      payment.amount = newAmount;
+      payment.day = newDay;
+
+      saveData(appData);
+      renderAll(appData);
+      console.log('Платёж обновлён:', payment);
+    }
+  }
   // Удаление платежа
   if (target.dataset.action === 'delete-payment') {
     const paymentId = parseInt(target.dataset.id);
