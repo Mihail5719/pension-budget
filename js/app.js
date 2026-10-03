@@ -433,7 +433,7 @@ function setupEventListeners() {
 
             if (!userAgrees) return;
 
-            appData.settings.initialBalance = carryOver;
+            appData.settings.initialBalance = Math.round(carryOver * 100) / 100;
             console.log(
               '🔄 Перенос остатка:',
               appData.settings.initialBalance.toFixed(2),
