@@ -19,7 +19,7 @@ const isCommitted = (t) => t.type === 'committed';
 const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
 // ─── конец блока предикатов ───
 
-// Список категорий расходов
+// Список категорий расходов (v2.0)
 const EXPENSE_CATEGORIES = [
   { id: 'products', name: 'Продукты', emoji: '🛒' },
   { id: 'pharmacy', name: 'Аптека', emoji: '💊' },
@@ -30,92 +30,102 @@ const EXPENSE_CATEGORIES = [
   { id: 'gifts', name: 'Подарки', emoji: '🎁' },
   { id: 'home', name: 'Для дома', emoji: '🏡' },
   { id: 'clothes', name: 'Одежда', emoji: '👕' },
-  { id: 'other', name: 'Другое', emoji: '📦' },
+  { id: 'other', name: 'Разное', emoji: '📦' }, // Глобальное переименование
   { id: 'study', name: 'Учёба', emoji: '🎓' },
   { id: 'savings', name: 'Накопления', emoji: '🏦' },
 ];
 
-// Подкатегории для категорий расходов
+// Подкатегории для категорий расходов (v2.0)
 const SUBCATEGORIES = {
   products: [
-    { id: 'meat', name: 'Мясо и рыба' },
+    { id: 'meat', name: 'Мясо' },       // Разделено
+    { id: 'fish', name: 'Рыба' },        // Разделено
     { id: 'veg', name: 'Овощи и фрукты' },
     { id: 'dairy', name: 'Молочное' },
     { id: 'bread', name: 'Хлеб и бакалея' },
-    { id: 'other', name: 'Другое' },
+    { id: 'other', name: 'Разное' },
   ],
   pharmacy: [
-    { id: 'rx', name: 'По рецепту' },
-    { id: 'vitamins', name: 'Витамины' },
-    { id: 'firstaid', name: 'Первая помощь' },
-    { id: 'other', name: 'Другое' },
+    { id: 'medicines', name: 'Лекарства' },
+    { id: 'vitamins', name: 'Витамины и БАДы' },
+    { id: 'medical_devices', name: 'Медицинские изделия' },
+    { id: 'hygiene', name: 'Уход и гигиена' },
+    { id: 'other', name: 'Разное' }, // Резерв
   ],
   transport: [
     { id: 'fuel', name: 'Бензин' },
-    { id: 'public', name: 'Проезд' },
-    { id: 'taxi', name: 'Такси' },
-    { id: 'other', name: 'Другое' },
+    { id: 'parts', name: 'Запчасти' },
+    { id: 'maintenance', name: 'ТО' },
+    { id: 'parking', name: 'Парковка' },
+    { id: 'car_wash', name: 'Мойка' },
+    { id: 'insurance', name: 'Страховка' },
+    { id: 'fines', name: 'Штрафы ГИБДД' },
+    { id: 'other', name: 'Разное' },
   ],
   utilities: [
+    { id: 'communal', name: 'Коммуналка' }, // Вода + Отопление + Содержание
     { id: 'elec', name: 'Электричество' },
-    { id: 'water', name: 'Вода' },
-    { id: 'heat', name: 'Отопление' },
-    { id: 'other', name: 'Другое' },
+    { id: 'gas', name: 'Газ' },
+    { id: 'trash', name: 'Вывоз мусора' },
+    { id: 'fkr', name: 'ФКР' },
+    { id: 'intercom', name: 'Домофон' },
+    { id: 'other', name: 'Разное' },
   ],
   communication: [
     { id: 'mobile', name: 'Мобильный' },
-    { id: 'internet', name: 'Интернет' },
-    { id: 'other', name: 'Другое' },
+    { id: 'internet_tv', name: 'Интернет и ТВ' },
+    { id: 'other', name: 'Прочее' }, // Специфично для Связи по спеке
   ],
   health: [
     { id: 'consult', name: 'Консультации' },
     { id: 'tests', name: 'Анализы' },
     { id: 'procedures', name: 'Процедуры' },
-    { id: 'other', name: 'Другое' },
+    { id: 'other', name: 'Разное' },
   ],
-
   gifts: [
     { id: 'birthday', name: 'Дни рождения' },
     { id: 'holiday', name: 'Праздники' },
     { id: 'grandkids', name: 'Внукам' },
-    { id: 'other', name: 'Другое' },
+    { id: 'other', name: 'Разное' },
   ],
   home: [
     { id: 'furniture', name: 'Мебель' },
     { id: 'repair', name: 'Ремонт' },
     { id: 'chem', name: 'Бытовая химия' },
-    { id: 'other', name: 'Другое' },
+    { id: 'other', name: 'Разное' },
   ],
   clothes: [
     { id: 'daily', name: 'Повседневная' },
     { id: 'season', name: 'Сезонная' },
     { id: 'shoes', name: 'Обувь' },
-    { id: 'other', name: 'Другое' },
+    { id: 'other', name: 'Разное' },
   ],
   study: [
     { id: 'courses', name: 'Курсы' },
     { id: 'books', name: 'Книги' },
-    { id: 'other', name: 'Другое' },
+    { id: 'other', name: 'Разное' },
   ],
   savings: [
     { id: 'bank', name: 'На счёт в банке' },
     { id: 'cash', name: 'Наличные' },
-    { id: 'other', name: 'Другое' },
+    { id: 'other', name: 'Разное' },
   ],
   other: [
     { id: 'unexpected', name: 'Непредвиденное' },
     { id: 'hobby', name: 'Хобби' },
-    { id: 'other', name: 'Прочее' },
+    { id: 'other_sub', name: 'Прочее' },
   ],
 };
 
-// Список категорий доходов
+// Список категорий доходов (v2.0)
 const INCOME_CATEGORIES = [
   { id: 'gift', name: 'Подарки', emoji: '🎁' },
   { id: 'help', name: 'Помощь от детей/родственников', emoji: '👪' },
   { id: 'work', name: 'Подработка', emoji: '💼' },
   { id: 'debt', name: 'Возврат долга', emoji: '💰' },
-  { id: 'other', name: 'Другое', emoji: '📦' },
+  { id: 'refund', name: 'Возврат переплаты', emoji: '💸' }, // Новое
+  { id: 'interest', name: 'Проценты по счёту', emoji: '📈' }, // Новое
+  { id: 'other', name: 'Разное', emoji: '📦' }, // Глобальное переименование
 ];
 
 let appData; // Глобальное состояние приложения
