@@ -1668,5 +1668,11 @@ body.dark-theme .btn.btn--warning {
   padding: 60px 8px;
 }
 
-
+.transaction__item {
+  display: block;
+  font-size: 0.85em;
+  color: #888;
+  margin-top: 2px;
+  font-style: italic;
+}
  

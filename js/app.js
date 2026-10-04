@@ -613,6 +613,9 @@ function saveExpense() {
     return;
   }
 
+  const itemInput = document.getElementById('expense-item');
+  const itemValue = itemInput.value.trim();
+
   const subSelect = document.getElementById('expense-subcategory');
   const subId = subSelect.value;
   if (!subId) {
@@ -633,11 +636,13 @@ function saveExpense() {
     category: categoryName,
     subcategory: subName,
     amount: amount,
-    type: 'expense', // Добавили тип
+    type: 'expense',
+    item: itemValue,
   };
 
   appData.transactions.push(transaction);
   saveData(appData);
+  itemInput.value = '';
   closeExpenseModal();
   renderTodayScreen(
     appData.settings,
