@@ -211,6 +211,38 @@ export function renderSettings(settings, fixedExpenses) {
 
   // Отображаем информацию о текущем периоде
   renderPensionPeriodInfo(settings);
+
+    // Отображаем информацию о текущем периоде
+  renderPensionPeriodInfo(settings);
+
+  // ✅ Обновляем индикатор синхронизации
+  // Передаем все транзакции и дату последнего экспорта из настроек
+  const allTransactions = window.appData ? window.appData.transactions : [];
+  updateSyncIndicator(allTransactions, settings.lastExportDate);
+
+}
+
+// Обновление индикатора синхронизации
+export function updateSyncIndicator(transactions, lastExportDate) {
+  const indicatorText = document.getElementById('sync-indicator-text');
+  if (!indicatorText) return;
+
+  const count = transactions ? transactions.length : 0;
+  
+  let dateStr = 'не экспортировалось';
+  if (lastExportDate) {
+    const date = new Date(lastExportDate);
+    // Форматируем дату: "05.10.2026, 14:30"
+    dateStr = date.toLocaleString('ru-RU', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  }
+
+  indicatorText.textContent = `Записей: ${count} | Обновлено: ${dateStr}`;
 }
 
 // Обновление всей страницы
