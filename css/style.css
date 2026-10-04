@@ -1734,3 +1734,23 @@ body.dark-theme .btn.btn--warning {
     margin-left: auto;
   }
 }
+
+/* Индикатор синхронизации */
+.sync-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background-color: #f0f4f8;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.85em;
+  color: #555;
+  text-align: center;
+}
+
+.sync-indicator__icon {
+  font-size: 1.1em;
+}

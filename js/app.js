@@ -6,6 +6,7 @@ import {
   renderSettings,
   renderStatsChart,
   renderPensionPeriodInfo,
+  updateSyncIndicator,
 } from './ui.js';
 import { formatDateKey, getCurrentPeriod, formatMoney } from './utils.js';
 import { calculateDailyLimit } from './budget.js';
@@ -1159,6 +1160,13 @@ function handleExport() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+
+  // ✅ Сохраняем дату последнего успешного экспорта
+  appData.settings.lastExportDate = new Date().toISOString();
+  saveData(appData);
+
+  // ✅ Обновляем индикатор на экране
+  updateSyncIndicator(appData.transactions, appData.settings.lastExportDate);
 
   alert('✅ Данные успешно сохранены в файл!');
 }

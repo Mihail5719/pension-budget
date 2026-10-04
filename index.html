@@ -133,8 +133,6 @@
             <section class="screen screen--settings" id="screen-settings">
                 <h2 class="screen__title">Настройки</h2>
 
-
-
                 <div class="settings-group">
                     <label class="settings-label">
                         <span class="settings-label__text">💰 Начальный остаток</span>
@@ -168,6 +166,13 @@
                 <button class="btn btn--secondary" id="btn-add-payment">
                     Добавить платёж
                 </button>
+                
+                <!-- ✅ ИНДИКАТОР СИНХРОНИЗАЦИИ -->
+                <div class="sync-indicator" id="sync-indicator">
+                    <span class="sync-indicator__icon">💾</span>
+                    <span class="sync-indicator__text" id="sync-indicator-text">Загрузка...</span>
+                </div>
+                
                 <!-- ✅ Кнопки инструкции, экспорта и импорта -->
                 <div class="menu__actions">
                     <a href="guide.html" class="action-btn" target="_blank" title="Открыть инструкцию">
