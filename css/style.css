@@ -117,7 +117,7 @@ body {
   font-size: var(--font-size-base);
   line-height: 1.5;
   background: var(--bg-primary);
-       color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 .app {
@@ -132,7 +132,7 @@ body {
 /* Header */
 .header {
   background: var(--header-bg);
-       color: var(--header-text);
+  color: var(--header-text);
   padding: var(--spacing-md);
   text-align: center;
 }
@@ -201,34 +201,34 @@ body.dark-theme .today-card {
 
 /* Маленький лейбл для дневного лимита */
 .today-card__label--small {
-    margin-top: 20px;
-    margin-bottom: 8px;
-    font-size: 16px;
-    font-weight: 500;
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 /* Вторичное число (дневной лимит) - меньше главного */
 .today-card__amount--secondary {
-    font-size: 36px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: var(--text-primary);
+  font-size: 36px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
 }
 
 /* Подсказка курсивом под дневным лимитом */
 .today-card__hint {
-    font-size: 14px;
-    font-style: italic;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
 }
 
 /* Разделитель перед статистикой */
 .today-card__divider {
-    height: 1px;
-    background: var(--border-color);
-    margin: 16px 0;
-    opacity: 0.3;
+  height: 1px;
+  background: var(--border-color);
+  margin: 16px 0;
+  opacity: 0.3;
 }
 
 .today-card__amount {
@@ -272,8 +272,8 @@ body.dark-theme .today-card {
 }
 
 .btn--primary {
- background: var(--btn-primary-bg);
-       color: var(--btn-primary-text);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
 }
 
 .btn--primary:hover {
@@ -317,7 +317,9 @@ body.dark-theme .today-card {
   text-align: center;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 6px var(--shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 /* Лёгкий эффект при наведении (для десктопа) */
@@ -366,22 +368,29 @@ body.dark-theme .today-card {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  align-self: flex-start;  /* ← Прижимает к верху карточки */
+  align-self: flex-start; /* ← Прижимает к верху карточки */
 }
 
 .transaction__category {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
-  white-space: normal;          /* ← РАЗРЕШАЕТ перенос текста */
-  word-break: break-word;       /* ← Переносит длинные слова */
-  line-height: 1.3;             /* ← Чуть больше межстрочный интервал */
+  white-space: normal; /* ← РАЗРЕШАЕТ перенос текста */
+  word-break: break-word; /* ← Переносит длинные слова */
+  line-height: 1.3; /* ← Чуть больше межстрочный интервал */
 }
 
 .transaction__date {
-  font-size: 13px;
-  color: var(--text-secondary, #666);
+  display: block;
+  font-size: 0.75rem;
+  color: #999;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: normal;
+  -webkit-text-size-adjust: 100%;
 }
+
 
 /* Сумма — не сжимается, не переносится */
 .transaction__amount {
@@ -627,7 +636,7 @@ body.dark-theme .today-card {
     grid-template-columns: 1fr;
   }
 
-    .bottom-nav {
+  .bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -694,8 +703,8 @@ body.dark-theme .today-card {
   width: 90%;
   z-index: 1;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  max-height: 85vh;   /* ← ДОБАВИТЬ: максимум 85% высоты экрана */
-  overflow-y: auto;   /* ← ДОБАВИТЬ: прокрутка, если не влезает */
+  max-height: 85vh; /* ← ДОБАВИТЬ: максимум 85% высоты экрана */
+  overflow-y: auto; /* ← ДОБАВИТЬ: прокрутка, если не влезает */
 }
 
 .modal__title {
@@ -756,7 +765,7 @@ body.dark-theme .today-card {
 .btn-edit {
   background: none;
   border: none;
-  color: var(--color-primary);  /* Синий цвет */
+  color: var(--color-primary); /* Синий цвет */
   font-size: 20px;
   cursor: pointer;
   padding: 8px 12px;
@@ -768,7 +777,12 @@ body.dark-theme .today-card {
 }
 
 .btn-edit:hover {
-  background-color: rgba(25, 118, 210, 0.1);  /* Лёгкий синий фон при наведении */
+  background-color: rgba(
+    25,
+    118,
+    210,
+    0.1
+  ); /* Лёгкий синий фон при наведении */
   transform: scale(1.1);
 }
 
@@ -808,162 +822,173 @@ body.dark-theme .today-card {
 }
 /* Кнопки экспорта/импорта */
 .backup-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 24px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
 }
 
 .backup-buttons .btn {
-    flex: 1;
-    min-width: 140px;
-    max-width: 200px;
-    padding: 12px 16px;
-    font-size: 14px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    background: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
+  flex: 1;
+  min-width: 140px;
+  max-width: 200px;
+  padding: 12px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .backup-buttons .btn:hover {
-    background: #f5f5f5;
-    border-color: #999;
+  background: #f5f5f5;
+  border-color: #999;
 }
 /* Стили для блока действий (Инструкция, Экспорт, Импорт) */
 .menu__actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 24px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
 }
 
 .action-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: #ffffff;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    color: #374151;
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .action-btn:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
-    transform: translateY(-1px);
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
 }
 
 .action-btn:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 .btn-icon {
-    font-size: 16px;
+  font-size: 16px;
 }
 /* Кнопка переключения темы */
 .theme-toggle {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.3s;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
 }
 
 .theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .theme-icon {
-    font-size: 20px;
+  font-size: 20px;
 }
 
 .header {
-    position: relative;
+  position: relative;
 }
 /* === ДОПОЛНИТЕЛЬНЫЕ ЭЛЕМЕНТЫ ДЛЯ ТЁМНОЙ ТЕМЫ === */
 
 /* Поля ввода и выпадающие списки */
-input, select {
-    background-color: var(--input-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--input-border);
+input,
+select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border);
 }
 
 /* Карточки и элементы списков (платежи, транзакции) */
-.fixed-expense, .transaction-item, .today-card, .stat-card {
-    background-color: var(--card-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+.fixed-expense,
+.transaction-item,
+.today-card,
+.stat-card {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 /* Текст внутри обязательных платежей */
-.fixed-expense__name, .fixed-expense__amount {
-    color: var(--text-primary);
+.fixed-expense__name,
+.fixed-expense__amount {
+  color: var(--text-primary);
 }
 /* === ФИНАЛЬНАЯ ДОРАБОТКА ТЁМНОЙ ТЕМЫ === */
 
 /* Основной контейнер приложения */
-.app, .main, body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+.app,
+.main,
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 /* Заголовки секций */
-.screen__title, h2, h3 {
-    color: var(--text-primary);
+.screen__title,
+h2,
+h3 {
+  color: var(--text-primary);
 }
 
 /* Поля ввода */
-input[type="text"],
-input[type="number"],
-input[type="tel"] {
-    background-color: var(--input-bg);
-    color: var(--text-primary);
-    border-color: var(--input-border);
+input[type='text'],
+input[type='number'],
+input[type='tel'] {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
 }
 
 /* Все кнопки */
-.btn, .action-btn, button {
-    background-color: var(--btn-secondary-bg);
-    color: var(--btn-secondary-text);
-    border-color: var(--border-color);
+.btn,
+.action-btn,
+button {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border-color: var(--border-color);
 }
 
 .btn-primary {
-    background-color: var(--btn-primary-bg);
-    color: var(--btn-primary-text);
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
 }
 
 /* Навигация внизу */
 .nav {
-    background-color: var(--bg-secondary);
-    border-top-color: var(--border-color);
+  background-color: var(--bg-secondary);
+  border-top-color: var(--border-color);
 }
 
 .nav__item {
-    color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
 .nav__item--active {
-    color: var(--btn-primary-bg);
+  color: var(--btn-primary-bg);
 }
 /* === УЛУЧШЕНИЯ ДЛЯ СВЕТЛОЙ ТЕМЫ === */
 
@@ -1032,101 +1057,101 @@ body.dark-theme .btn--success:hover {
 
 /* === ПРИВЕТСТВЕННЫЙ ЭКРАН === */
 .screen--welcome {
-    display: none;
-    min-height: 60vh;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+  display: none;
+  min-height: 60vh;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
 .screen--welcome.active {
-    display: flex;
+  display: flex;
 }
 
 .welcome-container {
-    text-align: center;
-    max-width: 500px;
-    width: 100%;
-    padding: 32px 24px;
-    background: var(--card-bg, #ffffff);
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  padding: 32px 24px;
+  background: var(--card-bg, #ffffff);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .welcome-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
+  font-size: 64px;
+  margin-bottom: 16px;
 }
 
 .welcome-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-primary, #2c3e50);
-    margin: 0 0 12px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #2c3e50);
+  margin: 0 0 12px 0;
 }
 
 .welcome-text {
-    font-size: 16px;
-    color: var(--text-secondary, #666);
-    line-height: 1.5;
-    margin: 0 0 24px 0;
+  font-size: 16px;
+  color: var(--text-secondary, #666);
+  line-height: 1.5;
+  margin: 0 0 24px 0;
 }
 
 .welcome-steps {
-    text-align: left;
-    margin-bottom: 28px;
+  text-align: left;
+  margin-bottom: 28px;
 }
 
 .welcome-step {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-color, #eee);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color, #eee);
 }
 
 .welcome-step:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .step-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    background: var(--btn-primary-bg, #3498db);
-    color: white;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: 14px;
-    flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--btn-primary-bg, #3498db);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 .step-text {
-    font-size: 15px;
-    color: var(--text-primary, #333);
+  font-size: 15px;
+  color: var(--text-primary, #333);
 }
 
 .welcome-btn {
-    width: 100%;
-    max-width: 280px;
+  width: 100%;
+  max-width: 280px;
 }
 
 body.dark-theme .welcome-container {
-    background: var(--card-bg);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: var(--card-bg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* === ФОН ПРИЛОЖЕНИЯ (ГРАДИЕНТ "НЕБО") === */
 body {
-    background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
-    min-height: 100vh;
+  background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+  min-height: 100vh;
 }
 
 /* Фон для тёмной темы */
 body.dark-theme {
-    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
 }
 
 /* Усиленная тень для карточек статистики в тёмной теме */
@@ -1283,7 +1308,9 @@ body.dark-theme .stat:hover {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
   box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
 }
 
@@ -1456,9 +1483,9 @@ body.dark-theme .stat:hover {
    МОБИЛЬНАЯ АДАПТАЦИЯ (экраны до 480px)
    ============================================ */
 @media (max-width: 480px) {
-
   /* 1. Убираем горизонтальную прокрутку */
-  html, body {
+  html,
+  body {
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -1670,9 +1697,40 @@ body.dark-theme .btn.btn--warning {
 
 .transaction__item {
   display: block;
-  font-size: 0.85em;
-  color: #888;
+  font-size: 0.75rem;
+  color: #999;
   margin-top: 2px;
   font-style: italic;
+  line-height: 1.2;
+  -webkit-text-size-adjust: 100%;
 }
- 
+
+.transaction__right {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.transaction__amount {
+  flex: 1; /* Сумма занимает всё доступное пространство */
+  text-align: left;
+}
+
+.transaction__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0; /* Кнопки не сжимаются */
+}
+
+/* Мобильная адаптация для карточек транзакций */
+@media (max-width: 480px) {
+  .transaction__right {
+    width: 100%;
+  }
+
+  .transaction__actions {
+    margin-left: auto;
+  }
+}

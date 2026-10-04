@@ -156,16 +156,18 @@ export function renderTransactionList(transactions, pensionDay) {
       ? `<span class="transaction__item">${transaction.item}</span>`
       : '';
 
-    itemEl.innerHTML = `
+        itemEl.innerHTML = `
     <div class="transaction__info">
-        <span class="transaction__category">${displayName}</span>
-        ${subLine}${noteLine}${itemLine}
         <span class="transaction__date">${formatDateOnly(transaction.date)}</span>
+        <span class="transaction__category">${displayName}</span>
+        ${subLine}${itemLine}${noteLine}
     </div>
-    <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
-    <div class="transaction__actions">
-        <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
-        <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+    <div class="transaction__right">
+        <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
+        <div class="transaction__actions">
+            <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
+            <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+        </div>
     </div>
 `;
 
