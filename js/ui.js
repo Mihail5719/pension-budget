@@ -152,11 +152,14 @@ export function renderTransactionList(transactions, pensionDay) {
         ? `<span class="transaction__subcategory">${transaction.note}</span>`
         : '';
     // ====================================================
+    const itemLine = transaction.item
+      ? `<span class="transaction__item">${transaction.item}</span>`
+      : '';
 
     itemEl.innerHTML = `
     <div class="transaction__info">
-                <span class="transaction__category">${displayName}</span>
-        ${subLine}${noteLine}
+        <span class="transaction__category">${displayName}</span>
+        ${subLine}${noteLine}${itemLine}
         <span class="transaction__date">${formatDateOnly(transaction.date)}</span>
     </div>
     <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
