@@ -197,7 +197,7 @@ export function renderSettings(settings, fixedExpenses) {
     </div>
     <span class="fixed-expense__amount">${formatMoney(expense.amount)}</span>
     <div class="fixed-expense__actions">
-        <button class="btn-edit-payment" data-action="edit-payment" data-id="${expense.id}" title="Редактировать">✏️</button>
+        <button class="btn-edit" data-action="edit-payment" data-id="${expense.id}" title="Редактировать">✎</button>
         <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
     </div>
 `;
