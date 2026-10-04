@@ -189,6 +189,19 @@ function init() {
   console.log('Приложение инициализировано', appData);
 }
 
+// Регистрация Service Worker для PWA (офлайн-режим)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((registration) => {
+        console.log('[PWA] Service Worker зарегистрирован:', registration.scope);
+      })
+      .catch((error) => {
+        console.log('[PWA] Ошибка регистрации Service Worker:', error);
+      });
+  });
+}
+
 function setupEventListeners() {
   // Инициализация элементов модального окна расходов
   expenseModal = document.getElementById('expense-modal');
