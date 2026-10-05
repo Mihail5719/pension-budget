@@ -1471,3 +1471,255 @@ function handleDeleteRange() {
   updateDeletePreview();
   alert(`Готово! Удалено записей: ${victims.length}`);
 }
+
+// === СВЕРКА С БАНКОМ ===
+
+// Обработчик кнопки загрузки файла
+document.getElementById('reconcile-upload-btn').addEventListener('click', () => {
+  document.getElementById('reconcile-file').click();
+});
+
+document.getElementById('reconcile-file').addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const csvText = e.target.result;
+    const bankTransactions = parseCSV(csvText);
+    reconcileTransactions(bankTransactions);
+  };
+  reader.readAsText(file, 'UTF-8');
+});
+
+// Умный парсер CSV — сам определяет кодировку
+function parseCSV(csvText) {
+  const lines = csvText.trim().split(/\r?\n/);
+  const transactions = [];
+
+  // Пропускаем первую строку (заголовок)
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line === ';') continue; // Пропускаем пустые строки
+
+    const parts = line.split(';');
+    if (parts.length < 3) continue;
+
+    const date = parts[0].trim();
+    // Заменяем запятую на точку в сумме (на случай разных форматов)
+    const amountStr = parts[1].trim().replace(',', '.');
+    const amount = parseFloat(amountStr);
+    const description = parts[2].trim();
+
+    if (date && !isNaN(amount) && description) {
+      transactions.push({ date, amount, description });
+    }
+  }
+
+  return transactions;
+}
+
+// Сравнение транзакций
+function reconcileTransactions(bankTransactions) {
+  const appTransactions = appData.transactions || [];
+  
+  const matches = [];        // Совпадения
+  const mismatches = [];     // Расхождения
+  const missingInApp = [];   // Есть в банке, нет в приложении
+  const missingInBank = [];  // Есть в приложении, нет в банке
+
+  // Создаём копию транзакций приложения для отслеживания
+  const appUsed = new Array(appTransactions.length).fill(false);
+
+  // Проходим по всем транзакциям из банка
+  bankTransactions.forEach((bankTx) => {
+    let found = false;
+    const bankDate = normalizeDate(bankTx.date);
+    const bankAmountAbs = Math.abs(bankTx.amount);
+
+    for (let i = 0; i < appTransactions.length; i++) {
+      if (appUsed[i]) continue;
+
+      const appTx = appTransactions[i];
+      const appDate = normalizeDate(appTx.date);
+      const appAmountAbs = Math.abs(appTx.amount);
+
+      // Сравниваем дату и абсолютное значение суммы
+      if (bankDate === appDate && Math.abs(bankAmountAbs - appAmountAbs) < 0.01) {
+        matches.push({ bank: bankTx, app: appTx });
+        appUsed[i] = true;
+        found = true;
+        break;
+      }
+
+      // Если дата совпадает, но сумма отличается незначительно (до 10 рублей)
+      if (bankDate === appDate && Math.abs(bankAmountAbs - appAmountAbs) <= 10) {
+        mismatches.push({ bank: bankTx, app: appTx });
+        appUsed[i] = true;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      missingInApp.push(bankTx);
+    }
+  });
+
+  // Транзакции приложения, которые не были сопоставлены
+  appTransactions.forEach((appTx, i) => {
+    if (!appUsed[i]) {
+      missingInBank.push(appTx);
+    }
+  });
+
+  // Отображаем результаты
+  displayReconcileResults(matches, mismatches, missingInApp, missingInBank);
+}
+
+// Нормализация даты — приводит к формату YYYY-MM-DD
+function normalizeDate(dateStr) {
+  if (!dateStr) return '';
+  
+  // Если это ISO-формат (2026-08-22T06:13:13.000Z)
+  if (dateStr.includes('T')) {
+    return dateStr.split('T')[0]; // Берём только дату: 2026-08-22
+  }
+  
+  // Если это формат DD.MM.YYYY (14.09.2026)
+  if (dateStr.includes('.')) {
+    const parts = dateStr.split('.');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`; // 2026-09-14
+    }
+  }
+  
+  // Если уже в формате YYYY-MM-DD
+  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateStr;
+  }
+  
+  return dateStr;
+}
+
+// Отображение результатов сверки
+function displayReconcileResults(matches, mismatches, missingInApp, missingInBank) {
+  const resultsDiv = document.getElementById('reconcile-results');
+  resultsDiv.style.display = 'flex';
+
+  const totalBank = matches.length + mismatches.length + missingInApp.length;
+  const totalApp = matches.length + mismatches.length + missingInBank.length;
+
+  resultsDiv.innerHTML = `
+    <div class="reconcile-summary">
+      <div class="reconcile-summary__item">
+        <span class="reconcile-summary__value">${totalBank}</span>
+        <span class="reconcile-summary__label">В банке</span>
+      </div>
+      <div class="reconcile-summary__item">
+        <span class="reconcile-summary__value">${totalApp}</span>
+        <span class="reconcile-summary__label">В приложении</span>
+      </div>
+      <div class="reconcile-summary__item">
+        <span class="reconcile-summary__value" style="color: #27ae60;">${matches.length}</span>
+        <span class="reconcile-summary__label">Совпадений</span>
+      </div>
+      <div class="reconcile-summary__item">
+        <span class="reconcile-summary__value" style="color: #f39c12;">${mismatches.length}</span>
+        <span class="reconcile-summary__label">Расхождений</span>
+      </div>
+    </div>
+
+    ${renderReconcileGroup(
+      '✅ Совпадения',
+      'match',
+      matches,
+      (item) => `
+      <div class="reconcile-item__date">${item.bank.date}</div>
+      <div class="reconcile-item__description">${item.bank.description}</div>
+      <div class="reconcile-item__amount">${formatMoney(item.bank.amount)}</div>
+    `,
+    )}
+
+    ${renderReconcileGroup(
+      '⚠️ Расхождения (суммы отличаются)',
+      'mismatch',
+      mismatches,
+      (item) => `
+      <div class="reconcile-item__info">
+        <div class="reconcile-item__date">${item.bank.date}</div>
+        <div class="reconcile-item__description">${item.bank.description}</div>
+        <div style="font-size: 0.85em; color: #f39c12;">
+          Банк: ${formatMoney(item.bank.amount)} | Приложение: ${formatMoney(item.app.amount)}
+        </div>
+      </div>
+    `,
+    )}
+
+    ${renderReconcileGroup(
+      '🔴 Не учтено в приложении',
+      'missing',
+      missingInApp,
+      (item) => `
+      <div class="reconcile-item__info">
+        <div class="reconcile-item__date">${item.date}</div>
+        <div class="reconcile-item__description">${item.description}</div>
+      </div>
+      <div class="reconcile-item__amount">${formatMoney(item.amount)}</div>
+      <button class="reconcile-item__action" onclick="addTransactionFromBank('${item.date}', ${item.amount}, '${item.description.replace(/'/g, "\\'")}')">
+        Добавить
+      </button>
+    `,
+    )}
+
+    ${renderReconcileGroup(
+      ' Не отражено в банке',
+      'extra',
+      missingInBank,
+      (item) => `
+      <div class="reconcile-item__info">
+        <div class="reconcile-item__date">${item.date.includes('T') ? item.date.split('T')[0] : item.date}</div>
+        <div class="reconcile-item__description">${item.description || item.category}</div>
+      </div>
+      <div class="reconcile-item__amount">${formatMoney(item.amount)}</div>
+    `,
+    )}
+  `;
+}
+
+// Вспомогательная функция для рендеринга группы
+function renderReconcileGroup(title, type, items, renderFn) {
+  if (items.length === 0) return '';
+
+  const itemsHtml = items.map((item) => `
+    <div class="reconcile-item">
+      ${renderFn(item)}
+    </div>
+  `).join('');
+
+  return `
+    <div class="reconcile-group reconcile-group--${type}">
+      <div class="reconcile-group__title">${title} (${items.length})</div>
+      ${itemsHtml}
+    </div>
+  `;
+}
+
+// Добавление транзакции из банка в приложение
+window.addTransactionFromBank = function(date, amount, description) {
+  const newTransaction = {
+    id: Date.now().toString(),
+    date: date,
+    amount: amount,
+    category: amount < 0 ? 'Продукты' : 'Доходы',
+    subcategory: 'Разное',
+    description: description,
+    type: amount < 0 ? 'expense' : 'income'
+  };
+
+  appData.transactions.push(newTransaction);
+  saveData(appData);
+  renderAll(appData);
+
+  alert(`✅ Транзакция добавлена: ${description} (${formatMoney(amount)})`);
+};
