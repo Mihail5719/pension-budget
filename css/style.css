@@ -1754,3 +1754,173 @@ body.dark-theme .btn.btn--warning {
 .sync-indicator__icon {
   font-size: 1.1em;
 }
+
+/* Экран сверки с банком */
+.reconcile-block {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.reconcile-block__title {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.reconcile-block__hint {
+  font-size: 0.85em;
+  color: #777;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.reconcile-block__hint code {
+  background: #f0f4f8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.95em;
+}
+
+.reconcile-results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reconcile-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.reconcile-summary__item {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.reconcile-summary__value {
+  font-size: 1.5em;
+  font-weight: 700;
+  display: block;
+}
+
+.reconcile-summary__label {
+  font-size: 0.8em;
+  color: #777;
+}
+
+.reconcile-group {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  border-left: 4px solid #ccc;
+}
+
+.reconcile-group--match {
+  border-left-color: #27ae60;
+}
+
+.reconcile-group--mismatch {
+  border-left-color: #f39c12;
+}
+
+.reconcile-group--missing {
+  border-left-color: #e74c3c;
+}
+
+.reconcile-group--extra {
+  border-left-color: #95a5a6;
+}
+
+.reconcile-group__title {
+  font-size: 1em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reconcile-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9em;
+}
+
+.reconcile-item:last-child {
+  border-bottom: none;
+}
+
+.reconcile-item__info {
+  flex: 1;
+}
+
+.reconcile-item__description {
+  font-weight: 500;
+}
+
+.reconcile-item__date {
+  font-size: 0.85em;
+  color: #999;
+}
+
+.reconcile-item__amount {
+  font-weight: 600;
+  margin-right: 12px;
+}
+
+.reconcile-item__action {
+  background: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.reconcile-item__action:hover {
+  background: #2980b9;
+}
+
+/* Адаптация навигации для 5 кнопок */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+}
+
+.bottom-nav__item {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px;
+}
+
+.bottom-nav__icon {
+  font-size: 1.3em;
+}
+
+.bottom-nav__label {
+  font-size: 0.75em;
+}
+
+@media (max-width: 480px) {
+  .bottom-nav__icon {
+    font-size: 1.1em;
+  }
+  .bottom-nav__label {
+    font-size: 0.7em;
+  }
+}

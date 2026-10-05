@@ -212,6 +212,27 @@
                 </div>
             </section>
 
+            <!-- Экран 5: Сверка с банком -->
+            <section class="screen screen--reconcile" id="screen-reconcile">
+                <h2 class="screen__title">Сверка с банком</h2>
+            
+                <div class="reconcile-block">
+                    <h3 class="reconcile-block__title">📥 Загрузить выписку из банка</h3>
+                    <p class="reconcile-block__hint">
+                        Формат CSV: <code>Дата;Сумма;Описание</code><br>
+                        Расходы со знаком минус (-59.00), доходы с плюсом (+1500.00)
+                    </p>
+                    <input type="file" id="reconcile-file" accept=".csv" hidden>
+                    <button class="btn btn--primary" id="reconcile-upload-btn">
+                        📁 Выбрать CSV-файл
+                    </button>
+                </div>
+            
+                <div id="reconcile-results" class="reconcile-results" style="display: none;">
+                    <!-- Сюда будут выводиться результаты сверки -->
+                </div>
+            </section>
+
             <!-- Экран 4: Статистика -->
             <section class="screen screen--stats" id="screen-stats">
                 <h2 class="screen__title" style="text-align: center;">Статистика расходов</h2>
@@ -227,7 +248,7 @@
 
         <nav class="bottom-nav">
             <button class="bottom-nav__item" data-screen="screen-today">
-                <span class="bottom-nav__icon">🏠</span>
+                <span class="bottom-nav__icon"></span>
                 <span class="bottom-nav__label">Сегодня</span>
             </button>
             <button class="bottom-nav__item" data-screen="screen-history">
@@ -237,6 +258,10 @@
             <button class="bottom-nav__item" data-screen="screen-stats">
                 <span class="bottom-nav__icon">📊</span>
                 <span class="bottom-nav__label">Статистика</span>
+            </button>
+            <button class="bottom-nav__item" data-screen="screen-reconcile">
+                <span class="bottom-nav__icon">🔄</span>
+                <span class="bottom-nav__label">Сверка</span>
             </button>
             <button class="bottom-nav__item" data-screen="screen-settings">
                 <span class="bottom-nav__icon">⚙️</span>
