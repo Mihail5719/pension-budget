@@ -1418,9 +1418,26 @@ function initDeleteRange() {
   toInput.value = toInputDate(new Date(periodStart.getTime() - 86400000));
   fromInput.addEventListener('change', updateDeletePreview);
   toInput.addEventListener('change', updateDeletePreview);
-  document
-    .getElementById('delete-range-btn')
-    .addEventListener('click', handleDeleteRange);
+    document
+      .getElementById('delete-range-btn')
+      .addEventListener('click', () => {
+        const dateFrom = fromInput.value;
+        const dateTo = toInput.value;
+
+        if (!dateFrom || !dateTo) {
+          alert('⚠️ Пожалуйста, укажите обе даты: "От" и "До"');
+          return;
+        }
+
+        const confirmed = confirm(
+          `Вы уверены, что хотите удалить все записи с ${dateFrom} по ${dateTo}?\n\n` +
+            `Это действие нельзя отменить!`,
+        );
+
+        if (confirmed) {
+          handleDeleteRange();
+        }
+      });
   updateDeletePreview();
 }
 
