@@ -924,12 +924,24 @@ function handleDeleteClick(event) {
       const newName = prompt('Название платежа:', payment.name);
       if (newName === null) return; // Отмена
 
-      const newAmountStr = prompt('Сумма:', payment.amount);
+      // 1. Показываем уже отформатированную сумму для удобства
+      const currentAmountFormatted = formatMoney(payment.amount);
+      const newAmountStr = prompt(
+        `Сумма (текущая: ${currentAmountFormatted}):`,
+        currentAmountFormatted,
+      );
       if (newAmountStr === null) return;
 
-      const newAmount = parseFloat(newAmountStr.replace(',', '.'));
+      // 2. Умная очистка: убираем пробелы, знак ₽ и заменяем запятую на точку
+      const cleanAmountStr = newAmountStr
+        .replace(/\s/g, '')
+        .replace('₽', '')
+        .replace(',', '.')
+        .trim();
+      const newAmount = parseFloat(cleanAmountStr);
+
       if (isNaN(newAmount) || newAmount <= 0) {
-        alert('Некорректная сумма');
+        alert('Некорректная сумма. Введите число, например: 4395.06');
         return;
       }
 
@@ -2083,3 +2095,4 @@ window.confirmAllHypotheses = function() {
     }, 300);
   }
 };
+
