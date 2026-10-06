@@ -1953,27 +1953,28 @@ function parseRawPDFText(text) {
 
 // Отображение гипотез
 function renderHypotheses(pendingHypotheses) {
-  // Получаем плоский список всех найденных гипотез
   const rawHypotheses = Object.values(pendingHypotheses).flat();
-  
-  // Получаем список уже подтверждённых гипотез из настроек
   const confirmedHypotheses = appData.confirmedHypotheses || [];
 
-  // Фильтруем: оставляем только те, которые ещё НЕ подтверждены
   const activeHypotheses = rawHypotheses.filter(hypothesis => {
     const hypothesisKey = `${hypothesis.bank.date}_${Math.abs(hypothesis.bank.amount)}_${hypothesis.app.map(tx => tx.id).join(',')}`;
     return !confirmedHypotheses.includes(hypothesisKey);
   });
 
-  // Если все гипотезы уже подтверждены, блок не рисуем
   if (activeHypotheses.length === 0) return '';
 
+  // Кнопка "Подтвердить все" (показываем, если гипотез больше 1)
+  const confirmAllBtn = activeHypotheses.length > 1 
+    ? `<button class="reconcile-group__action-all" onclick="confirmAllHypotheses()" style="margin: 12px 0; padding: 10px 16px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95em; font-weight: 600; width: 100%; transition: background 0.2s;">
+         ✅ Подтвердить все (${activeHypotheses.length})
+       </button>` 
+    : '';
+
   const itemsHtml = activeHypotheses.map((hypothesis) => {
-    // Ключ нужен для кнопки подтверждения
     const hypothesisKey = `${hypothesis.bank.date}_${Math.abs(hypothesis.bank.amount)}_${hypothesis.app.map(tx => tx.id).join(',')}`;
 
     return `
-      <div class="reconcile-item">
+      <div class="reconcile-item" data-key="${hypothesisKey}" style="margin-bottom: 12px;">
         <div class="reconcile-item__info" style="width: 100%;">
           <div class="reconcile-item__date">${hypothesis.bank.date}</div>
           <div class="reconcile-item__description" style="font-weight: 600;">${hypothesis.bank.description}</div>
@@ -1981,22 +1982,23 @@ function renderHypotheses(pendingHypotheses) {
             Банк: ${formatMoney(hypothesis.bank.amount)} | Возможно в приложении:
           </div>
           <div style="font-size: 0.85em; color: #555; margin-top: 4px; line-height: 1.4;">
-            ${hypothesis.app.map((tx) => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
+            ${hypothesis.app.map(tx => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
           </div>
           <div style="font-size: 0.8em; color: #777; margin-top: 4px;">
             Разница: ${formatMoney(hypothesis.difference)}
           </div>
-          <button class="reconcile-item__action" onclick="confirmHypothesis('${hypothesisKey}', this)" style="margin-top: 8px; background: #27ae60;">
-  ✅ Подтвердить
-</button>
+          <button class="reconcile-item__action" onclick="confirmHypothesis('${hypothesisKey}', this)" style="margin-top: 8px; background: #3498db;">
+            ✅ Подтвердить
+          </button>
         </div>
       </div>
     `;
   }).join('');
 
   return `
-    <div class="reconcile-group reconcile-group--mismatch">
+    <div class="reconcile-group reconcile-group--mismatch" id="hypotheses-group">
       <div class="reconcile-group__title">⚠️ Требует проверки (${activeHypotheses.length})</div>
+      ${confirmAllBtn}
       ${itemsHtml}
     </div>
   `;
@@ -2025,10 +2027,17 @@ window.confirmHypothesis = function(hypothesisKey, btnElement) {
   const group = btnElement.closest('.reconcile-group');
   const title = group.querySelector('.reconcile-group__title');
   const match = title.textContent.match(/\d+/);
+  
   if (match) {
     const currentCount = parseInt(match[0]);
     const newCount = currentCount - 1;
     title.textContent = `⚠️ Требует проверки (${newCount})`;
+    
+    // 3.1. Обновляем текст большой кнопки "Подтвердить все"
+    const confirmAllBtn = group.querySelector('.reconcile-group__action-all');
+    if (confirmAllBtn) {
+      confirmAllBtn.textContent = `✅ Подтвердить все (${newCount})`;
+    }
     
     // 4. Если гипотез больше не осталось, скрываем весь блок
     if (newCount === 0) {
@@ -2038,5 +2047,39 @@ window.confirmHypothesis = function(hypothesisKey, btnElement) {
         group.style.display = 'none';
       }, 300);
     }
+  }
+}; // <-- Вот правильный конец: одна } закрывает функцию, одна ; завершает присваивание.
+
+// Подтверждение ВСЕХ гипотез сразу
+window.confirmAllHypotheses = function() {
+  if (!confirm('Подтвердить все предложенные гипотезы? Они будут сохранены и не появятся при следующей сверке.')) {
+    return;
+  }
+
+  if (!appData.confirmedHypotheses) {
+    appData.confirmedHypotheses = [];
+  }
+
+  // Собираем ключи всех видимых гипотез из DOM
+  const items = document.querySelectorAll('#hypotheses-group .reconcile-item');
+  items.forEach(item => {
+    const key = item.getAttribute('data-key');
+    if (key && !appData.confirmedHypotheses.includes(key)) {
+      appData.confirmedHypotheses.push(key);
+    }
+  });
+
+  // Сохраняем в localStorage
+  saveData(appData);
+
+  // Красиво скрываем весь блок целиком
+  const group = document.getElementById('hypotheses-group');
+  if (group) {
+    group.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    group.style.opacity = '0';
+    group.style.transform = 'translateY(-10px)';
+    setTimeout(() => {
+      group.style.display = 'none';
+    }, 300);
   }
 };
