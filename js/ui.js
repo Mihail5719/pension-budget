@@ -177,16 +177,14 @@ export function renderTransactionList(transactions, pensionDay) {
 
 // Отрисовка настроек
 export function renderSettings(settings, fixedExpenses) {
-  // Заполняем поля ввода
-  document.getElementById('input-initial-balance').value =
-    settings.initialBalance || 0;
-  document.getElementById('input-pension').value =
-    settings.pensionAmount.toFixed(2);
+  // 1. Заполняем поля ввода "сырыми" числами 
+  // (initMoneyFields сам превратит их в красивый формат)
+  document.getElementById('input-initial-balance').value = settings.initialBalance || 0;
+  document.getElementById('input-pension').value = settings.pensionAmount || 0;
   document.getElementById('input-pension-day').value = settings.pensionDay;
-  document.getElementById('input-reserve').value =
-    settings.reserveAmount.toFixed(2);
+  document.getElementById('input-reserve').value = settings.reserveAmount || 0;
 
-  // Отрисовываем список обязательных платежей
+  // 2. Отрисовываем список обязательных платежей
   const listEl = document.getElementById('fixed-expenses-list');
   listEl.innerHTML = '';
 
@@ -195,32 +193,31 @@ export function renderSettings(settings, fixedExpenses) {
     itemEl.className = 'fixed-expense';
     itemEl.dataset.id = expense.id;
 
-       itemEl.innerHTML = `
-    <div class="fixed-expense__info">
-        <span class="fixed-expense__name">${expense.name}</span>
-        <span class="fixed-expense__day">${expense.day ? `${expense.day}-го числа` : ''}</span>
-    </div>
-    <span class="fixed-expense__amount">${formatMoney(expense.amount)}</span>
-    <div class="fixed-expense__actions">
-        <button class="btn-edit" data-action="edit-payment" data-id="${expense.id}" title="Редактировать">✎</button>
-        <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
-    </div>
-`;
+    itemEl.innerHTML = `
+      <div class="fixed-expense__info">
+          <span class="fixed-expense__name">${expense.name}</span>
+          <span class="fixed-expense__day">${expense.day ? `${expense.day}-го числа` : ''}</span>
+      </div>
+      <span class="fixed-expense__amount">${formatMoney(expense.amount)}</span>
+      <div class="fixed-expense__actions">
+          <button class="btn-edit" data-action="edit-payment" data-id="${expense.id}" title="Редактировать">✎</button>
+          <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
+      </div>
+    `;
     listEl.appendChild(itemEl);
   });
 
-  // Отображаем информацию о текущем периоде
+  // 3. 🚀 ЗАПУСКАЕМ МАГИЮ ФОРМАТИРОВАНИЯ ПОСЛЕ ОТРИСОВКИ
+  initMoneyFields();
+
+  // 4. Отображаем информацию о текущем периоде
   renderPensionPeriodInfo(settings);
 
-    // Отображаем информацию о текущем периоде
-  renderPensionPeriodInfo(settings);
-
-  // ✅ Обновляем индикатор синхронизации
+  // 5. ✅ Обновляем индикатор синхронизации
   // Передаем все транзакции и дату последнего экспорта из настроек
   const allTransactions = window.appData ? window.appData.transactions : [];
   updateSyncIndicator(allTransactions, settings.lastExportDate);
-
-}
+} // <-- ЗАКРЫВАЮЩАЯ СКОБКА ТЕПЕРЬ ЗДЕСЬ, В САМОМ КОНЦЕ!
 
 // Обновление индикатора синхронизации
 export function updateSyncIndicator(transactions, lastExportDate) {
@@ -232,7 +229,6 @@ export function updateSyncIndicator(transactions, lastExportDate) {
   let dateStr = 'не экспортировалось';
   if (lastExportDate) {
     const date = new Date(lastExportDate);
-    // Форматируем дату: "05.10.2026, 14:30"
     dateStr = date.toLocaleString('ru-RU', { 
       day: '2-digit', 
       month: '2-digit', 
@@ -823,4 +819,56 @@ export function renderSubcategoryBreakdown(settings, transactions) {
     html += '</div>';
   });
   container.innerHTML = html;
+}
+
+// Инициализация красивых денежных полей (Format-on-blur)
+function initMoneyFields() {
+  const moneyInputs = document.querySelectorAll('.money-field');
+
+  moneyInputs.forEach(input => {
+    // 1. При загрузке страницы сразу делаем красиво
+    const rawValue = parseFloat(input.value);
+    if (!isNaN(rawValue)) {
+      input.value = formatMoney(rawValue); // ← formatMoney сам добавляет ₽
+    }
+
+    // 2. Когда поле получает фокус (вы кликнули в него)
+    input.addEventListener('focus', function() {
+      // Превращаем "34 714,73 ₽" обратно в "34714.73" для удобного редактирования
+      let raw = this.value.replace(/\s/g, '').replace('₽', '').replace(',', '.').trim();
+      this.value = raw;
+      this.select(); // Сразу выделяем весь текст
+    });
+
+    // 3. Когда поле теряет фокус (вы кликнули в другое место)
+    input.addEventListener('blur', function() {
+      let raw = this.value.replace(/\s/g, '').replace('₽', '').replace(',', '.').trim();
+      let num = parseFloat(raw);
+
+      if (!isNaN(num)) {
+        // Находим имя поля (initialBalance, pensionAmount, reserveAmount)
+        const fieldName = this.dataset.field;
+
+        // Сохраняем в настройки
+        if (fieldName && window.appData.settings) {
+          window.appData.settings[fieldName] = num;
+          // Сохраняем в localStorage (функция saveData должна быть доступна глобально или импортирована)
+          if (typeof window.saveData === 'function') {
+            window.saveData(window.appData);
+          }
+        }
+
+        // Форматируем красиво
+        this.value = formatMoney(num); // ← formatMoney сам добавляет ₽
+      } else {
+        // Если пользователь ввёл бред, возвращаем старое значение
+        const fieldName = this.dataset.field;
+        if (fieldName && window.appData.settings) {
+          this.value = formatMoney(window.appData.settings[fieldName]);
+        } else {
+          this.value = '';
+        }
+      }
+    });
+  });
 }
