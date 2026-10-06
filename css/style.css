@@ -1924,3 +1924,36 @@ body.dark-theme .btn.btn--warning {
     font-size: 0.7em;
   }
 }
+
+.reconcile-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.9em;
+  resize: vertical;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.reconcile-textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.btn--secondary {
+  background: #95a5a6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1em;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn--secondary:hover {
+  background: #7f8c8d;
+}

@@ -217,13 +217,25 @@
                 <h2 class="screen__title">Сверка с банком</h2>
             
                 <div class="reconcile-block">
-                    <h3 class="reconcile-block__title">📥 Загрузить выписку из банка</h3>
+                    <h3 class="reconcile-block__title">📋 Способ 1: Вставить текст из PDF</h3>
+                    <p class="reconcile-block__hint">
+                        Откройте PDF-выписку → Ctrl+A (выделить всё) → Ctrl+C (копировать) → вставьте ниже
+                    </p>
+                    <textarea id="reconcile-raw-text" class="reconcile-textarea"
+                        placeholder="Вставьте сюда текст из PDF-выписки..."></textarea>
+                    <button class="btn btn--primary" id="reconcile-parse-btn">
+                        🔍 Разобрать текст
+                    </button>
+                </div>
+            
+                <div class="reconcile-block">
+                    <h3 class="reconcile-block__title"> Способ 2: Загрузить CSV-файл</h3>
                     <p class="reconcile-block__hint">
                         Формат CSV: <code>Дата;Сумма;Описание</code><br>
                         Расходы со знаком минус (-59.00), доходы с плюсом (+1500.00)
                     </p>
                     <input type="file" id="reconcile-file" accept=".csv" hidden>
-                    <button class="btn btn--primary" id="reconcile-upload-btn">
+                    <button class="btn btn--secondary" id="reconcile-upload-btn">
                         📁 Выбрать CSV-файл
                     </button>
                 </div>
