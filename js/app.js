@@ -1981,14 +1981,14 @@ function renderHypotheses(pendingHypotheses) {
             Банк: ${formatMoney(hypothesis.bank.amount)} | Возможно в приложении:
           </div>
           <div style="font-size: 0.85em; color: #555; margin-top: 4px; line-height: 1.4;">
-            ${hypothesis.app.map(tx => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
+            ${hypothesis.app.map((tx) => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
           </div>
           <div style="font-size: 0.8em; color: #777; margin-top: 4px;">
             Разница: ${formatMoney(hypothesis.difference)}
           </div>
-          <button class="reconcile-item__action" onclick="confirmHypothesis('${hypothesisKey}')" style="margin-top: 8px; background: #27ae60;">
-            ✅ Подтвердить
-          </button>
+          <button class="reconcile-item__action" onclick="confirmHypothesis('${hypothesisKey}', this)" style="margin-top: 8px; background: #27ae60;">
+  ✅ Подтвердить
+</button>
         </div>
       </div>
     `;
@@ -2002,31 +2002,41 @@ function renderHypotheses(pendingHypotheses) {
   `;
 }
 
-// Подтверждение гипотезы
-window.confirmHypothesis = function(hypothesisKey) {
+// Подтверждение гипотезы (без перезагрузки)
+window.confirmHypothesis = function(hypothesisKey, btnElement) {
+  // 1. Сохраняем в память
   if (!appData.confirmedHypotheses) {
     appData.confirmedHypotheses = [];
   }
-  
   appData.confirmedHypotheses.push(hypothesisKey);
   saveData(appData);
   
-  // Перезагружаем сверку
-  alert('✅ Гипотеза подтверждена! Она не будет показываться при следующей сверке.');
-  location.reload();
-};
-
-// Подтверждение гипотезы (сохраняет её ключ, чтобы больше не показывать)
-window.confirmHypothesis = function(hypothesisKey) {
-  if (!appData.confirmedHypotheses) {
-    appData.confirmedHypotheses = [];
+  // 2. Мгновенно скрываем элемент из интерфейса
+  const item = btnElement.closest('.reconcile-item');
+  if (item) {
+    item.style.transition = 'opacity 0.3s ease';
+    item.style.opacity = '0';
+    setTimeout(() => {
+      item.style.display = 'none';
+    }, 300);
   }
   
-  appData.confirmedHypotheses.push(hypothesisKey);
-  saveData(appData);
-  
-  alert('✅ Гипотеза подтверждена! Она сохранена и не будет мешать при следующей сверке.');
-  
-  // Перезагружаем страницу, чтобы обновить интерфейс
-  location.reload();
+  // 3. Обновляем счётчик в заголовке
+  const group = btnElement.closest('.reconcile-group');
+  const title = group.querySelector('.reconcile-group__title');
+  const match = title.textContent.match(/\d+/);
+  if (match) {
+    const currentCount = parseInt(match[0]);
+    const newCount = currentCount - 1;
+    title.textContent = `⚠️ Требует проверки (${newCount})`;
+    
+    // 4. Если гипотез больше не осталось, скрываем весь блок
+    if (newCount === 0) {
+      group.style.transition = 'opacity 0.3s ease';
+      group.style.opacity = '0';
+      setTimeout(() => {
+        group.style.display = 'none';
+      }, 300);
+    }
+  }
 };
