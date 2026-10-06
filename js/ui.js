@@ -104,74 +104,104 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   }
 }
 
-// Отрисовка списка транзакций
+// Отрисовка списка транзакций с группировкой по дням и итогами
 export function renderTransactionList(transactions, pensionDay) {
   const listEl = document.getElementById('transaction-list');
   listEl.innerHTML = '';
 
   if (transactions.length === 0) {
-    listEl.innerHTML =
-      '<p style="text-align: center; color: var(--color-text-secondary); padding: 40px;">Пока нет операций</p>';
+    listEl.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary); padding: 40px;">Пока нет операций</p>';
     return;
   }
 
-  const sorted = [...transactions].sort(
-    (a, b) => new Date(b.date) - new Date(a.date),
-  );
+  // 1. Сортируем по дате (новые сверху)
+  const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  sorted.forEach((transaction) => {
-    const itemEl = document.createElement('div');
-    itemEl.className = 'transaction';
-    itemEl.dataset.id = transaction.id;
-    if (transaction.type === 'reserve') {
-      itemEl.classList.add('transaction--reserve');
+  // 2. Группируем транзакции по датам
+  const grouped = {};
+  sorted.forEach(tx => {
+    // Берем только дату (YYYY-MM-DD), отбрасывая время, если оно есть
+    const dateKey = tx.date.split('T')[0]; 
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = { transactions: [], total: 0 };
     }
+    grouped[dateKey].transactions.push(tx);
+    
+    // Считаем итог за день (алгебраическая сумма: доходы +, расходы -)
+    const sign = isIncome(tx) ? 1 : -1;
+    grouped[dateKey].total += tx.amount * sign;
+  });
 
-    // Определяем тип операции
-    const incomeFlag = isIncome(transaction);
-    const amountClass = incomeFlag
-      ? 'transaction__amount--income'
-      : 'transaction__amount';
-    const amountPrefix = incomeFlag ? '+' : '-';
-    const deleteAction = incomeFlag ? 'delete-income' : 'delete-transaction';
+  // 3. Отрисовываем группы
+  Object.keys(grouped).forEach(dateKey => {
+    const group = grouped[dateKey];
+    const firstTxDate = group.transactions[0].date;
+    
+    // Формируем текст итога
+    const totalSign = group.total >= 0 ? '+' : '-';
+    const totalColor = group.total >= 0 ? '#27ae60' : '#e74c3c'; // Зеленый для прихода, красный для расхода
+    
+    // Создаем заголовок группы (шапка дня)
+    const groupHeader = document.createElement('div');
+    groupHeader.className = 'day-header';
+    groupHeader.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      margin: 16px 0 8px 0;
+      font-size: 0.95em;
+      font-weight: 600;
+      color: #555;
+      border-left: 4px solid ${totalColor};
+    `;
+    groupHeader.innerHTML = `
+      <span>${formatDateOnly(firstTxDate)}</span>
+      <span style="color: ${totalColor};">Итого: ${totalSign}${formatMoney(Math.abs(group.total))}</span>
+    `;
+    listEl.appendChild(groupHeader);
 
-    // === НОВОЕ: Добавляем эмодзи к названию категории ===
-    const catStyle = categoryConfig[transaction.category] || {
-      emoji: '📦',
-      color: '#95a5a6',
-    };
-    // v2.0: фиксированные платежи получают значок 📋 и строку note
-    const committedFlag = isCommitted(transaction);
-    const emoji = committedFlag ? '📋' : catStyle.emoji;
-    const displayName = `${emoji} ${transaction.category}`;
-    const subLine = transaction.subcategory
-      ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
-      : '';
-    const noteLine =
-      committedFlag && transaction.note
-        ? `<span class="transaction__subcategory">${transaction.note}</span>`
-        : '';
-    // ====================================================
-    const itemLine = transaction.item
-      ? `<span class="transaction__item">${transaction.item}</span>`
-      : '';
+    // Отрисовываем транзакции внутри этой группы
+    group.transactions.forEach((transaction) => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'transaction';
+      itemEl.dataset.id = transaction.id;
+      if (transaction.type === 'reserve') {
+        itemEl.classList.add('transaction--reserve');
+      }
 
-        itemEl.innerHTML = `
-    <div class="transaction__info">
-        <span class="transaction__date">${formatDateOnly(transaction.date)}</span>
-        <span class="transaction__category">${displayName}</span>
-        ${subLine}${itemLine}${noteLine}
-    </div>
-    <div class="transaction__right">
-        <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
-        <div class="transaction__actions">
-            <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
-            <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+      const incomeFlag = isIncome(transaction);
+      const amountClass = incomeFlag ? 'transaction__amount--income' : 'transaction__amount';
+      const amountPrefix = incomeFlag ? '+' : '-';
+      const deleteAction = incomeFlag ? 'delete-income' : 'delete-transaction';
+
+      const catStyle = categoryConfig[transaction.category] || { emoji: '📦', color: '#95a5a6' };
+      const committedFlag = isCommitted(transaction);
+      const emoji = committedFlag ? '📋' : catStyle.emoji;
+      const displayName = `${emoji} ${transaction.category}`;
+      
+      const subLine = transaction.subcategory ? `<span class="transaction__subcategory">${transaction.subcategory}</span>` : '';
+      const noteLine = committedFlag && transaction.note ? `<span class="transaction__subcategory">${transaction.note}</span>` : '';
+      const itemLine = transaction.item ? `<span class="transaction__item">${transaction.item}</span>` : '';
+
+      // Обратите внимание: дата убрана из карточки, так как теперь она есть в шапке дня!
+      itemEl.innerHTML = `
+        <div class="transaction__info">
+            <span class="transaction__category">${displayName}</span>
+            ${subLine}${itemLine}${noteLine}
         </div>
-    </div>
-`;
-
-    listEl.appendChild(itemEl);
+        <div class="transaction__right">
+            <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
+            <div class="transaction__actions">
+                <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
+                <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+            </div>
+        </div>
+      `;
+      listEl.appendChild(itemEl);
+    });
   });
 }
 
