@@ -2019,88 +2019,7 @@ body.dark-theme .btn.btn--warning {
   text-align: right;
 }
 
-/* --- Статистика: Иерархическая структура (Идея 10) --- */
-.stats-income-block {
-  background: #e8f5e9;
-  color: #2e7d32;
-  padding: 16px;
-  border-radius: 12px;
-  text-align: center;
-  font-size: 1.2em;
-  font-weight: 700;
-  margin-bottom: 24px;
-  border: 1px solid #c8e6c9;
-}
 
-.stats-main-header {
-  font-size: 1.1em;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 16px 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #ecf0f1;
-}
-
-.stats-section-header {
-  font-size: 1em;
-  font-weight: 600;
-  color: #7f8c8d;
-  margin: 20px 0 12px 0;
-  display: flex;
-  justify-content: space-between;
-}
-
-.stats-section-header__total {
-  color: #2c3e50;
-  font-weight: 700;
-}
-
-.breakdown__card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.breakdown__header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 600;
-  font-size: 1em;
-  color: #2c3e50;
-  margin-bottom: 8px;
-}
-
-.breakdown__row {
-  display: flex;
-  flex-direction: column;
-  margin-top: 8px;
-  padding-left: 28px; /* Отступ для подкатегорий */
-  border-top: 1px dashed #ecf0f1;
-  padding-top: 8px;
-}
-
-.breakdown__line {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9em;
-  color: #555;
-  margin-bottom: 4px;
-}
-
-.breakdown__bar {
-  height: 6px;
-  background: #ecf0f1;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.breakdown__bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
 
 /* Карточка статистики */
 .stats-card {
@@ -2198,178 +2117,73 @@ body.dark-theme .btn.btn--warning {
   transition: width 0.4s ease;
 }
 
-/* --- Идеальная карточка статистики (Идея 10) --- */
-.stats-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  margin-bottom: 20px;
-}
-
-.stats-title {
-  margin: 0 0 20px 0;
-  font-size: 1.3em;
-  font-weight: 700;
-  color: #2c3e50;
-  text-align: center;
-}
-
-.stats-summary-block {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.stats-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 1.05em;
-  font-weight: 500;
-}
-
-.stats-row.income { color: #27ae60; font-weight: 700; font-size: 1.15em; }
-.stats-row.expense { color: #e74c3c; font-weight: 700; font-size: 1.15em; }
-
-.stats-divider {
-  height: 1px;
-  background: #ecf0f1;
-  margin: 8px 0;
-}
-
-.stats-breakdown-title {
-  font-size: 1.1em;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 24px 0 16px 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #ecf0f1;
-}
-
-.breakdown__card {
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 12px;
-}
-
-.breakdown__header {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 700;
-  font-size: 1em;
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
-
-.breakdown__row {
-  display: flex;
-  flex-direction: column;
-  margin-top: 10px;
-  padding-left: 32px; /* Отступ для иерархии подкатегорий */
-  border-top: 1px dashed #cbd5e0;
-  padding-top: 10px;
-}
-
-.breakdown__line {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.95em;
-  color: #4a5568;
-  margin-bottom: 6px;
-}
-
-.breakdown__bar {
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.breakdown__bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-
-/* --- Мобильная адаптация статистики (АДАПТИВНАЯ) --- */
+/* --- Мобильная адаптация статистики --- */
 @media (max-width: 480px) {
   .stats-card {
-    padding: 14px;
+    padding: 12px;
     border-radius: 12px;
   }
 
   .stats-title {
-    font-size: 1.2em;
-    margin-bottom: 16px;
-    text-align: center;
+    font-size: 1.1em;
+    margin-bottom: 14px;
   }
 
-  .stats-summary-block {
-    gap: 10px;
-  }
-
+  /* ВАЖНО: уменьшаем шрифт и добавляем gap */
   .stats-row {
-    font-size: 0.95em;
+    font-size: 0.85em;
+    gap: 6px;
+    flex-wrap: wrap; /* Разрешаем перенос если не помещается */
   }
 
   .stats-row.income,
   .stats-row.expense {
-    font-size: 1.05em;
+    font-size: 0.95em;
   }
 
-  /* На мобильном: заголовок категории и сумма/процент на разных строках */
+  /* Категории — в две строки на мобильном */
   .breakdown__header {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .breakdown__header > span:first-child {
-    font-size: 1em;
-    font-weight: 700;
-  }
-
-  .breakdown__header > span:last-child {
-    font-size: 0.9em;
-    color: #7f8c8d;
-  }
-
-  /* Подкатегории: тоже в две строки на мобильном */
-  .breakdown__line {
-    display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
 
-  .breakdown__line > span:first-child {
-    font-size: 0.9em;
-    color: #4a5568;
+  .breakdown__header > span:first-child {
+    font-size: 0.95em;
   }
 
-  .breakdown__line > span:last-child {
+  .breakdown__header > span:last-child {
     font-size: 0.85em;
     color: #7f8c8d;
   }
 
+  .breakdown__line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .breakdown__line > span:first-child {
+    font-size: 0.85em;
+  }
+
+  .breakdown__line > span:last-child {
+    font-size: 0.8em;
+    color: #7f8c8d;
+  }
+
   .breakdown__row {
-    padding-left: 20px;
+    padding-left: 16px;
   }
 
   .breakdown__card {
-    padding: 12px;
-    margin-bottom: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
   }
 
-  /* Диаграмма центрирована и нормального размера */
   #expense-chart {
-    display: block;
-    margin: 20px auto;
     max-width: 100%;
-    max-height: 280px;
+    max-height: 260px;
   }
 }
 
