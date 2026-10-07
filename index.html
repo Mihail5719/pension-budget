@@ -248,14 +248,18 @@
 
             <!-- Экран 4: Статистика -->
             <section class="screen screen--stats" id="screen-stats">
-                <h2 class="screen__title" style="text-align: center;">Статистика расходов</h2>
-                <div class="stats-card">
-                    <div id="stats-period-summary"
-                        style="text-align: center; margin-bottom: 16px; font-size: 1.1em; line-height: 1.6;"></div>
+                <!-- Верхняя карточка: заголовок + суммы -->
+                <div id="stats-top" class="stats-card"></div>
+            
+                <!-- Средняя карточка: диаграмма -->
+                <div id="stats-chart" class="stats-card">
+                    <p id="stats-empty" hidden style="text-align: center; color: #7f8c8d; padding: 20px;">Нет данных за текущий
+                        период</p>
                     <canvas id="expense-chart"></canvas>
-                    <p id="stats-empty" class="stats-empty" hidden>Нет расходов за этот период</p>
-                    <div id="subcategory-breakdown" class="stats-breakdown"></div>
                 </div>
+            
+                <!-- Нижняя карточка: список подкатегорий -->
+                <div id="stats-bottom" class="stats-card"></div>
             </section>
         </main>
 

@@ -4,7 +4,7 @@ import {
   renderTodayScreen,
   renderTransactionList,
   renderSettings,
-  renderStatsChart,
+  renderStats,
   renderPensionPeriodInfo,
   updateSyncIndicator,
 } from './ui.js';
@@ -396,11 +396,18 @@ function setupEventListeners() {
 
         // 4. Если открыта статистика, обновляем и её
         if (window.expenseChartInstance) {
-          renderStatsChart(appData.settings, appData.transactions);
+          renderStats(
+            appData.settings,
+            appData.fixedExpenses,
+            appData.transactions,
+          );
         }
       }
     });
   }
+
+
+
   // ======================================================
   // === Обработчик изменения/сброса даты пенсии на главном экране ===
   const btnEditPensionDate = document.getElementById('btn-edit-pension-date');
@@ -430,8 +437,15 @@ function setupEventListeners() {
           );
           renderPensionPeriodInfo(appData.settings);
           if (window.expenseChartInstance)
-            renderStatsChart(appData.settings, appData.transactions);
+            renderStats(
+              appData.settings,
+              appData.fixedExpenses,
+              appData.transactions,
+            );
         }
+
+
+
       } else {
         const newDate = new Date(userChoice);
         if (!isNaN(newDate.getTime())) {
@@ -475,7 +489,11 @@ function setupEventListeners() {
           );
           renderPensionPeriodInfo(appData.settings);
           if (window.expenseChartInstance)
-            renderStatsChart(appData.settings, appData.transactions);
+            renderStats(
+              appData.settings,
+              appData.fixedExpenses,
+              appData.transactions,
+            );
           alert('✅ Дата успешно изменена!');
         } else {
           alert(
@@ -1272,14 +1290,12 @@ function initTheme() {
 
     // 2. === ГАРАНТИРОВАННАЯ ПЕРЕРИСОВКА ДИАГРАММЫ ===
     if (window.expenseChartInstance) {
-      // Полностью уничтожаем старую диаграмму
       window.expenseChartInstance.destroy();
-
-      // Рисуем новую с правильными цветами темы
-      // ВНИМАНИЕ: замените appData.settings и appData.transactions
-      // на те переменные, которые вы используете в своём коде для хранения данных!
-      // (например, state.settings, store.transactions и т.д.)
-      renderStatsChart(appData.settings, appData.transactions);
+      renderStats(
+        appData.settings,
+        appData.fixedExpenses,
+        appData.transactions,
+      );
     }
     // =================================
   });
@@ -1337,8 +1353,8 @@ document.addEventListener('click', (e) => {
         const data = JSON.parse(savedData);
 
         // 1. Рисуем график
-        if (typeof renderStatsChart === 'function') {
-          renderStatsChart(data.settings, data.transactions);
+        if (typeof renderStats === 'function') {
+          renderStats(data.settings, data.fixedExpenses, data.transactions);
         }
 
         // 2. Заполняем отчёт "Нефиксированные / Фиксированные"
