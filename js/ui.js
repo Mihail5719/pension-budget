@@ -104,7 +104,7 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   }
 }
 
-// Отрисовка списка транзакций с группировкой по дням и итогами
+// Отрисовка списка транзакций с группировкой по дням и раздельными итогами
 export function renderTransactionList(transactions, pensionDay) {
   const listEl = document.getElementById('transaction-list');
   listEl.innerHTML = '';
@@ -117,19 +117,21 @@ export function renderTransactionList(transactions, pensionDay) {
   // 1. Сортируем по дате (новые сверху)
   const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // 2. Группируем транзакции по датам
+  // 2. Группируем транзакции по датам, считая приходы и расходы отдельно
   const grouped = {};
   sorted.forEach(tx => {
-    // Берем только дату (YYYY-MM-DD), отбрасывая время, если оно есть
     const dateKey = tx.date.split('T')[0]; 
     if (!grouped[dateKey]) {
-      grouped[dateKey] = { transactions: [], total: 0 };
+      grouped[dateKey] = { transactions: [], income: 0, expense: 0 };
     }
     grouped[dateKey].transactions.push(tx);
     
-    // Считаем итог за день (алгебраическая сумма: доходы +, расходы -)
-    const sign = isIncome(tx) ? 1 : -1;
-    grouped[dateKey].total += tx.amount * sign;
+    // Считаем приходы и расходы отдельно
+    if (isIncome(tx)) {
+      grouped[dateKey].income += tx.amount;
+    } else {
+      grouped[dateKey].expense += tx.amount;
+    }
   });
 
   // 3. Отрисовываем группы
@@ -137,9 +139,15 @@ export function renderTransactionList(transactions, pensionDay) {
     const group = grouped[dateKey];
     const firstTxDate = group.transactions[0].date;
     
-    // Формируем текст итога
-    const totalSign = group.total >= 0 ? '+' : '-';
-    const totalColor = group.total >= 0 ? '#27ae60' : '#e74c3c'; // Зеленый для прихода, красный для расхода
+    // Безопасно формируем текст сводки за день (без вложенных обратных кавычек!)
+    let summaryHtml = '';
+    if (group.income > 0 && group.expense > 0) {
+      summaryHtml = '<span style="color: #27ae60; font-weight: 700;">Приход: +' + formatMoney(group.income) + '</span> &nbsp;|&nbsp; <span style="color: #e74c3c; font-weight: 700;">Расход: -' + formatMoney(group.expense) + '</span>';
+    } else if (group.income > 0) {
+      summaryHtml = '<span style="color: #27ae60; font-weight: 700;">Приход: +' + formatMoney(group.income) + '</span>';
+    } else {
+      summaryHtml = '<span style="color: #e74c3c; font-weight: 700;">Расход: -' + formatMoney(group.expense) + '</span>';
+    }
     
     // Создаем заголовок группы (шапка дня)
     const groupHeader = document.createElement('div');
@@ -152,18 +160,20 @@ export function renderTransactionList(transactions, pensionDay) {
       background-color: #f8f9fa;
       border-radius: 8px;
       margin: 16px 0 8px 0;
-      font-size: 0.95em;
+      font-size: 0.9em;
       font-weight: 600;
       color: #555;
-      border-left: 4px solid ${totalColor};
+      border-left: 4px solid #3498db; /* Нейтральный синий, так как день может содержать и то, и другое */
     `;
+    
+    // Вставляем дату и заранее подготовленный безопасный HTML
     groupHeader.innerHTML = `
       <span>${formatDateOnly(firstTxDate)}</span>
-      <span style="color: ${totalColor};">Итого: ${totalSign}${formatMoney(Math.abs(group.total))}</span>
+      <span>${summaryHtml}</span>
     `;
     listEl.appendChild(groupHeader);
 
-    // Отрисовываем транзакции внутри этой группы
+    // Отрисовываем транзакции внутри этой группы (код остался точно таким же, как в вашем рабочем варианте)
     group.transactions.forEach((transaction) => {
       const itemEl = document.createElement('div');
       itemEl.className = 'transaction';
@@ -186,7 +196,6 @@ export function renderTransactionList(transactions, pensionDay) {
       const noteLine = committedFlag && transaction.note ? `<span class="transaction__subcategory">${transaction.note}</span>` : '';
       const itemLine = transaction.item ? `<span class="transaction__item">${transaction.item}</span>` : '';
 
-      // Обратите внимание: дата убрана из карточки, так как теперь она есть в шапке дня!
       itemEl.innerHTML = `
         <div class="transaction__info">
             <span class="transaction__category">${displayName}</span>
