@@ -2115,37 +2115,48 @@ window.confirmAllHypotheses = function() {
 };
 
 // ========================================================================
-// 📱 СВАЙП-НАВИГАЦИЯ (Hammer.js) - Исправленная версия
+// 📱 СВАЙП-НАВИГАЦИЯ (Hammer.js) - Финальная версия с пересозданием
 // ========================================================================
-if (typeof Hammer !== 'undefined') {
-  // Привязываем к document, чтобы ловить свайпы глобально, 
-  // даже если фокус "прилип" к кнопке навигации
-  const hammer = new Hammer(document);
+let hammerInstance = null;
+
+function initSwipeNavigation() {
+  if (hammerInstance) {
+    hammerInstance.destroy();
+  }
   
-  hammer.get('swipe').set({ 
-    direction: Hammer.DIRECTION_HORIZONTAL,
-    threshold: 50, // минимальная дистанция свайпа
-    velocity: 0.3  // минимальная скорость
-  });
-
-  hammer.on('swipeleft', () => {
-    navigateScreens(1);
-  });
-
-  hammer.on('swiperight', () => {
-    navigateScreens(-1);
-  });
-
-  function navigateScreens(direction) {
-    const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
-    const currentHash = window.location.hash || '#screen-today';
-    const currentScreenId = currentHash.replace('#', '');
-    const currentIndex = screens.indexOf(currentScreenId);
+  if (typeof Hammer !== 'undefined') {
+    hammerInstance = new Hammer(document.body, {
+      touchAction: 'pan-y'
+    });
     
-    const newIndex = currentIndex + direction;
-    if (newIndex >= 0 && newIndex < screens.length) {
-      window.location.hash = `#${screens[newIndex]}`;
-    }
+    hammerInstance.get('swipe').set({ 
+      direction: Hammer.DIRECTION_HORIZONTAL,
+      threshold: 50,
+      velocity: 0.3
+    });
+
+    hammerInstance.on('swipeleft', () => {
+      navigateScreens(1);
+    });
+
+    hammerInstance.on('swiperight', () => {
+      navigateScreens(-1);
+    });
   }
 }
+
+function navigateScreens(direction) {
+  const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
+  const currentHash = window.location.hash || '#screen-today';
+  const currentScreenId = currentHash.replace('#', '');
+  const currentIndex = screens.indexOf(currentScreenId);
+  
+  const newIndex = currentIndex + direction;
+  if (newIndex >= 0 && newIndex < screens.length) {
+    window.location.hash = `#${screens[newIndex]}`;
+    setTimeout(initSwipeNavigation, 100);
+  }
+}
+
+initSwipeNavigation();
 // ========================================================================
