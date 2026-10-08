@@ -2112,3 +2112,69 @@ window.confirmAllHypotheses = function() {
   }
 };
 
+// ========================================================================
+// 📱 СВАЙП-НАВИГАЦИЯ (Идея 3)
+// ========================================================================
+const ENABLE_SWIPE_NAVIGATION = true; // 🚨 АВАРИЙНЫЙ РУБИЛЬНИК (поставьте false, если что-то пойдет не так)
+
+if (ENABLE_SWIPE_NAVIGATION && 'ontouchstart' in window) {
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+
+  // Порядок экранов для навигации
+  // (ВАЖНО: убедитесь, что этот порядок совпадает с порядком иконок в вашем нижнем меню!)
+  const screens = [
+    'screen-today',
+    'screen-history',
+    'screen-stats',
+    'screen-reconcile', // ← Добавили экран Сверки!
+    'screen-settings',
+  ];
+
+  // Запоминаем точку касания
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    },
+    { passive: true },
+  ); // passive: true гарантирует, что это не заблокирует скролл
+
+  // Обрабатываем отпускание пальца
+  document.addEventListener(
+    'touchend',
+    (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      handleSwipe();
+    },
+    { passive: true },
+  );
+
+  function handleSwipe() {
+    const diffX = touchEndX - touchStartX;
+    const diffY = touchEndY - touchStartY;
+
+    // Получаем текущий экран из URL (или 'screen-today' по умолчанию)
+    const currentHash = window.location.hash || '#screen-today';
+    const currentScreenId = currentHash.replace('#', '');
+    const currentIndex = screens.indexOf(currentScreenId);
+
+    // УСЛОВИЕ БЕЗОПАСНОСТИ:
+    // 1. Горизонтальное движение должно быть больше вертикального (чтобы не ломать скролл)
+    // 2. Длина свайпа должна быть больше 50 пикселей (защита от случайных касаний)
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+      if (diffX > 0 && currentIndex > 0) {
+        // Свайп ВПРАВО -> переходим к предыдущему экрану
+        window.location.hash = `#${screens[currentIndex - 1]}`;
+      } else if (diffX < 0 && currentIndex < screens.length - 1) {
+        // Свайп ВЛЕВО -> переходим к следующему экрану
+        window.location.hash = `#${screens[currentIndex + 1]}`;
+      }
+    }
+  }
+}
+// ========================================================================
