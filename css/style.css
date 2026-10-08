@@ -118,6 +118,10 @@ body {
   line-height: 1.5;
   background: var(--bg-primary);
   color: var(--text-primary);
+
+  /* 👇 ДОБАВИТЬ ЭТУ СТРОКУ 👇 */
+  touch-action: pan-y; /* Разрешает вертикальный скролл, но отдает горизонтальные жесты нам */
+
 }
 
 .app {
@@ -127,6 +131,8 @@ body {
   display: flex;
   flex-direction: column;
   background-color: var(--color-surface);
+
+  touch-action: pan-y;
 }
 
 /* Header */
