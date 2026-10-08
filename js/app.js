@@ -2115,79 +2115,42 @@ window.confirmAllHypotheses = function() {
 };
 
 // ========================================================================
-// 📱 СВАЙП-НАВИГАЦИЯ (Идея 3) - Финальная версия с фиксом фокуса
+// 📱 СВАЙП-НАВИГАЦИЯ (Hammer.js)
 // ========================================================================
-   const ENABLE_SWIPE_NAVIGATION = false; //  АВАРИЙНЫЙ РУБИЛЬНИК
 
-if (ENABLE_SWIPE_NAVIGATION && 'ontouchstart' in window) {
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let isTracking = false; // ← НОВОЕ: флаг активного отслеживания
+// Ждём загрузки DOM и инициализации приложения
+if (typeof Hammer !== 'undefined') {
+  const appElement = document.querySelector('.app') || document.body;
   
-  const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
+  const hammer = new Hammer(appElement);
+  
+  // Включаем распознавание свайпов влево и вправо
+  hammer.get('swipe').set({ 
+    direction: Hammer.DIRECTION_HORIZONTAL,
+    threshold: 50, // минимальная дистанция свайпа
+    velocity: 0.3  // минимальная скорость
+  });
 
-  document.addEventListener('touchstart', (e) => {
-    // КРИТИЧЕСКИЙ ФИКС №1: снимаем фокус с любого элемента (кнопки, поля ввода)
-    if (document.activeElement && document.activeElement !== document.body) {
-      document.activeElement.blur();
-    }
-    
-    touchStartX = e.changedTouches[0].clientX;
-    touchStartY = e.changedTouches[0].clientY;
-    isTracking = true; // ← начинаем отслеживание
-  }, { passive: true });
+  // Обработчик свайпа влево (следующий экран)
+  hammer.on('swipeleft', () => {
+    navigateScreens(1);
+  });
 
-  document.addEventListener('touchmove', (e) => {
-    // НОВОЕ: если движение преимущественно вертикальное — отменяем отслеживание
-    // (это позволяет браузеру нормально скроллить)
-    if (!isTracking) return;
-    const currentX = e.changedTouches[0].clientX;
-    const currentY = e.changedTouches[0].clientY;
-    const diffX = Math.abs(currentX - touchStartX);
-    const diffY = Math.abs(currentY - touchStartY);
-    
-    // Если вертикальное движение уже больше горизонтального — это скролл, не свайп
-    if (diffY > diffX && diffY > 10) {
-      isTracking = false; // отменяем отслеживание свайпа
-    }
-  }, { passive: true });
+  // Обработчик свайпа вправо (предыдущий экран)
+  hammer.on('swiperight', () => {
+    navigateScreens(-1);
+  });
 
-  document.addEventListener('touchend', (e) => {
-    if (!isTracking) {
-      isTracking = false;
-      return;
-    }
-    
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    handleSwipe(touchEndX, touchEndY);
-    
-    // КРИТИЧЕСКИЙ ФИКС №2: принудительный сброс после каждого свайпа
-    isTracking = false;
-    touchStartX = 0;
-    touchStartY = 0;
-  }, { passive: true });
-
-  document.addEventListener('touchcancel', () => {
-    isTracking = false;
-    touchStartX = 0;
-    touchStartY = 0;
-  }, { passive: true });
-
-  function handleSwipe(endX, endY) {
-    const diffX = endX - touchStartX;
-    const diffY = endY - touchStartY;
-    
+  // Функция навигации между экранами
+  function navigateScreens(direction) {
+    const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
     const currentHash = window.location.hash || '#screen-today';
     const currentScreenId = currentHash.replace('#', '');
     const currentIndex = screens.indexOf(currentScreenId);
-
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-      if (diffX > 0 && currentIndex > 0) {
-        window.location.hash = `#${screens[currentIndex - 1]}`;
-      } else if (diffX < 0 && currentIndex < screens.length - 1) {
-        window.location.hash = `#${screens[currentIndex + 1]}`;
-      }
+    
+    const newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < screens.length) {
+      window.location.hash = `#${screens[newIndex]}`;
     }
   }
 }
