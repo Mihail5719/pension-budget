@@ -1394,9 +1394,6 @@ document.addEventListener('click', (e) => {
       }
     }, 100);
   }
-  // КРИТИЧЕСКИЙ ФИКС №3: снимаем фокус с кнопки после клика
-  navBtn.blur();
-  // ================================================================
 }); // ← закрывающая скобка обработчика
 
 function toInputDate(d) {
@@ -2115,48 +2112,52 @@ window.confirmAllHypotheses = function() {
 };
 
 // ========================================================================
-// 📱 СВАЙП-НАВИГАЦИЯ (Hammer.js) - Финальная версия с пересозданием
+// 📱 СВАЙП-НАВИГАЦИЯ (ВРЕМЕННО ОТКЛЮЧЕНО)
+// Причина: Конфликт событий Hammer.js с кликами по навигации в PWA.
+// Будет переделано на библиотеку Swiper.js на этапе финальной полировки.
 // ========================================================================
-let hammerInstance = null;
+if (false) {
+  let hammerInstance = null;
 
-function initSwipeNavigation() {
-  if (hammerInstance) {
-    hammerInstance.destroy();
-  }
-  
-  if (typeof Hammer !== 'undefined') {
-    hammerInstance = new Hammer(document.body, {
-      touchAction: 'pan-y'
-    });
+  function initSwipeNavigation() {
+    if (hammerInstance) {
+      hammerInstance.destroy();
+    }
     
-    hammerInstance.get('swipe').set({ 
-      direction: Hammer.DIRECTION_HORIZONTAL,
-      threshold: 50,
-      velocity: 0.3
-    });
+    if (typeof Hammer !== 'undefined') {
+      hammerInstance = new Hammer(document.body, {
+        touchAction: 'pan-y'
+      });
+      
+      hammerInstance.get('swipe').set({ 
+        direction: Hammer.DIRECTION_HORIZONTAL,
+        threshold: 50,
+        velocity: 0.3
+      });
 
-    hammerInstance.on('swipeleft', () => {
-      navigateScreens(1);
-    });
+      hammerInstance.on('swipeleft', () => {
+        navigateScreens(1);
+      });
 
-    hammerInstance.on('swiperight', () => {
-      navigateScreens(-1);
-    });
+      hammerInstance.on('swiperight', () => {
+        navigateScreens(-1);
+      });
+    }
   }
-}
 
-function navigateScreens(direction) {
-  const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
-  const currentHash = window.location.hash || '#screen-today';
-  const currentScreenId = currentHash.replace('#', '');
-  const currentIndex = screens.indexOf(currentScreenId);
-  
-  const newIndex = currentIndex + direction;
-  if (newIndex >= 0 && newIndex < screens.length) {
-    window.location.hash = `#${screens[newIndex]}`;
-    setTimeout(initSwipeNavigation, 100);
+  function navigateScreens(direction) {
+    const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
+    const currentHash = window.location.hash || '#screen-today';
+    const currentScreenId = currentHash.replace('#', '');
+    const currentIndex = screens.indexOf(currentScreenId);
+    
+    const newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < screens.length) {
+      window.location.hash = `#${screens[newIndex]}`;
+      setTimeout(initSwipeNavigation, 100);
+    }
   }
-}
 
-initSwipeNavigation();
+  initSwipeNavigation();
+}
 // ========================================================================
