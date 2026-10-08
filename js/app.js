@@ -1394,6 +1394,8 @@ document.addEventListener('click', (e) => {
       }
     }, 100);
   }
+  // КРИТИЧЕСКИЙ ФИКС №3: снимаем фокус с кнопки после клика
+  navBtn.blur();
   // ================================================================
 }); // ← закрывающая скобка обработчика
 
@@ -2113,30 +2115,61 @@ window.confirmAllHypotheses = function() {
 };
 
 // ========================================================================
-// 📱 СВАЙП-НАВИГАЦИЯ (Идея 3) - Улучшенная версия
+// 📱 СВАЙП-НАВИГАЦИЯ (Идея 3) - Финальная версия с фиксом фокуса
 // ========================================================================
 const ENABLE_SWIPE_NAVIGATION = true; // 🚨 АВАРИЙНЫЙ РУБИЛЬНИК
 
 if (ENABLE_SWIPE_NAVIGATION && 'ontouchstart' in window) {
   let touchStartX = 0;
   let touchStartY = 0;
+  let isTracking = false; // ← НОВОЕ: флаг активного отслеживания
   
   const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
 
-  // Используем clientX/clientY (надежнее в PWA, чем screenX)
   document.addEventListener('touchstart', (e) => {
+    // КРИТИЧЕСКИЙ ФИКС №1: снимаем фокус с любого элемента (кнопки, поля ввода)
+    if (document.activeElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
+    
     touchStartX = e.changedTouches[0].clientX;
     touchStartY = e.changedTouches[0].clientY;
+    isTracking = true; // ← начинаем отслеживание
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    // НОВОЕ: если движение преимущественно вертикальное — отменяем отслеживание
+    // (это позволяет браузеру нормально скроллить)
+    if (!isTracking) return;
+    const currentX = e.changedTouches[0].clientX;
+    const currentY = e.changedTouches[0].clientY;
+    const diffX = Math.abs(currentX - touchStartX);
+    const diffY = Math.abs(currentY - touchStartY);
+    
+    // Если вертикальное движение уже больше горизонтального — это скролл, не свайп
+    if (diffY > diffX && diffY > 10) {
+      isTracking = false; // отменяем отслеживание свайпа
+    }
   }, { passive: true });
 
   document.addEventListener('touchend', (e) => {
+    if (!isTracking) {
+      isTracking = false;
+      return;
+    }
+    
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
     handleSwipe(touchEndX, touchEndY);
+    
+    // КРИТИЧЕСКИЙ ФИКС №2: принудительный сброс после каждого свайпа
+    isTracking = false;
+    touchStartX = 0;
+    touchStartY = 0;
   }, { passive: true });
 
-  // ВАЖНО: обрабатываем отмену жеста браузером (частая причина "зависаний")
   document.addEventListener('touchcancel', () => {
+    isTracking = false;
     touchStartX = 0;
     touchStartY = 0;
   }, { passive: true });
@@ -2149,13 +2182,10 @@ if (ENABLE_SWIPE_NAVIGATION && 'ontouchstart' in window) {
     const currentScreenId = currentHash.replace('#', '');
     const currentIndex = screens.indexOf(currentScreenId);
 
-    // Условие: горизонтальное движение строго больше вертикального И больше 50px
     if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
       if (diffX > 0 && currentIndex > 0) {
-        // Свайп ВПРАВО -> предыдущий экран
         window.location.hash = `#${screens[currentIndex - 1]}`;
       } else if (diffX < 0 && currentIndex < screens.length - 1) {
-        // Свайп ВЛЕВО -> следующий экран
         window.location.hash = `#${screens[currentIndex + 1]}`;
       }
     }
