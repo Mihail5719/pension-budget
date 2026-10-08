@@ -1,117 +1,499 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Инструкция - Пенсионный Бюджет</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Руководство пользователя — Мой Бюджет</title>
+
     <style>
-    body { 
-        font-family: system-ui, -apple-system, sans-serif; 
-        line-height: 1.6; 
-        padding: 20px; 
-        max-width: 800px; 
-        margin: 0 auto; 
-        background: #f9f9f9; 
-        color: #333;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-    .guide-container { 
-        background: #fff; 
-        padding: 24px; 
-        border-radius: 12px; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        max-width: 100%;
-    }
-    h1 { 
-        color: #2c3e50; 
-        border-bottom: 2px solid #3498db; 
-        padding-bottom: 10px;
-        font-size: clamp(24px, 5vw, 32px);
-        word-break: break-word;
-        overflow-wrap: break-word;
-        hyphens: auto;
-    }
-    h2 { 
-        color: #34495e; 
-        margin-top: 24px;
-        font-size: clamp(20px, 4vw, 24px);
-        word-break: break-word;
-    }
-    ul { padding-left: 20px; }
-    li { margin-bottom: 8px; }
-    .back-btn { 
-        display: inline-block; 
-        margin-top: 30px; 
-        padding: 12px 24px; 
-        background: #3498db; 
-        color: white; 
-        text-decoration: none; 
-        border-radius: 8px; 
-        font-weight: bold; 
-        transition: background 0.2s;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-    .back-btn:hover { background: #2980b9; }
-    .tip { 
-        background: #e8f4f8; 
-        border-left: 4px solid #3498db; 
-        padding: 12px; 
-        margin: 16px 0; 
-        border-radius: 4px;
-        word-break: break-word;
-    }
-    
-    /* Адаптация для смартфонов */
-    @media (max-width: 480px) {
+        /* CSS-переменные для светлой темы */
+        :root {
+            --bg-primary: #f9f9f9;
+            --bg-secondary: #f0f0f0;
+            --card-bg: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --color-primary: #3498db;
+            --color-primary-dark: #2980b9;
+            --color-danger: #e74c3c;
+            --border-color: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --btn-primary-bg: #3498db;
+            --btn-primary-text: #ffffff;
+        }
+
+        /* CSS-переменные для тёмной темы */
+        .dark-theme {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --card-bg: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --color-primary: #5dade2;
+            --color-primary-dark: #3498db;
+            --color-danger: #e74c3c;
+            --border-color: #404040;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --btn-primary-bg: #5dade2;
+            --btn-primary-text: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            padding: 10px;
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            transition: background 0.3s, color 0.3s;
         }
+
         .guide-container {
-            padding: 16px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            max-width: 100%;
+            transition: background 0.3s;
         }
+
         h1 {
-            font-size: 24px;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 10px;
+            font-size: clamp(24px, 5vw, 32px);
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
         }
+
         h2 {
+            color: var(--text-primary);
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-size: clamp(20px, 4vw, 24px);
+            word-break: break-word;
+            border-left: 4px solid var(--color-primary);
+            padding-left: 12px;
+        }
+
+        h3 {
+            color: var(--text-primary);
+            margin-top: 24px;
+            margin-bottom: 12px;
             font-size: 18px;
         }
-    }
-</style>
+
+        ul {
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin-bottom: 12px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 24px;
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background 0.2s;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .back-btn:hover {
+            background: var(--color-primary-dark);
+        }
+
+        /* Кнопка переключения темы */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Оглавление */
+        .toc {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .toc h2 {
+            margin-top: 0;
+            border-left: none;
+            padding-left: 0;
+            font-size: 20px;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            margin-bottom: 12px;
+        }
+
+        .toc a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .toc a:hover {
+            background: var(--bg-primary);
+        }
+
+        /* Места для скриншотов */
+        .screenshot-placeholder {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 20px 0;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Блоки заметок и предупреждений */
+        .tip {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid var(--color-primary);
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 8px;
+            word-break: break-word;
+        }
+
+        .warning {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid var(--color-danger);
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 8px;
+            word-break: break-word;
+        }
+
+        .module {
+            margin-bottom: 40px;
+            padding-top: 20px;
+            scroll-margin-top: 80px;
+        }
+
+        /* Плавная прокрутка */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Адаптация для смартфонов */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .guide-container {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            h2 {
+                font-size: 18px;
+            }
+
+            .toc a {
+                font-size: 15px;
+            }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+    </style>
 </head>
+
 <body>
+    <!-- Кнопка переключения темы -->
+    <button class="theme-toggle" id="themeToggle" title="Переключить тему">🌙</button>
+
     <div class="guide-container">
-        <h1>📖 Инструкция по использованию</h1>
-        
-        <h2>1. Начальная настройка</h2>
-        <ul>
-            <li>Перейдите во вкладку <strong>«Настройки»</strong>.</li>
-            <li>Укажите размер вашей ежемесячной пенсии.</li>
-            <li>Укажите день месяца, когда приходит пенсия.</li>
-            <li>Укажите сумму неприкосновенного запаса (резерва).</li>
-            <li>Нажмите <strong>«Сохранить настройки»</strong>.</li>
-        </ul>
+        <h1> Руководство пользователя</h1>
 
-        <h2>2. Обязательные платежи</h2>
-        <ul>
-            <li>Там же, в настройках, нажмите <strong>«Добавить платёж»</strong>.</li>
-            <li>Введите название (например, "ЖКХ" или "Лекарства") и сумму.</li>
-            <li>Эти суммы будут автоматически вычитаться из вашего свободного бюджета.</li>
-        </ul>
+        <!-- Оглавление -->
+        <nav class="toc">
+            <h2>Содержание</h2>
+            <ul>
+                <li><a href="#intro">Введение</a></li>
+                <li><a href="#common">Общие элементы интерфейса</a></li>
+                <li><a href="#module1">Модуль 1: Экран «Сегодня»</a></li>
+                <li><a href="#module2">Модуль 2: Экран «История операций»</a></li>
+                <li><a href="#module3">Модуль 3: Экран «Статистика»</a></li>
+                <li><a href="#module4">Модуль 4: Экран «Сверка»</a></li>
+                <li><a href="#module5">Модуль 5: Экран «Настройки»</a></li>
+            </ul>
+        </nav>
 
-        <h2>3. Ежедневные траты</h2>
-        <ul>
-            <li>На главном экране <strong>«Сегодня»</strong> вы видите ваш безопасный лимит трат на день.</li>
-            <li>Чтобы записать расход, нажмите <strong>«Добавить расход»</strong>, выберите категорию и введите сумму.</li>
-        </ul>
+        <!-- Введение -->
+        <section id="intro" class="module">
+            <h2>Введение</h2>
+            <p><strong>«Мой бюджет»</strong> — это приложение для честного учёта личных финансов между фиксированными
+                поступлениями (например, от пенсии до пенсии). Оно показывает, сколько вы можете тратить каждый день,
+                чтобы денег хватило до следующего поступления, и помогает не выйти за рамки бюджета.</p>
+            <p>Приложение работает как на компьютере, так и на смартфоне. На смартфоне его можно установить на рабочий
+                стол как обычное приложение — тогда оно будет работать даже без интернета.</p>
 
-        <div class="tip">
-            💡 <strong>Совет:</strong> Регулярно используйте кнопки «Экспорт» и «Импорт» внизу страницы настроек, чтобы сохранять резервную копию ваших данных в файл.
-        </div>
+            <div class="tip">
+                <strong>Главное правило контроля бюджета:</strong><br>
+                Каждый день достаточно сравнить две цифры:<br>
+                <strong>«Осталось до пенсии» в приложении + НЗ = Остаток на счёте в банке</strong>.<br>
+                Если они совпадают — ваш бюджет в порядке. Экран «Сверка» нужен только для детального разбора
+                расхождений.
+            </div>
+        </section>
+
+        <!-- Общие элементы -->
+        <section id="common" class="module">
+            <h2>Общие элементы интерфейса</h2>
+            <p>Каждый экран приложения имеет одинаковую «рамку» — верхнюю шапку и нижнее меню навигации.</p>
+
+            <h3>🔵 Шапка (верхняя часть экрана)</h3>
+            <p>В верхней части любого экрана вы видите синий блок с тремя элементами:</p>
+            <ul>
+                <li><strong>Название приложения</strong> — «Мой бюджет» (по центру).</li>
+                <li><strong>Дата пенсии</strong> — под названием, мелким шрифтом: <em>«Пенсия: 23 числа»</em>.</li>
+                <li><strong>Переключатель темы</strong> 🌙/☀️ — в правом верхнем углу.</li>
+            </ul>
+
+            <h3>📱 Нижнее меню навигации</h3>
+            <p>Внизу любого экрана расположены <strong>5 кнопок</strong>:</p>
+            <ul>
+                <li>📅 <strong>Сегодня</strong> — Главный экран (остаток, лимит).</li>
+                <li>📋 <strong>История</strong> — История операций.</li>
+                <li>📊 <strong>Статистика</strong> — Диаграмма расходов.</li>
+                <li>🔄 <strong>Сверка</strong> — Проверка с банком.</li>
+                <li>⚙️ <strong>Настройки</strong> — Параметры и данные.</li>
+            </ul>
+        </section>
+
+        <!-- Модуль 1 -->
+        <section id="module1" class="module">
+            <h2>Модуль 1: Экран «Сегодня»</h2>
+            <p>Когда вы открываете приложение, первым делом вы видите экран «Сегодня». Это ваш главный финансовый компас
+                на день.</p>
+
+            <div class="screenshot-placeholder">[СКРИНШОТ 1: Главный экран "Сегодня"]</div>
+
+            <h3>Что здесь показано:</h3>
+            <ul>
+                <li> <strong>Остаток до пенсии</strong> — крупное число в центре карточки.</li>
+                <li>🟢 <strong>Индикатор (цветной кружок)</strong>:
+                    <ul>
+                        <li>🟢 Зелёный — всё хорошо.</li>
+                        <li>🟡 Жёлтый — внимание, приближаетесь к пределу.</li>
+                        <li>🔴 Красный — тревога, вышли за рамки лимита.</li>
+                    </ul>
+                </li>
+                <li>💵 <strong>Безопасный дневной лимит</strong> — сумма, которую можно тратить каждый день.</li>
+                <li>📅 <strong>Дней осталось</strong> — сколько дней до следующей пенсии.</li>
+                <li>💸 <strong>Потрачено</strong> — сумма трат за текущий период.</li>
+            </ul>
+
+            <h3>Кнопка «Отметить поступление пенсии»</h3>
+            <p>Нажмите её в день, когда пенсия пришла на счёт. Приложение пересчитает лимит и запомнит дату начала
+                нового периода.</p>
+            <div class="warning">⚠️ <strong>Важно:</strong> если пенсия ещё не пришла, не нажимайте эту кнопку — иначе
+                дневной лимит будет посчитан неправильно.</div>
+
+            <h3>Блок «Сегодня к оплате»</h3>
+            <p>Если на сегодня есть фиксированные платежи, они появятся здесь с кнопками ✓ (оплатить) и ⏸ (отложить).
+            </p>
+        </section>
+
+        <!-- Модуль 2 -->
+        <section id="module2" class="module">
+            <h2>Модуль 2: Экран «История операций»</h2>
+            <p>Журнал всех ваших финансовых движений: расходов, доходов и фиксированных платежей.</p>
+
+            <div class="screenshot-placeholder">[СКРИНШОТ 2: Экран "История операций"]</div>
+
+            <h3>Как устроен экран</h3>
+            <p>Все записи сгруппированы по дням. Каждый день начинается с <strong>шапки</strong>, в которой показан
+                развёрнутый итог:</p>
+            <ul>
+                <li><strong>Доход</strong> — зелёным со знаком плюс (+5 000,00 ₽).</li>
+                <li><strong>Расход</strong> — красным со знаком минус (−2 350,00 ₽).</li>
+            </ul>
+
+            <h3>Карточка операции</h3>
+            <ul>
+                <li>🏷️ <strong>Категория и подкатегория</strong> (например, «Продукты → Овощи»).</li>
+                <li>💰 <strong>Сумма</strong> — расходы чёрным с минусом, доходы зелёным с плюсом.</li>
+                <li>📝 <strong>Предмет покупки</strong> — третья строка курсивом (если заполнено).</li>
+                <li>✏️ <strong>Редактировать</strong> и ❌ <strong>Удалить</strong> — кнопки справа внизу.</li>
+            </ul>
+
+            <h3>Как добавить расход или доход</h3>
+            <p>Используйте кнопки <strong>«Записать расход»</strong> (синяя) или <strong>«Добавить доход»</strong>
+                (зелёная) на экране «Сегодня».</p>
+        </section>
+
+        <!-- Модуль 3 -->
+        <section id="module3" class="module">
+            <h2>Модуль 3: Экран «Статистика»</h2>
+            <p>Показывает полную картину ваших финансов за текущий период.</p>
+
+            <div class="screenshot-placeholder">[СКРИНШОТ 3: Экран "Статистика"]</div>
+
+            <h3>Блок 1: Сводка</h3>
+            <ul>
+                <li>💚 <strong>Доходы</strong> (зелёный) и ❤️ <strong>Расходы</strong> (красный).</li>
+                <li>⚪ <strong>Нефиксированные</strong> (повседневные траты) и <strong>Фиксированные</strong> (ЖКХ,
+                    кредит).</li>
+            </ul>
+
+            <h3>Блок 2: Круговая диаграмма</h3>
+            <p>Наглядно показывает доли категорий в нефиксированных расходах. Наведите палец на сектор для деталей.</p>
+
+            <h3>Блок 3: Детальная разбивка</h3>
+            <p>Раздел <strong>«По подкатегориям»</strong> раскрывает каждую категорию.</p>
+            <div class="tip">
+                <strong>Как читать проценты:</strong><br>
+                • Процент у <strong>категории</strong> (ЖКХ 30.6%) — доля от <strong>всех расходов</strong>.<br>
+                • Процент у <strong>подкатегории</strong> (Коммуналка 71.2%) — доля <strong>внутри категории</strong>.
+            </div>
+        </section>
+
+        <!-- Модуль 4 -->
+        <section id="module4" class="module">
+            <h2>Модуль 4: Экран «Сверка»</h2>
+            <p>Позволяет загрузить выписку из банка и сравнить её с записями в приложении.</p>
+
+            <div class="screenshot-placeholder">[СКРИНШОТ 4: Экран "Сверка"]</div>
+
+            <h3>Как читать отчёт</h3>
+            <ul>
+                <li>✅ <strong>Точные совпадения</strong> — всё верно.</li>
+                <li> <strong>Не учтено в приложении</strong> — забыли записать. Нажмите «Добавить», чтобы перенести в
+                    Историю.</li>
+                <li>⚪ <strong>Не отражено в банке</strong> — например, траты наличными.</li>
+            </ul>
+        </section>
+
+        <!-- Модуль 5 -->
+        <section id="module5" class="module">
+            <h2>Модуль 5: Экран «Настройки»</h2>
+            <p>Центр управления приложением.</p>
+
+            <div class="screenshot-placeholder">[СКРИНШОТ 5: Экран "Настройки"]</div>
+
+            <h3>Основные параметры</h3>
+            <ul>
+                <li>💰 <strong>Начальный остаток</strong>.</li>
+                <li>🏦 <strong>Размер пенсии</strong>.</li>
+                <li>📅 <strong>День пенсии</strong>.</li>
+                <li>🔒 <strong>Неприкосновенный запас (НЗ)</strong>.</li>
+            </ul>
+
+            <h3>Экспорт и импорт</h3>
+            <p>Регулярно делайте экспорт (скачивайте JSON-файл) и сохраняйте его в надёжном месте (облако, Telegram).
+                Это единственный способ не потерять данные.</p>
+            <div class="warning">⚠️ <strong>Внимание:</strong> импорт полностью заменяет текущие данные. Сначала
+                сделайте экспорт!</div>
+        </section>
 
         <a href="index.html" class="back-btn">← Вернуться в приложение</a>
     </div>
+
+    <script>
+        // Переключение темы
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Проверяем сохранённую тему
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+            themeToggle.textContent = '☀️';
+        }
+
+        // Обработчик клика по кнопке темы
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            const isDark = body.classList.contains('dark-theme');
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        // Плавная прокрутка для якорных ссылок (дополнительная страховка)
+        document.querySelectorAll('.toc a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>
