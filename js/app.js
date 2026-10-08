@@ -2117,7 +2117,7 @@ window.confirmAllHypotheses = function() {
 // ========================================================================
 // 📱 СВАЙП-НАВИГАЦИЯ (Идея 3) - Финальная версия с фиксом фокуса
 // ========================================================================
-const ENABLE_SWIPE_NAVIGATION = true; // 🚨 АВАРИЙНЫЙ РУБИЛЬНИК
+   const ENABLE_SWIPE_NAVIGATION = false; //  АВАРИЙНЫЙ РУБИЛЬНИК
 
 if (ENABLE_SWIPE_NAVIGATION && 'ontouchstart' in window) {
   let touchStartX = 0;
