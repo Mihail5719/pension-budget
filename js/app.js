@@ -2115,33 +2115,27 @@ window.confirmAllHypotheses = function() {
 };
 
 // ========================================================================
-// 📱 СВАЙП-НАВИГАЦИЯ (Hammer.js)
+// 📱 СВАЙП-НАВИГАЦИЯ (Hammer.js) - Исправленная версия
 // ========================================================================
-
-// Ждём загрузки DOM и инициализации приложения
 if (typeof Hammer !== 'undefined') {
-  const appElement = document.querySelector('.app') || document.body;
+  // Привязываем к document, чтобы ловить свайпы глобально, 
+  // даже если фокус "прилип" к кнопке навигации
+  const hammer = new Hammer(document);
   
-  const hammer = new Hammer(appElement);
-  
-  // Включаем распознавание свайпов влево и вправо
   hammer.get('swipe').set({ 
     direction: Hammer.DIRECTION_HORIZONTAL,
     threshold: 50, // минимальная дистанция свайпа
     velocity: 0.3  // минимальная скорость
   });
 
-  // Обработчик свайпа влево (следующий экран)
   hammer.on('swipeleft', () => {
     navigateScreens(1);
   });
 
-  // Обработчик свайпа вправо (предыдущий экран)
   hammer.on('swiperight', () => {
     navigateScreens(-1);
   });
 
-  // Функция навигации между экранами
   function navigateScreens(direction) {
     const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
     const currentHash = window.location.hash || '#screen-today';
