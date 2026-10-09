@@ -124,14 +124,14 @@ export function renderTransactionList(transactions, pensionDay) {
     let summaryHtml = '';
     if (group.income > 0 && group.expense > 0) {
       summaryHtml =
-        '<span style="color: #27ae60; font-weight: 700;">Приход: +' +
+        '<span style="color: #27ae60; font-weight: 700;">Доход: +' +
         formatMoney(group.income) +
         '</span> &nbsp;|&nbsp; <span style="color: #e74c3c; font-weight: 700;">Расход: -' +
         formatMoney(group.expense) +
         '</span>';
     } else if (group.income > 0) {
       summaryHtml =
-        '<span style="color: #27ae60; font-weight: 700;">Приход: +' +
+        '<span style="color: #27ae60; font-weight: 700;">Доход: +' +
         formatMoney(group.income) +
         '</span>';
     } else {
@@ -407,12 +407,34 @@ const categoryConfig = {
 };
 
 function getCategoryStyle(name) {
+  // 1. Точное совпадение с настройками
   if (categoryConfig[name]) return categoryConfig[name];
+
   const lowerName = name.toLowerCase();
+
+  // 2. Явные переопределения для проблемных категорий (высокая контрастность)
+  if (
+    lowerName.includes('кредит') ||
+    lowerName.includes('долг') ||
+    lowerName.includes('займ')
+  ) {
+    return { emoji: '💳', color: '#E67E22' }; // Яркий насыщенный оранжевый
+  }
+  if (
+    lowerName.includes('разное') ||
+    lowerName.includes('другое') ||
+    lowerName.includes('прочее')
+  ) {
+    return { emoji: '📦', color: '#34495E' }; // Глубокий тёмно-синий/графит (идеальный контраст и на белом, и на чёрном)
+  }
+
+  // 3. Поиск по частичному совпадению в categoryConfig
   for (const key in categoryConfig) {
     if (lowerName.includes(key.toLowerCase())) return categoryConfig[key];
   }
-  return { emoji: '📦', color: '#95a5a6' };
+
+  // 4. Фолбэк по умолчанию (вместо бледного #95a5a6)
+  return { emoji: '📦', color: '#2C3E50' }; // Тёмный асфальтовый цвет
 }
 
 // ========================================================================
