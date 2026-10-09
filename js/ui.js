@@ -581,11 +581,22 @@ export function renderStats(settings, fixedExpenses, transactions) {
       window.expenseChartInstance.destroy();
     }
 
-        window.expenseChartInstance = new Chart(canvas, {
+    // Принудительно включаем анимацию для всех диаграмм (на мобильных может отключаться)
+    Chart.defaults.animation.duration = 2000;
+    Chart.defaults.animation.easing = 'easeOutQuart';
+
+    window.expenseChartInstance = new Chart(canvas, {
       type: 'pie',
       data: {
         labels: labels,
-        datasets: [{ data: data, backgroundColor: backgroundColors, borderWidth: 2, borderColor: '#ffffff' }],
+        datasets: [
+          {
+            data: data,
+            backgroundColor: backgroundColors,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -593,16 +604,22 @@ export function renderStats(settings, fixedExpenses, transactions) {
         animation: {
           animateRotate: true,
           animateScale: true,
-          duration: 1000, // 1 секунда плавной отрисовки
-          easing: 'easeOutQuart', // Плавное замедление в конце
+          duration: 2000, // Увеличили с 1000 до 2000 мс
+          easing: 'easeOutQuart',
         },
         plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } },
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, padding: 15 },
+          },
           tooltip: {
             callbacks: {
               label: function (context) {
                 const style = getCategoryStyle(context.label);
-                const percentage = ((context.parsed / totalExpenses) * 100).toFixed(1);
+                const percentage = (
+                  (context.parsed / totalExpenses) *
+                  100
+                ).toFixed(1);
                 return `${style.emoji} ${context.label}: ${formatMoney(context.parsed)} (${percentage}%)`;
               },
             },
