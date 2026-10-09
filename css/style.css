@@ -2293,3 +2293,53 @@ body.dark-theme .btn.btn--warning {
     max-width: 60%; 
   }
 }
+
+/* === ПОЛИРОВКА: Шапка дня в Истории операций === */
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin: 16px 0 8px 0;
+  font-size: 0.95em;
+  font-weight: 600;
+  gap: 12px; /* Гарантированный минимальный отступ между датой и суммами */
+}
+
+.day-header__date {
+  white-space: nowrap;
+  flex-shrink: 0; /* Дата никогда не сжимается */
+}
+
+.day-header__summary {
+  display: flex;
+  flex-wrap: wrap; /* Разрешаем перенос на новую строку, если не влезает */
+  align-items: center;
+  gap: 6px;
+  text-align: right;
+}
+
+.day-header__income { color: #27ae60; font-weight: 700; white-space: nowrap; }
+.day-header__expense { color: #e74c3c; font-weight: 700; white-space: nowrap; }
+.day-header__divider { color: var(--text-secondary, #999); font-weight: 400; }
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 480px) {
+  .day-header {
+    flex-direction: column; /* На телефоне ставим дату сверху, суммы снизу */
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+  
+  .day-header__summary {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px 12px;
+  }
+  
+  .day-header__divider {
+    display: none; /* На мобильном убираем вертикальную черту для чистоты */
+  }
+}

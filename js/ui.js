@@ -121,43 +121,36 @@ export function renderTransactionList(transactions, pensionDay) {
     const group = grouped[dateKey];
     const firstTxDate = group.transactions[0].date;
 
+    // 1. Формируем красивую разметку для сумм (без неразрывных пробелов, чтобы текст мог переноситься)
     let summaryHtml = '';
     if (group.income > 0 && group.expense > 0) {
-      summaryHtml =
-        '<span style="color: #27ae60; font-weight: 700;">Доход: +' +
-        formatMoney(group.income) +
-        '</span> &nbsp;|&nbsp; <span style="color: #e74c3c; font-weight: 700;">Расход: -' +
-        formatMoney(group.expense) +
-        '</span>';
+      summaryHtml = `
+        <span class="day-header__income">Доход: +${formatMoney(group.income)}</span>
+        <span class="day-header__divider">|</span>
+        <span class="day-header__expense">Расход: -${formatMoney(group.expense)}</span>
+      `;
     } else if (group.income > 0) {
-      summaryHtml =
-        '<span style="color: #27ae60; font-weight: 700;">Доход: +' +
-        formatMoney(group.income) +
-        '</span>';
+      summaryHtml = `<span class="day-header__income">Доход: +${formatMoney(group.income)}</span>`;
     } else {
-      summaryHtml =
-        '<span style="color: #e74c3c; font-weight: 700;">Расход: -' +
-        formatMoney(group.expense) +
-        '</span>';
+      summaryHtml = `<span class="day-header__expense">Расход: -${formatMoney(group.expense)}</span>`;
     }
 
     const groupHeader = document.createElement('div');
     groupHeader.className = 'day-header';
+    
+    // 2. Оставляем в inline только переменные темы, остальное вынесем в CSS для гибкости
     groupHeader.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 16px;
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      margin: 16px 0 8px 0;
-      font-size: 0.9em;
-      font-weight: 600;
-      color: #555;
+      background-color: var(--bg-secondary, #f8f9fa);
       border-left: 4px solid #3498db;
+      color: var(--text-primary, #555);
     `;
 
-    groupHeader.innerHTML = `<span>${formatDateOnly(firstTxDate)}</span><span>${summaryHtml}</span>`;
+    // 3. Используем классы для адаптивного управления через CSS
+    groupHeader.innerHTML = `
+      <span class="day-header__date">${formatDateOnly(firstTxDate)}</span>
+      <span class="day-header__summary">${summaryHtml}</span>
+    `;
+    
     listEl.appendChild(groupHeader);
 
     group.transactions.forEach((transaction) => {
@@ -588,35 +581,28 @@ export function renderStats(settings, fixedExpenses, transactions) {
       window.expenseChartInstance.destroy();
     }
 
-    window.expenseChartInstance = new Chart(canvas, {
+        window.expenseChartInstance = new Chart(canvas, {
       type: 'pie',
       data: {
         labels: labels,
-        datasets: [
-          {
-            data: data,
-            backgroundColor: backgroundColors,
-            borderWidth: 2,
-            borderColor: '#ffffff',
-          },
-        ],
+        datasets: [{ data: data, backgroundColor: backgroundColors, borderWidth: 2, borderColor: '#ffffff' }],
       },
       options: {
         responsive: true,
         maintainAspectRatio: true,
+        animation: {
+          animateRotate: true,
+          animateScale: true,
+          duration: 1000, // 1 секунда плавной отрисовки
+          easing: 'easeOutQuart', // Плавное замедление в конце
+        },
         plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { usePointStyle: true, padding: 15 },
-          },
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } },
           tooltip: {
             callbacks: {
               label: function (context) {
                 const style = getCategoryStyle(context.label);
-                const percentage = (
-                  (context.parsed / totalExpenses) *
-                  100
-                ).toFixed(1);
+                const percentage = ((context.parsed / totalExpenses) * 100).toFixed(1);
                 return `${style.emoji} ${context.label}: ${formatMoney(context.parsed)} (${percentage}%)`;
               },
             },
