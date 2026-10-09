@@ -12,7 +12,12 @@ const FILES_TO_CACHE = [
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './guide.html', // <-- ДОБАВИТЬ ЭТУ СТРОКУ
+  './guide.html',
+  './docs/screenshots/screen-today.png',
+  './docs/screenshots/screen-history.png',
+  './docs/screenshots/screen-stats.png',
+  './docs/screenshots/screen-reconcile.png',
+  './docs/screenshots/screen-settings.png',
 ];
 
 // Установка: кэшируем все файлы
