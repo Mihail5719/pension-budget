@@ -2343,3 +2343,9 @@ body.dark-theme .btn.btn--warning {
     display: none; /* На мобильном убираем вертикальную черту для чистоты */
   }
 }
+
+/* Расходы в карточках — красный цвет (как в шапке дня) */
+.transaction__amount:not(.transaction__amount--income) {
+  color: #e74c3c;
+  font-weight: 600;
+}
