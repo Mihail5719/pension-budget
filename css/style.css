@@ -1507,29 +1507,34 @@ body.dark-theme .stat:hover {
     grid-column: auto !important;
   }
 
-  /* 3. Нижняя навигация — 4 вкладки помещаются */
-  .bottom-nav {
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    max-width: 100vw;
-    padding: 4px 2px;
-    box-sizing: border-box;
-  }
+  /* 3. Нижняя навигация — только иконки на мобильных */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 100vw;
+  padding: 8px 2px;
+  box-sizing: border-box;
+}
 
-  .bottom-nav__item {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: 6px 2px;
-  }
+.bottom-nav__item {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
-  .bottom-nav__icon {
-    font-size: 20px;
-  }
+.bottom-nav__icon {
+  font-size: 28px; /* Увеличиваем иконки */
+  margin-bottom: 0;
+}
 
-  .bottom-nav__label {
-    font-size: 10px;
-  }
+.bottom-nav__label {
+  display: none; /* Скрываем текст полностью */
+}
 
   /* 4. Кнопка темы — не обрезается справа */
   .theme-toggle {
@@ -2239,5 +2244,31 @@ body.dark-theme .btn.btn--warning {
   #stats-chart canvas {
     max-width: 100%;
     max-height: 280px;
+  }
+}
+
+/* Адаптация кнопок модального окна для мобильных */
+@media (max-width: 480px) {
+  .modal__buttons {
+    gap: 6px; /* Уменьшаем расстояние между кнопками */
+    padding: 0 4px; /* Добавляем небольшой отступ от краев */
+  }
+  
+  .modal__buttons button {
+    padding: 10px 4px; /* Минимальные боковые отступы внутри кнопки */
+    font-size: 13px; /* Уменьшаем шрифт */
+    white-space: nowrap; /* Запрещаем перенос текста */
+    min-width: 0; /* Позволяем кнопкам сжиматься */
+    width: 100%; /* Занимать всю доступную ширину */
+    box-sizing: border-box; /* Учитывать padding в общей ширине */
+    margin: 0; /* Убираем внешние отступы, если они есть */
+  }
+}
+
+/* Для очень узких экранов (меньше 360px) */
+@media (max-width: 360px) {
+  .modal__buttons button {
+    font-size: 12px;
+    padding: 8px 2px;
   }
 }
