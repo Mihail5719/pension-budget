@@ -2272,3 +2272,24 @@ body.dark-theme .btn.btn--warning {
     padding: 8px 2px;
   }
 }
+
+/* === ПОЛИРОВКА: Отступы в карточке истории на мобильных === */
+@media (max-width: 480px) {
+  .transaction__right {
+    gap: 12px; /* Увеличиваем расстояние между суммой и кнопками действий */
+    align-items: flex-start; /* Выравнивание по верху, чтобы сумма не прыгала */
+  }
+
+  .transaction__amount {
+    margin-top: 4px; /* Отступ суммы от категории сверху */
+    margin-right: 4px; /* Небольшой отступ справа от кнопок */
+    font-size: 16px; /* Чуть крупнее для удобства чтения */
+    font-weight: 600;
+  }
+  
+  /* Если сумма очень длинная, разрешаем ей переноситься, но не ломать верстку */
+  .transaction__amount {
+    word-break: break-word; 
+    max-width: 60%; 
+  }
+}
