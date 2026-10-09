@@ -2161,3 +2161,30 @@ if (false) {
   initSwipeNavigation();
 }
 // ========================================================================
+
+// Обновляем иконку "Сегодня" на текущее число месяца
+function updateTodayIcon() {
+  const today = new Date();
+  const day = today.getDate();
+  
+  // Находим первую кнопку навигации (Сегодня)
+  const firstNavItem = document.querySelector('.bottom-nav__item:first-child');
+  
+  if (firstNavItem) {
+    const icon = firstNavItem.querySelector('.bottom-nav__icon');
+    if (icon) {
+      // Заменяем эмодзи на число
+      icon.textContent = day;
+      icon.style.fontSize = '22px';
+      icon.style.fontWeight = 'bold';
+      icon.style.color = 'var(--color-primary)';
+    }
+  }
+}
+
+// Вызываем при загрузке
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateTodayIcon);
+} else {
+  updateTodayIcon();
+}
