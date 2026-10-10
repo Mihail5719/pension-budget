@@ -19,6 +19,15 @@ import {
   SUBCATEGORIES,
   INCOME_CATEGORIES,
 } from './constants.js';
+import {
+  createExpense,
+  createIncome,
+  updateTransaction,
+  deleteTransaction,
+  deleteTransactionsByRange,
+  isValidAmount,
+  getCategoriesByType,
+} from './transactions.js';
 
 let appData; // Глобальное состояние приложения
 
@@ -426,33 +435,20 @@ function saveIncome() {
   const categoryId = incomeCategorySelect.value;
   const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
 
+  // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     incomeAmountInput.focus();
     return;
   }
 
-  // Находим название категории
-  const category = INCOME_CATEGORIES.find((c) => c.id === categoryId);
-  const categoryName = category ? category.name : categoryId;
+  // 2. Создаём и сохраняем транзакцию через модуль transactions.js
+  // (Внутри createIncome уже происходит push в массив и вызов saveData)
+  createIncome(appData, { categoryId, amount });
 
-  // Создаём транзакцию с типом "income"
-  const transaction = {
-    id: Date.now(),
-    date: new Date().toISOString(),
-    category: categoryName,
-    amount: amount,
-    type: 'income', // Важно! Отличает доход от расхода
-  };
-
-  // Добавляем в данные
-  appData.transactions.push(transaction);
-
-  // Сохраняем
-  saveData(appData);
-
-  // Закрываем модалку и перерисовываем
+  // 3. UI-реакция: закрываем модалку и перерисовываем экраны
   closeIncomeModal();
+  
   renderTodayScreen(
     appData.settings,
     appData.fixedExpenses,
@@ -460,7 +456,7 @@ function saveIncome() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  console.log('Добавлен доход:', transaction);
+  console.log('Добавлен доход, категория:', categoryId, 'сумма:', amount);
 }
 
 // Элементы модального окна расходов
@@ -529,44 +525,29 @@ function handleAddExpense() {
 function saveExpense() {
   const categoryId = expenseCategorySelect.value;
   const amount = parseFloat(expenseAmountInput.value.replace(',', '.'));
+  const itemValue = document.getElementById('expense-item').value.trim();
+  const subId = document.getElementById('expense-subcategory').value;
 
+  // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     expenseAmountInput.focus();
     return;
   }
 
-  const itemInput = document.getElementById('expense-item');
-  const itemValue = itemInput.value.trim();
-
-  const subSelect = document.getElementById('expense-subcategory');
-  const subId = subSelect.value;
   if (!subId) {
     alert('Пожалуйста, выберите подкатегорию');
-    subSelect.focus();
+    document.getElementById('expense-subcategory').focus();
     return;
   }
-  const subs = SUBCATEGORIES[categoryId] || [];
-  const sub = subs.find((s) => s.id === subId);
-  const subName = sub ? sub.name : subId;
 
-  const category = EXPENSE_CATEGORIES.find((c) => c.id === categoryId);
-  const categoryName = category ? category.name : categoryId;
+  // 2. Создаём и сохраняем через модуль
+  createExpense(appData, { categoryId, amount, subId, item: itemValue });
 
-  const transaction = {
-    id: Date.now(),
-    date: new Date().toISOString(),
-    category: categoryName,
-    subcategory: subName,
-    amount: amount,
-    type: 'expense',
-    item: itemValue,
-  };
-
-  appData.transactions.push(transaction);
-  saveData(appData);
-  itemInput.value = '';
+  // 3. UI-реакция
+  document.getElementById('expense-item').value = ''; // Очищаем поле
   closeExpenseModal();
+  
   renderTodayScreen(
     appData.settings,
     appData.fixedExpenses,
@@ -574,7 +555,7 @@ function saveExpense() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  console.log('Добавлен расход:', transaction);
+  console.log('Добавлен расход, категория:', categoryId, 'сумма:', amount);
 }
 
 // === Использование Неприкосновенного запаса ===
@@ -788,24 +769,7 @@ function handleDeleteClick(event) {
     );
 
     if (confirm('Удалить эту запись о расходе?')) {
-      appData.transactions = appData.transactions.filter(
-        (t) => t.id !== transactionId,
-      );
-
-      // === ВОССТАНОВЛЕНИЕ НЗ при удалении записи о снятии ===
-      if (transaction && transaction.type === 'reserve') {
-        appData.settings.reserveAmount += transaction.amount;
-        const reserveInput =
-          document.getElementById('input-reserve') ||
-          document.getElementById('input-reserve-amount');
-        if (reserveInput) {
-          reserveInput.value = appData.settings.reserveAmount;
-        }
-        console.log('🔓 НЗ восстановлен:', appData.settings.reserveAmount);
-      }
-      // =====================================================
-
-      saveData(appData);
+      deleteTransaction(appData, transactionId);
       renderAll(appData);
       console.log('Транзакция удалена:', transactionId);
     }
@@ -1381,9 +1345,7 @@ function handleDeleteRange() {
     `Расходы на сумму: ${formatMoney(expenseSum)}\n\n` +
     'Рекомендуем сначала сделать Экспорт!\nПродолжить?';
   if (!confirm(message)) return;
-  appData.transactions = appData.transactions.filter(
-    (t) => !isInDeleteRange(t, from, to),
-  );
+  const count = deleteTransactionsByRange(appData, from, to);
   saveData(appData);
   renderAll(appData);
   updateDeletePreview();
