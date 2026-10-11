@@ -1656,6 +1656,19 @@ input[type='tel'] {
   background-color: rgba(198, 40, 40, 0.1);
 }
 
+/* Иконка счёта в карточке транзакции (v2.1) */
+.transaction__account-icon {
+  font-size: 14px;
+  margin-left: 6px;
+  vertical-align: middle;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.transaction__category:hover .transaction__account-icon {
+  opacity: 1;
+}
+
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)

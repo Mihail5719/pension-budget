@@ -153,43 +153,59 @@ export function renderTransactionList(transactions, pensionDay) {
     
     listEl.appendChild(groupHeader);
 
-    group.transactions.forEach((transaction) => {
-      const itemEl = document.createElement('div');
-      itemEl.className = 'transaction';
-      itemEl.dataset.id = transaction.id;
-      if (transaction.type === 'reserve') {
-        itemEl.classList.add('transaction--reserve');
-      }
+        group.transactions.forEach((transaction) => {
+          const itemEl = document.createElement('div');
+          itemEl.className = 'transaction';
+          itemEl.dataset.id = transaction.id;
+          if (transaction.type === 'reserve') {
+            itemEl.classList.add('transaction--reserve');
+          }
 
-      const incomeFlag = isIncome(transaction);
-      const amountClass = incomeFlag
-        ? 'transaction__amount--income'
-        : 'transaction__amount';
-      const amountPrefix = incomeFlag ? '+' : '-';
-      const deleteAction = incomeFlag ? 'delete-income' : 'delete-transaction';
+          const incomeFlag = isIncome(transaction);
+          const amountClass = incomeFlag
+            ? 'transaction__amount--income'
+            : 'transaction__amount';
+          const amountPrefix = incomeFlag ? '+' : '-';
+          const deleteAction = incomeFlag
+            ? 'delete-income'
+            : 'delete-transaction';
 
-      const catStyle = categoryConfig[transaction.category] || {
-        emoji: '📦',
-        color: '#95a5a6',
-      };
-      const committedFlag = isCommitted(transaction);
-      const emoji = committedFlag ? '📋' : catStyle.emoji;
-      const displayName = `${emoji} ${transaction.category}`;
+          const catStyle = categoryConfig[transaction.category] || {
+            emoji: '📦',
+            color: '#95a5a6',
+          };
+          const committedFlag = isCommitted(transaction);
+          const emoji = committedFlag ? '📋' : catStyle.emoji;
+          const displayName = `${emoji} ${transaction.category}`;
 
-      const subLine = transaction.subcategory
-        ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
-        : '';
-      const noteLine =
-        committedFlag && transaction.note
-          ? `<span class="transaction__subcategory">${transaction.note}</span>`
-          : '';
-      const itemLine = transaction.item
-        ? `<span class="transaction__item">${transaction.item}</span>`
-        : '';
+          // === НОВОЕ: Находим иконку и цвет счёта транзакции (v2.1) ===
+          const account = window.appData?.settings?.accounts?.find(
+            (a) => a.id === transaction.accountId,
+          );
+          const accountIcon = account ? account.emoji : '💼';
+          const accountColor = account ? account.color : '#95a5a6';
+          const accountName = account ? account.name : 'Счёт';
+          // ============================================================
 
-      itemEl.innerHTML = `
+          const subLine = transaction.subcategory
+            ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
+            : '';
+          const noteLine =
+            committedFlag && transaction.note
+              ? `<span class="transaction__subcategory">${transaction.note}</span>`
+              : '';
+          const itemLine = transaction.item
+            ? `<span class="transaction__item">${transaction.item}</span>`
+            : '';
+
+          itemEl.innerHTML = `
         <div class="transaction__info">
-            <span class="transaction__category">${displayName}</span>
+            <span class="transaction__category">
+                ${displayName}
+                <span class="transaction__account-icon" style="color: ${accountColor};" title="${accountName}">
+                    ${accountIcon}
+                </span>
+            </span>
             ${subLine}${itemLine}${noteLine}
         </div>
         <div class="transaction__right">
@@ -200,8 +216,8 @@ export function renderTransactionList(transactions, pensionDay) {
             </div>
         </div>
       `;
-      listEl.appendChild(itemEl);
-    });
+          listEl.appendChild(itemEl);
+        });
   });
 }
 
