@@ -924,6 +924,9 @@ function openEditModal(transactionId) {
   // Заполняем сумму
   document.getElementById('edit-amount').value = transaction.amount;
 
+  // Заполняем предмет покупки (НОВОЕ)
+  document.getElementById('edit-item').value = transaction.item || '';
+
   // Заполняем дату (формат YYYY-MM-DD для input type="date")
   const transactionDate = new Date(transaction.date);
   const dateStr = transactionDate.toISOString().split('T')[0];
@@ -1011,6 +1014,9 @@ function saveEditTransaction() {
     originalDate.getSeconds(),
   );
 
+  // Получаем предмет покупки (НОВОЕ)
+  const itemValue = document.getElementById('edit-item').value.trim();
+
   // Обновляем транзакцию
   appData.transactions[transactionIndex] = {
     ...originalTransaction, // Сохраняем id и type
@@ -1018,6 +1024,7 @@ function saveEditTransaction() {
     subcategory: subName,
     amount: amount,
     date: newDate.toISOString(),
+    item: itemValue, // Сохраняем предмет покупки
   };
 
   // Сохраняем данные
