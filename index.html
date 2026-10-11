@@ -323,6 +323,15 @@
                 </select>
             </label>
 
+            <!-- === ВСТАВИТЬ СЮДА: Выбор счёта (v2.1) === -->
+            <label class="modal__label">
+                <span class="modal__label-text">Счёт:</span>
+                <select class="modal__select" id="expense-account">
+                    <!-- Счета будут добавляться через JavaScript -->
+                </select>
+            </label>
+            <!-- === КОНЕЦ БЛОКА === -->
+
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
                 <input type="number" class="modal__input" id="expense-amount" placeholder="0.00" inputmode="decimal"
@@ -350,6 +359,15 @@
                 <span class="modal__label-text">Тип дохода</span>
                 <select class="modal__select" id="income-category"></select>
             </label>
+
+            <!-- Выбор счёта (v2.1) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Счёт:</span>
+                <select class="modal__select" id="income-account">
+                    <!-- Счета будут добавляться через JavaScript -->
+                </select>
+            </label>
+
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
                 <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal"
@@ -426,23 +444,23 @@
         <div class="modal__overlay"></div>
         <div class="modal__content">
             <h2 class="modal__title" id="account-modal-title">Добавить счёт</h2>
-    
+
             <label class="modal__label">
                 <span class="modal__label-text">Название счёта</span>
                 <input type="text" class="modal__input" id="account-name" placeholder="Например: Тинькофф, Наличные">
             </label>
-    
+
             <label class="modal__label">
                 <span class="modal__label-text">Иконка (эмодзи)</span>
                 <input type="text" class="modal__input" id="account-emoji" placeholder="💳 🏦 💼 💵" maxlength="2">
             </label>
-    
+
             <label class="modal__label">
                 <span class="modal__label-text">Цвет</span>
                 <input type="color" class="modal__input" id="account-color" value="#3498db"
                     style="height: 60px; padding: 8px;">
             </label>
-    
+
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-account">Отмена</button>
                 <button class="btn btn--primary" id="btn-save-account">Сохранить</button>

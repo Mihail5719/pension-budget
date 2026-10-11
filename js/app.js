@@ -552,17 +552,35 @@ function setupEventListeners() {
 
 // Открытие модального окна доходов
 function openIncomeModal() {
-  // Очищаем список
+  // Очищаем список категорий
   incomeCategorySelect.innerHTML = '';
 
   // Заполняем список категориями с эмодзи
   INCOME_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
     option.value = category.id; // <-- ВАЖНО: сохраняем ID ('work'), а не имя!
-    option.textContent = `${category.emoji} ${category.name}`.trim(); // <-- Собираем: эмодзи + чистое имя
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // <-- Собираем: эмодзи + чистое имя
     incomeCategorySelect.appendChild(option);
   });
 
+  // === ВСТАВЛЯЕМ ЗДЕСЬ: Заполняем список счетов (v2.1) ===
+  const accountSelect = document.getElementById('income-account');
+  if (accountSelect) {
+    accountSelect.innerHTML = '';
+    appData.settings.accounts.forEach(account => {
+      const option = document.createElement('option');
+      option.value = account.id;
+      option.textContent = `${account.emoji || ''} ${account.name}`.trim();
+      // Выбираем счёт по умолчанию
+      if (account.id === appData.settings.defaultAccountId) {
+        option.selected = true;
+      }
+      accountSelect.appendChild(option);
+    });
+  }
+  // ========================================================
+
+  // Открываем модальное окно и фокусируемся на категории
   incomeModal.classList.add('is-open');
   incomeCategorySelect.focus();
 }
@@ -639,13 +657,30 @@ function openExpenseModal() {
   // 1. Очищаем список (на случай, если он уже был заполнен)
   expenseCategorySelect.innerHTML = '';
 
-  // // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
+  // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
   EXPENSE_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
     option.value = category.id; // Сохраняем чистое имя (без эмодзи)
     option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Показываем с эмодзи
     expenseCategorySelect.appendChild(option);
   });
+
+  // 2.5. === ВСТАВЛЯЕМ ЗДЕСЬ: Заполняем список счетов (v2.1) ===
+  const accountSelect = document.getElementById('expense-account');
+  if (accountSelect) {
+    accountSelect.innerHTML = '';
+    appData.settings.accounts.forEach(account => {
+      const option = document.createElement('option');
+      option.value = account.id;
+      option.textContent = `${account.emoji || ''} ${account.name}`.trim();
+      // Выбираем счёт по умолчанию
+      if (account.id === appData.settings.defaultAccountId) {
+        option.selected = true;
+      }
+      accountSelect.appendChild(option);
+    });
+  }
+  // ========================================================
 
   // 3. Открываем окно и ставим фокус на список
   expenseModal.classList.add('is-open');
