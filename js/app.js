@@ -28,6 +28,7 @@ import {
   isValidAmount,
   getCategoriesByType,
 } from './transactions.js';
+import { initReconcileListeners } from './reconcile.js'; // ← ДОБАВЬТЕ ЭТУ СТРОКУ!
 
 let appData; // Глобальное состояние приложения
 
@@ -85,7 +86,8 @@ function init() {
 
   // Навешиваем обработчики
   setupEventListeners();
-    initDeleteRange();
+  initDeleteRange();
+  initReconcileListeners();
 
   console.log('Приложение инициализировано', appData);
 }
@@ -93,9 +95,13 @@ function init() {
 // Регистрация Service Worker для PWA (офлайн-режим)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker
+      .register('./sw.js')
       .then((registration) => {
-        console.log('[PWA] Service Worker зарегистрирован:', registration.scope);
+        console.log(
+          '[PWA] Service Worker зарегистрирован:',
+          registration.scope,
+        );
       })
       .catch((error) => {
         console.log('[PWA] Ошибка регистрации Service Worker:', error);
@@ -306,8 +312,6 @@ function setupEventListeners() {
     });
   }
 
-
-
   // ======================================================
   // === Обработчик изменения/сброса даты пенсии на главном экране ===
   const btnEditPensionDate = document.getElementById('btn-edit-pension-date');
@@ -343,9 +347,6 @@ function setupEventListeners() {
               appData.transactions,
             );
         }
-
-
-
       } else {
         const newDate = new Date(userChoice);
         if (!isNaN(newDate.getTime())) {
@@ -448,7 +449,7 @@ function saveIncome() {
 
   // 3. UI-реакция: закрываем модалку и перерисовываем экраны
   closeIncomeModal();
-  
+
   renderTodayScreen(
     appData.settings,
     appData.fixedExpenses,
@@ -547,7 +548,7 @@ function saveExpense() {
   // 3. UI-реакция
   document.getElementById('expense-item').value = ''; // Очищаем поле
   closeExpenseModal();
-  
+
   renderTodayScreen(
     appData.settings,
     appData.fixedExpenses,
@@ -1307,26 +1308,24 @@ function initDeleteRange() {
   toInput.value = toInputDate(new Date(periodStart.getTime() - 86400000));
   fromInput.addEventListener('change', updateDeletePreview);
   toInput.addEventListener('change', updateDeletePreview);
-    document
-      .getElementById('delete-range-btn')
-      .addEventListener('click', () => {
-        const dateFrom = fromInput.value;
-        const dateTo = toInput.value;
+  document.getElementById('delete-range-btn').addEventListener('click', () => {
+    const dateFrom = fromInput.value;
+    const dateTo = toInput.value;
 
-        if (!dateFrom || !dateTo) {
-          alert('⚠️ Пожалуйста, укажите обе даты: "От" и "До"');
-          return;
-        }
+    if (!dateFrom || !dateTo) {
+      alert('⚠️ Пожалуйста, укажите обе даты: "От" и "До"');
+      return;
+    }
 
-        const confirmed = confirm(
-          `Вы уверены, что хотите удалить все записи с ${dateFrom} по ${dateTo}?\n\n` +
-            `Это действие нельзя отменить!`,
-        );
+    const confirmed = confirm(
+      `Вы уверены, что хотите удалить все записи с ${dateFrom} по ${dateTo}?\n\n` +
+        `Это действие нельзя отменить!`,
+    );
 
-        if (confirmed) {
-          handleDeleteRange();
-        }
-      });
+    if (confirmed) {
+      handleDeleteRange();
+    }
+  });
   updateDeletePreview();
 }
 
@@ -1359,618 +1358,6 @@ function handleDeleteRange() {
   alert(`Готово! Удалено записей: ${victims.length}`);
 }
 
-// === СВЕРКА С БАНКОМ ===
-
-// Обработчик кнопки загрузки файла
-document.getElementById('reconcile-upload-btn').addEventListener('click', () => {
-  document.getElementById('reconcile-file').click();
-});
-
-document.getElementById('reconcile-file').addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const csvText = e.target.result;
-    const bankTransactions = parseCSV(csvText);
-    reconcileTransactions(bankTransactions);
-  };
-  reader.readAsText(file, 'UTF-8');
-});
-
-// Умный парсер CSV — сам определяет кодировку
-function parseCSV(csvText) {
-  const lines = csvText.trim().split(/\r?\n/);
-  const transactions = [];
-
-  // Пропускаем первую строку (заголовок)
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line || line === ';') continue; // Пропускаем пустые строки
-
-    const parts = line.split(';');
-    if (parts.length < 3) continue;
-
-    const date = parts[0].trim();
-    // Заменяем запятую на точку в сумме (на случай разных форматов)
-    const amountStr = parts[1].trim().replace(',', '.');
-    const amount = parseFloat(amountStr);
-    const description = parts[2].trim();
-
-    if (date && !isNaN(amount) && description) {
-      transactions.push({ date, amount, description });
-    }
-  }
-
-  return transactions;
-}
-
-// Умное сравнение транзакций с допуском по дате ±1 день
-function reconcileTransactions(bankTransactions) {
-  const appTransactions = appData.transactions || [];
-  
-  const matches = [];
-  const groupMatches = [];
-  const mismatches = [];
-  const missingInApp = [];
-  const missingInBank = [];
-
-  const pendingHypotheses = {};  // Гипотезы по датам
-
-  // Группируем транзакции приложения по дате
-  const appByDate = {};
-  appTransactions.forEach((tx, index) => {
-    const date = normalizeDate(tx.date);
-    if (!appByDate[date]) appByDate[date] = [];
-    appByDate[date].push({ tx, index });
-  });
-
-  const appUsed = new Array(appTransactions.length).fill(false);
-
-  bankTransactions.forEach((bankTx) => {
-    const bankDate = normalizeDate(bankTx.date);
-    const bankAmount = bankTx.amount; // ✅ Со знаком!
-    let found = false;
-
-    // Ищем совпадения в диапазоне ±1 день
-    const datesToCheck = [
-      bankDate,
-      getAdjacentDate(bankDate, -1),
-      getAdjacentDate(bankDate, 1),
-    ];
-
-    for (const checkDate of datesToCheck) {
-      if (found) break;
-
-      if (appByDate[checkDate]) {
-        // 1. Точное совпадение 1 к 1 (по модулю суммы)
-        for (const { tx: appTx, index } of appByDate[checkDate]) {
-          if (appUsed[index]) continue;
-          const bankAmountAbs = Math.abs(bankAmount);
-          const appAmountAbs = Math.abs(appTx.amount);
-
-          if (Math.abs(bankAmountAbs - appAmountAbs) < 0.01) {
-            matches.push({ bank: bankTx, app: appTx });
-            appUsed[index] = true;
-            found = true;
-            break;
-          }
-        }
-
-        // 2. Групповое совпадение (алгебраическая сумма)
-        if (!found) {
-          const dayTransactions = appByDate[checkDate].filter(
-            ({ index }) => !appUsed[index],
-          );
-          const combinations = findCombinations(
-            dayTransactions.map(({ tx, index }) => ({ tx, index })),
-            bankAmount,
-          );
-
-          if (combinations.found) {
-            groupMatches.push({
-              bank: bankTx,
-              app: combinations.items.map(({ tx }) => tx),
-            });
-            combinations.items.forEach(({ index }) => {
-              appUsed[index] = true;
-            });
-            found = true;
-          }
-        }
-
-        // 3. Поиск гипотез (если не нашли точное или групповое)
-        if (!found) {
-          const dayTransactions = appByDate[checkDate].filter(
-            ({ index }) => !appUsed[index],
-          );
-          const bankAmountAbs = Math.abs(bankAmount);
-
-          // Пробуем найти комбинацию по алгебраической сумме (для случаев с возвратом)
-          let hypotheses = findCombinations(
-            dayTransactions.map(({ tx, index }) => ({ tx, index })),
-            bankAmount,
-            5,
-          );
-
-          // Если не нашли, пробуем по сумме модулей (для случаев с несколькими расходами)
-          if (!hypotheses.found) {
-            hypotheses = findCombinationsByAbsoluteSum(
-              dayTransactions.map(({ tx, index }) => ({ tx, index })),
-              bankAmountAbs,
-              5,
-            );
-          }
-
-          if (hypotheses.found) {
-            // Сохраняем как гипотезу, не помечаем как использованные
-            if (!pendingHypotheses[bankDate]) pendingHypotheses[bankDate] = [];
-
-            // Вычисляем разницу
-            const appSum = hypotheses.items.reduce(
-              (sum, { tx }) => sum + tx.amount,
-              0,
-            );
-            const appAbsSum = hypotheses.items.reduce(
-              (sum, { tx }) => sum + Math.abs(tx.amount),
-              0,
-            );
-            const difference = Math.abs(bankAmountAbs - appAbsSum);
-
-            pendingHypotheses[bankDate].push({
-              bank: bankTx,
-              app: hypotheses.items.map(({ tx }) => tx),
-              difference: difference,
-            });
-            found = true;
-          }
-        }
-      }
-    }
-
-    
-
-    if (!found) {
-      missingInApp.push(bankTx);
-    }
-  });
-
-  appTransactions.forEach((appTx, i) => {
-    if (!appUsed[i]) {
-      missingInBank.push(appTx);
-    }
-  });
-
-    displayReconcileResults(matches, groupMatches, mismatches, missingInApp, missingInBank, pendingHypotheses);
-}
-
-// Вспомогательная функция: получить соседнюю дату
-function getAdjacentDate(dateStr, daysOffset) {
-  const date = new Date(dateStr);
-  date.setDate(date.getDate() + daysOffset);
-  return date.toISOString().split('T')[0];
-}
-
-// Вспомогательная функция для поиска комбинаций сумм (алгебраическая сумма)
-function findCombinations(items, targetSum, tolerance = 2) {
-  const result = { found: false, items: [] };
-  
-  function algebraicSum(items) {
-    return items.reduce((sum, { tx }) => sum + tx.amount, 0);
-  }
-  
-  function findSubset(items, target, current = [], startIndex = 0) {
-    if (result.found) return;
-    
-    const currentSum = algebraicSum(current);
-    
-    if (Math.abs(target - currentSum) <= tolerance) {
-      result.found = true;
-      result.items = [...current];
-      return;
-    }
-    
-    for (let i = startIndex; i < items.length; i++) {
-      current.push(items[i]);
-      findSubset(items, target, current, i + 1);
-      if (result.found) return;
-      current.pop();
-    }
-  }
-  
-  findSubset(items, targetSum);
-  return result;
-}
-
-// Поиск комбинаций по сумме модулей (для гипотез)
-function findCombinationsByAbsoluteSum(items, targetSum, tolerance = 5) {
-  const result = { found: false, items: [] };
-  
-  function absoluteSum(items) {
-    return items.reduce((sum, { tx }) => sum + Math.abs(tx.amount), 0);
-  }
-  
-  function findSubset(items, target, current = [], startIndex = 0) {
-    if (result.found) return;
-    
-    const currentSum = absoluteSum(current);
-    
-    if (Math.abs(target - currentSum) <= tolerance) {
-      result.found = true;
-      result.items = [...current];
-      return;
-    }
-    
-    if (currentSum > target + tolerance) return;
-    
-    for (let i = startIndex; i < items.length; i++) {
-      current.push(items[i]);
-      findSubset(items, target, current, i + 1);
-      if (result.found) return;
-      current.pop();
-    }
-  }
-  
-  findSubset(items, targetSum);
-  return result;
-}
-
-// Нормализация даты — приводит к формату YYYY-MM-DD
-function normalizeDate(dateStr) {
-  if (!dateStr) return '';
-  
-  // Если это ISO-формат (2026-08-22T06:13:13.000Z)
-  if (dateStr.includes('T')) {
-    return dateStr.split('T')[0]; // Берём только дату: 2026-08-22
-  }
-  
-  // Если это формат DD.MM.YYYY (14.09.2026)
-  if (dateStr.includes('.')) {
-    const parts = dateStr.split('.');
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`; // 2026-09-14
-    }
-  }
-  
-  // Если уже в формате YYYY-MM-DD
-  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return dateStr;
-  }
-  
-  return dateStr;
-}
-
-// Отображение результатов сверки
-function displayReconcileResults(matches, groupMatches, mismatches, missingInApp, missingInBank, pendingHypotheses = {}) {
-  const resultsDiv = document.getElementById('reconcile-results');
-  resultsDiv.style.display = 'flex';
-
-  // ✅ Добавили подсчёт общих совпадений (точные + групповые)
-  const totalMatches = matches.length + groupMatches.length;
-  
-  // Пересчитали общее количество, чтобы цифры сходились
-  const totalBank = totalMatches + mismatches.length + missingInApp.length;
-  const totalApp = totalMatches + mismatches.length + missingInBank.length;
-
-  resultsDiv.innerHTML = `
-    <div class="reconcile-summary">
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value">${totalBank}</span>
-        <span class="reconcile-summary__label">В банке</span>
-      </div>
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value">${totalApp}</span>
-        <span class="reconcile-summary__label">В приложении</span>
-      </div>
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value" style="color: #27ae60;">${totalMatches}</span>
-        <span class="reconcile-summary__label">Совпадений</span>
-      </div>
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value" style="color: #f39c12;">${mismatches.length}</span>
-        <span class="reconcile-summary__label">Расхождений</span>
-      </div>
-    </div>
-
-    ${renderReconcileGroup(
-      '✅ Точные совпадения (1 к 1)',
-      'match',
-      matches,
-      (item) => `
-      <div class="reconcile-item__date">${item.bank.date}</div>
-      <div class="reconcile-item__description">${item.bank.description}</div>
-      <div class="reconcile-item__amount">${formatMoney(item.bank.amount)}</div>
-    `
-    )}
-
-    ${renderReconcileGroup(
-      '✅ Групповые совпадения (1 операция в банке = несколько в приложении)',
-      'match',
-      groupMatches,
-      (item) => `
-      <div class="reconcile-item__info" style="width: 100%;">
-        <div class="reconcile-item__date">${item.bank.date}</div>
-        <div class="reconcile-item__description" style="font-weight: 600;">${item.bank.description}</div>
-        <div style="font-size: 0.9em; color: #27ae60; margin-top: 6px; font-weight: 600;">
-          Банк: ${formatMoney(item.bank.amount)} | В приложении: ${item.app.length} операций на ${formatMoney(item.app.reduce((sum, tx) => sum + Math.abs(tx.amount), 0))}
-        </div>
-        <div style="font-size: 0.85em; color: #555; margin-top: 4px; line-height: 1.4;">
-          ${item.app.map(tx => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
-        </div>
-      </div>
-    `
-    )}
-
-    ${renderReconcileGroup(
-      '⚠️ Расхождения (суммы отличаются)',
-      'mismatch',
-      mismatches,
-      (item) => `
-      <div class="reconcile-item__info">
-        <div class="reconcile-item__date">${item.bank.date}</div>
-        <div class="reconcile-item__description">${item.bank.description}</div>
-        <div style="font-size: 0.85em; color: #f39c12;">
-          Банк: ${formatMoney(item.bank.amount)} | Приложение: ${formatMoney(item.app.amount)}
-        </div>
-      </div>
-    `
-    )}
-
-    ${renderReconcileGroup(
-      '🔴 Не учтено в приложении',
-      'missing',
-      missingInApp,
-      (item) => `
-      <div class="reconcile-item__info">
-        <div class="reconcile-item__date">${item.date}</div>
-        <div class="reconcile-item__description">${item.description}</div>
-      </div>
-      <div class="reconcile-item__amount">${formatMoney(item.amount)}</div>
-      <button class="reconcile-item__action" onclick="addTransactionFromBank('${item.date}', ${item.amount}, '${item.description.replace(/'/g, "\\'")}')">
-        Добавить
-      </button>
-    `
-    )}
-
-        ${renderReconcileGroup(
-      '📝 Не отражено в банке',
-      'extra',
-      missingInBank,
-      (item) => `
-      <div class="reconcile-item__info">
-        <div class="reconcile-item__date">${item.date.includes('T') ? item.date.split('T')[0] : item.date}</div>
-        <div class="reconcile-item__description">${item.description || item.category}</div>
-      </div>
-      <div class="reconcile-item__amount">${formatMoney(item.amount)}</div>
-    `
-    )}
-
-    ${renderHypotheses(pendingHypotheses)}
-  `;
-}
-
-
-
-// Вспомогательная функция для рендеринга группы
-function renderReconcileGroup(title, type, items, renderFn) {
-  if (items.length === 0) return '';
-
-  const itemsHtml = items.map((item) => `
-    <div class="reconcile-item">
-      ${renderFn(item)}
-    </div>
-  `).join('');
-
-  return `
-    <div class="reconcile-group reconcile-group--${type}">
-      <div class="reconcile-group__title">${title} (${items.length})</div>
-      ${itemsHtml}
-    </div>
-  `;
-}
-
-// Добавление транзакции из банка в приложение
-window.addTransactionFromBank = function(date, amount, description) {
-  const newTransaction = {
-    id: Date.now().toString(),
-    date: date,
-    amount: amount,
-    category: amount < 0 ? 'Продукты' : 'Доходы',
-    subcategory: 'Разное',
-    description: description,
-    type: amount < 0 ? 'expense' : 'income'
-  };
-
-  appData.transactions.push(newTransaction);
-  saveData(appData);
-  renderAll(appData);
-
-  alert(`✅ Транзакция добавлена: ${description} (${formatMoney(amount)})`);
-};
-
-// === ПАРСЕР СЫРОГО ТЕКСТА ИЗ PDF ===
-
-// Обработчик кнопки "Разобрать текст"
-document.getElementById('reconcile-parse-btn').addEventListener('click', () => {
-  const rawText = document.getElementById('reconcile-raw-text').value.trim();
-  if (!rawText) {
-    alert('️ Вставьте текст из PDF-выписки');
-    return;
-  }
-
-  const bankTransactions = parseRawPDFText(rawText);
-  
-  if (bankTransactions.length === 0) {
-    alert('⚠️ Не удалось найти транзакции в тексте. Проверьте формат выписки.');
-    return;
-  }
-
-  alert(`✅ Найдено транзакций: ${bankTransactions.length}`);
-  reconcileTransactions(bankTransactions);
-});
-
-// Парсер "сырого" текста из PDF Сбербанка
-function parseRawPDFText(text) {
-  const transactions = [];
-  
-  // Регулярное выражение для поиска транзакций
-  const regex = /(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2})\s+([А-Яа-яA-Za-z][А-Яа-яA-Za-z\s]*?)\s+([\d\s]+,\d{2})\s+([\d\s]+,\d{2})\s+(\d{2}\.\d{2}\.\d{4})\s+(\d+)\s+(.+?)(?=\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2}|$)/gs;
-  
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    const date = match[1];
-    const amountStr = match[4].replace(/\s/g, '').replace(',', '.');
-    const description = match[8].trim();
-    
-    // Определяем тип: если в описании есть "+" или "Перевод", "Зачисление" — это доход
-    const isIncome = description.includes('+') || 
-                     description.toLowerCase().includes('перевод') ||
-                     description.toLowerCase().includes('зачислен');
-    
-    const amount = isIncome ? parseFloat(amountStr) : -parseFloat(amountStr);
-    
-    if (date && !isNaN(amount) && description) {
-      transactions.push({ date, amount, description });
-    }
-  }
-
-  return transactions;
-}
-
-// Отображение гипотез
-function renderHypotheses(pendingHypotheses) {
-  const rawHypotheses = Object.values(pendingHypotheses).flat();
-  const confirmedHypotheses = appData.confirmedHypotheses || [];
-
-  const activeHypotheses = rawHypotheses.filter(hypothesis => {
-    const hypothesisKey = `${hypothesis.bank.date}_${Math.abs(hypothesis.bank.amount)}_${hypothesis.app.map(tx => tx.id).join(',')}`;
-    return !confirmedHypotheses.includes(hypothesisKey);
-  });
-
-  if (activeHypotheses.length === 0) return '';
-
-  // Кнопка "Подтвердить все" (показываем, если гипотез больше 1)
-  const confirmAllBtn = activeHypotheses.length > 1 
-    ? `<button class="reconcile-group__action-all" onclick="confirmAllHypotheses()" style="margin: 12px 0; padding: 10px 16px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95em; font-weight: 600; width: 100%; transition: background 0.2s;">
-         ✅ Подтвердить все (${activeHypotheses.length})
-       </button>` 
-    : '';
-
-  const itemsHtml = activeHypotheses.map((hypothesis) => {
-    const hypothesisKey = `${hypothesis.bank.date}_${Math.abs(hypothesis.bank.amount)}_${hypothesis.app.map(tx => tx.id).join(',')}`;
-
-    return `
-      <div class="reconcile-item" data-key="${hypothesisKey}" style="margin-bottom: 12px;">
-        <div class="reconcile-item__info" style="width: 100%;">
-          <div class="reconcile-item__date">${hypothesis.bank.date}</div>
-          <div class="reconcile-item__description" style="font-weight: 600;">${hypothesis.bank.description}</div>
-          <div style="font-size: 0.9em; color: #f39c12; margin-top: 6px;">
-            Банк: ${formatMoney(hypothesis.bank.amount)} | Возможно в приложении:
-          </div>
-          <div style="font-size: 0.85em; color: #555; margin-top: 4px; line-height: 1.4;">
-            ${hypothesis.app.map(tx => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
-          </div>
-          <div style="font-size: 0.8em; color: #777; margin-top: 4px;">
-            Разница: ${formatMoney(hypothesis.difference)}
-          </div>
-          <button class="reconcile-item__action" onclick="confirmHypothesis('${hypothesisKey}', this)" style="margin-top: 8px; background: #3498db;">
-            ✅ Подтвердить
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <div class="reconcile-group reconcile-group--mismatch" id="hypotheses-group">
-      <div class="reconcile-group__title">⚠️ Требует проверки (${activeHypotheses.length})</div>
-      ${confirmAllBtn}
-      ${itemsHtml}
-    </div>
-  `;
-}
-
-// Подтверждение гипотезы (без перезагрузки)
-window.confirmHypothesis = function(hypothesisKey, btnElement) {
-  // 1. Сохраняем в память
-  if (!appData.confirmedHypotheses) {
-    appData.confirmedHypotheses = [];
-  }
-  appData.confirmedHypotheses.push(hypothesisKey);
-  saveData(appData);
-  
-  // 2. Мгновенно скрываем элемент из интерфейса
-  const item = btnElement.closest('.reconcile-item');
-  if (item) {
-    item.style.transition = 'opacity 0.3s ease';
-    item.style.opacity = '0';
-    setTimeout(() => {
-      item.style.display = 'none';
-    }, 300);
-  }
-  
-  // 3. Обновляем счётчик в заголовке
-  const group = btnElement.closest('.reconcile-group');
-  const title = group.querySelector('.reconcile-group__title');
-  const match = title.textContent.match(/\d+/);
-  
-  if (match) {
-    const currentCount = parseInt(match[0]);
-    const newCount = currentCount - 1;
-    title.textContent = `⚠️ Требует проверки (${newCount})`;
-    
-    // 3.1. Обновляем текст большой кнопки "Подтвердить все"
-    const confirmAllBtn = group.querySelector('.reconcile-group__action-all');
-    if (confirmAllBtn) {
-      confirmAllBtn.textContent = `✅ Подтвердить все (${newCount})`;
-    }
-    
-    // 4. Если гипотез больше не осталось, скрываем весь блок
-    if (newCount === 0) {
-      group.style.transition = 'opacity 0.3s ease';
-      group.style.opacity = '0';
-      setTimeout(() => {
-        group.style.display = 'none';
-      }, 300);
-    }
-  }
-}; // <-- Вот правильный конец: одна } закрывает функцию, одна ; завершает присваивание.
-
-// Подтверждение ВСЕХ гипотез сразу
-window.confirmAllHypotheses = function() {
-  if (!confirm('Подтвердить все предложенные гипотезы? Они будут сохранены и не появятся при следующей сверке.')) {
-    return;
-  }
-
-  if (!appData.confirmedHypotheses) {
-    appData.confirmedHypotheses = [];
-  }
-
-  // Собираем ключи всех видимых гипотез из DOM
-  const items = document.querySelectorAll('#hypotheses-group .reconcile-item');
-  items.forEach(item => {
-    const key = item.getAttribute('data-key');
-    if (key && !appData.confirmedHypotheses.includes(key)) {
-      appData.confirmedHypotheses.push(key);
-    }
-  });
-
-  // Сохраняем в localStorage
-  saveData(appData);
-
-  // Красиво скрываем весь блок целиком
-  const group = document.getElementById('hypotheses-group');
-  if (group) {
-    group.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-    group.style.opacity = '0';
-    group.style.transform = 'translateY(-10px)';
-    setTimeout(() => {
-      group.style.display = 'none';
-    }, 300);
-  }
-};
-
 // ========================================================================
 // 📱 СВАЙП-НАВИГАЦИЯ (ВРЕМЕННО ОТКЛЮЧЕНО)
 // Причина: Конфликт событий Hammer.js с кликами по навигации в PWA.
@@ -1983,16 +1370,16 @@ if (false) {
     if (hammerInstance) {
       hammerInstance.destroy();
     }
-    
+
     if (typeof Hammer !== 'undefined') {
       hammerInstance = new Hammer(document.body, {
-        touchAction: 'pan-y'
+        touchAction: 'pan-y',
       });
-      
-      hammerInstance.get('swipe').set({ 
+
+      hammerInstance.get('swipe').set({
         direction: Hammer.DIRECTION_HORIZONTAL,
         threshold: 50,
-        velocity: 0.3
+        velocity: 0.3,
       });
 
       hammerInstance.on('swipeleft', () => {
@@ -2006,11 +1393,17 @@ if (false) {
   }
 
   function navigateScreens(direction) {
-    const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
+    const screens = [
+      'screen-today',
+      'screen-history',
+      'screen-stats',
+      'screen-reconcile',
+      'screen-settings',
+    ];
     const currentHash = window.location.hash || '#screen-today';
     const currentScreenId = currentHash.replace('#', '');
     const currentIndex = screens.indexOf(currentScreenId);
-    
+
     const newIndex = currentIndex + direction;
     if (newIndex >= 0 && newIndex < screens.length) {
       window.location.hash = `#${screens[newIndex]}`;
@@ -2026,10 +1419,10 @@ if (false) {
 function updateTodayIcon() {
   const today = new Date();
   const day = today.getDate();
-  
+
   // Находим первую кнопку навигации (Сегодня)
   const firstNavItem = document.querySelector('.bottom-nav__item:first-child');
-  
+
   if (firstNavItem) {
     const icon = firstNavItem.querySelector('.bottom-nav__icon');
     if (icon) {
