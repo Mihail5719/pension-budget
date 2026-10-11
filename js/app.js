@@ -406,6 +406,148 @@ function setupEventListeners() {
     });
   }
   // ================================================================
+  // === ОБРАБОТЧИКИ ДЛЯ УПРАВЛЕНИЯ СЧЕТАМИ (v2.1) ===
+
+  // Переменная для хранения ID редактируемого счёта (null если добавляем новый)
+  let editingAccountId = null;
+
+  // Кнопка "Добавить счёт"
+  const btnAddAccount = document.getElementById('btn-add-account');
+  if (btnAddAccount) {
+    btnAddAccount.addEventListener('click', () => {
+      editingAccountId = null;
+      document.getElementById('account-modal-title').textContent =
+        'Добавить счёт';
+      document.getElementById('account-name').value = '';
+      document.getElementById('account-emoji').value = '';
+      document.getElementById('account-color').value = '#3498db';
+      document.getElementById('account-modal').classList.add('is-open');
+    });
+  }
+
+  // Кнопка "Отмена" в модалке счёта
+  const btnCancelAccount = document.getElementById('btn-cancel-account');
+  if (btnCancelAccount) {
+    btnCancelAccount.addEventListener('click', () => {
+      document.getElementById('account-modal').classList.remove('is-open');
+    });
+  }
+
+  // Кнопка "Сохранить" в модалке счёта
+  const btnSaveAccount = document.getElementById('btn-save-account');
+  if (btnSaveAccount) {
+    btnSaveAccount.addEventListener('click', () => {
+      const name = document.getElementById('account-name').value.trim();
+      const emoji = document.getElementById('account-emoji').value.trim();
+      const color = document.getElementById('account-color').value;
+
+      if (!name) {
+        alert('Пожалуйста, введите название счёта');
+        return;
+      }
+
+      if (editingAccountId) {
+        // Редактирование существующего счёта
+        const account = appData.settings.accounts.find(
+          (a) => a.id === editingAccountId,
+        );
+        if (account) {
+          account.name = name;
+          account.emoji = emoji;
+          account.color = color;
+          console.log('✅ Счёт обновлён:', account);
+        }
+      } else {
+        // Добавление нового счёта
+        const newAccount = {
+          id: 'account_' + Date.now(),
+          name: name,
+          emoji: emoji,
+          color: color,
+        };
+        appData.settings.accounts.push(newAccount);
+        console.log('✅ Счёт добавлен:', newAccount);
+      }
+
+      saveData(appData);
+      renderAccountsList(appData.settings.accounts, appData.transactions);
+      document.getElementById('account-modal').classList.remove('is-open');
+    });
+  }
+
+  // Делегирование событий для кнопок редактирования и удаления счетов
+  document.addEventListener('click', (e) => {
+    // Кнопка редактирования счёта
+    if (e.target.closest('.btn-edit-account')) {
+      const accountId = e.target.closest('.btn-edit-account').dataset.accountId;
+      const account = appData.settings.accounts.find((a) => a.id === accountId);
+      if (account) {
+        editingAccountId = accountId;
+        document.getElementById('account-modal-title').textContent =
+          'Редактировать счёт';
+        document.getElementById('account-name').value = account.name;
+        document.getElementById('account-emoji').value = account.emoji || '';
+        document.getElementById('account-color').value =
+          account.color || '#3498db';
+        document.getElementById('account-modal').classList.add('is-open');
+      }
+    }
+
+    // Кнопка удаления счёта
+    if (e.target.closest('.btn-delete-account')) {
+      const accountId = e.target.closest('.btn-delete-account').dataset
+        .accountId;
+      const account = appData.settings.accounts.find((a) => a.id === accountId);
+
+      if (account) {
+        // Проверяем, есть ли транзакции на этом счёте
+        const transactionsCount = appData.transactions.filter(
+          (t) => t.accountId === accountId,
+        ).length;
+
+        if (transactionsCount > 0) {
+          const confirmDelete = confirm(
+            `На счёте "${account.name}" есть ${transactionsCount} транзакций.\n\n` +
+              `Если вы удалите счёт, все транзакции будут перенесены на счёт по умолчанию.\n\n` +
+              `Продолжить?`,
+          );
+
+          if (!confirmDelete) return;
+
+          // Переносим транзакции на счёт по умолчанию
+          const defaultAccountId =
+            appData.settings.defaultAccountId ||
+            appData.settings.accounts[0].id;
+          appData.transactions.forEach((t) => {
+            if (t.accountId === accountId) {
+              t.accountId = defaultAccountId;
+            }
+          });
+          console.log(`🔄 Транзакции перенесены на счёт "${defaultAccountId}"`);
+        } else {
+          const confirmDelete = confirm(`Удалить счёт "${account.name}"?`);
+          if (!confirmDelete) return;
+        }
+
+        // Удаляем счёт
+        appData.settings.accounts = appData.settings.accounts.filter(
+          (a) => a.id !== accountId,
+        );
+
+        // Если удалили счёт по умолчанию, устанавливаем новый
+        if (
+          appData.settings.defaultAccountId === accountId &&
+          appData.settings.accounts.length > 0
+        ) {
+          appData.settings.defaultAccountId = appData.settings.accounts[0].id;
+        }
+
+        saveData(appData);
+        renderAccountsList(appData.settings.accounts, appData.transactions);
+        console.log('✅ Счёт удалён:', account.name);
+      }
+    }
+  });
 }
 
 // Открытие модального окна доходов
