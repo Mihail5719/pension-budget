@@ -133,48 +133,62 @@
             <!-- Экран 3: Настройки -->
             <section class="screen screen--settings" id="screen-settings">
                 <h2 class="screen__title">Настройки</h2>
-            
+
+                <!-- === БЛОК УПРАВЛЕНИЯ СЧЕТАМИ (v2.1) === -->
+                <div class="accounts-section">
+                    <h3 class="settings-subtitle">💳 Мои счета</h3>
+
+                    <div class="accounts-list" id="accounts-list">
+                        <!-- Счета будут добавляться сюда через JavaScript -->
+                    </div>
+
+                    <button class="btn btn--secondary" id="btn-add-account" style="margin-top: 16px;">
+                        ➕ Добавить счёт
+                    </button>
+                </div>
+                <!-- === КОНЕЦ БЛОКА === -->
+
                 <div class="settings-group">
                     <label class="settings-label">
                         <span class="settings-label__text">💰 Начальный остаток</span>
-                        <input type="text" class="settings-input money-field" id="input-initial-balance" data-field="initialBalance"
-                            placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-initial-balance"
+                            data-field="initialBalance" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
                     <label class="settings-label">
                         <span class="settings-label__text">Размер пенсии</span>
-                        <input type="text" class="settings-input money-field" id="input-pension" data-field="pensionAmount"
-                            placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-pension"
+                            data-field="pensionAmount" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
-            
+
                     <label class="settings-label">
                         <span class="settings-label__text">День получения</span>
                         <input type="number" class="settings-input" id="input-pension-day" min="1" max="31">
                     </label>
-            
+
                     <label class="settings-label">
                         <span class="settings-label__text">Неприкосновенный запас</span>
-                        <input type="text" class="settings-input money-field" id="input-reserve" data-field="reserveAmount"
-                            placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-reserve"
+                            data-field="reserveAmount" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
                 </div>
-            
+
                 <h3 class="settings-subtitle">Фиксированные платежи</h3>
-            
+
                 <div class="fixed-expenses" id="fixed-expenses-list">
                     <!-- Платежи будут добавляться сюда из JS -->
                 </div>
-            
+
                 <button class="btn btn--secondary" id="btn-add-payment">
                     Добавить платёж
                 </button>
-            
-                
+
+
                 <!-- ✅ ИНДИКАТОР СИНХРОНИЗАЦИИ -->
                 <div class="sync-indicator" id="sync-indicator">
                     <span class="sync-indicator__icon">💾</span>
                     <span class="sync-indicator__text" id="sync-indicator-text">Загрузка...</span>
                 </div>
-                
+
                 <!-- ✅ Кнопки инструкции, экспорта и импорта -->
                 <div class="menu__actions">
                     <a href="guide.html" class="action-btn" title="Открыть инструкцию">
@@ -217,7 +231,7 @@
             <!-- Экран 5: Сверка с банком -->
             <section class="screen screen--reconcile" id="screen-reconcile">
                 <h2 class="screen__title">Сверка с банком</h2>
-            
+
                 <div class="reconcile-block">
                     <h3 class="reconcile-block__title">📋 Способ 1: Вставить текст из PDF</h3>
                     <p class="reconcile-block__hint">
@@ -229,7 +243,7 @@
                         🔍 Разобрать текст
                     </button>
                 </div>
-            
+
                 <div class="reconcile-block">
                     <h3 class="reconcile-block__title"> Способ 2: Загрузить CSV-файл</h3>
                     <p class="reconcile-block__hint">
@@ -241,7 +255,7 @@
                         📁 Выбрать CSV-файл
                     </button>
                 </div>
-            
+
                 <div id="reconcile-results" class="reconcile-results" style="display: none;">
                     <!-- Сюда будут выводиться результаты сверки -->
                 </div>
@@ -251,14 +265,15 @@
             <section class="screen screen--stats" id="screen-stats">
                 <!-- Верхняя карточка: заголовок + суммы -->
                 <div id="stats-top" class="stats-card"></div>
-            
+
                 <!-- Средняя карточка: диаграмма -->
                 <div id="stats-chart" class="stats-card">
-                    <p id="stats-empty" hidden style="text-align: center; color: #7f8c8d; padding: 20px;">Нет данных за текущий
+                    <p id="stats-empty" hidden style="text-align: center; color: #7f8c8d; padding: 20px;">Нет данных за
+                        текущий
                         период</p>
                     <canvas id="expense-chart"></canvas>
                 </div>
-            
+
                 <!-- Нижняя карточка: список подкатегорий -->
                 <div id="stats-bottom" class="stats-card"></div>
             </section>
@@ -408,7 +423,7 @@
 
     <script type="module" src="js/app.js"></script>
     <!-- Hammer.js для свайп-навигации -->
-<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 </body>
 
 </html>

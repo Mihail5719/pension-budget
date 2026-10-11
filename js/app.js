@@ -7,6 +7,7 @@ import {
   renderStats,
   renderPensionPeriodInfo,
   updateSyncIndicator,
+  renderAccountsList,
 } from './ui.js';
 import { formatDateKey, getCurrentPeriod, formatMoney } from './utils.js';
 import { calculateDailyLimit } from './budget.js';

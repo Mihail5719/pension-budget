@@ -1573,6 +1573,89 @@ input[type='tel'] {
 .nav__item { color: var(--text-secondary); }
 .nav__item--active { color: var(--btn-primary-bg); }
 
+/* === Блок управления счетами (v2.1) === */
+.accounts-section {
+  max-width: 800px;
+  margin: 0 auto 24px;
+  padding: 20px;
+  background-color: var(--color-card);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+.accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.account-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  gap: 12px;
+  border-left: 4px solid var(--color-primary);
+}
+
+.account-item__icon {
+  font-size: 24px;
+  width: 40px;
+  text-align: center;
+}
+
+.account-item__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-item__name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.account-item__balance {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.account-item__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit-account,
+.btn-delete-account {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  font-size: 18px;
+}
+
+.btn-edit-account {
+  color: var(--color-primary);
+}
+
+.btn-edit-account:hover {
+  background-color: rgba(25, 118, 210, 0.1);
+}
+
+.btn-delete-account {
+  color: var(--color-danger);
+}
+
+.btn-delete-account:hover {
+  background-color: rgba(198, 40, 40, 0.1);
+}
+
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)

@@ -268,6 +268,7 @@ export function renderAll(data) {
   // ВЫЗЫВАЕМ НОВУЮ ЕДИНУЮ ФУНКЦИЮ СТАТИСТИКИ
   renderStats(data.settings, data.fixedExpenses, data.transactions);
   renderSettings(data.settings, data.fixedExpenses);
+  renderAccountsList(data.settings.accounts, data.transactions);
 }
 
 function renderTodayPayments(payments) {
@@ -825,5 +826,45 @@ function initMoneyFields() {
         }
       }
     });
+  });
+}
+
+/**
+ * Отрисовка списка счетов в настройках (v2.1)
+ * @param {Array} accounts - Массив счетов из settings
+ * @param {Array} transactions - Все транзакции (для расчёта баланса)
+ */
+export function renderAccountsList(accounts, transactions) {
+  const container = document.getElementById('accounts-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  if (!accounts || accounts.length === 0) {
+    container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Нет добавленных счетов</p>';
+    return;
+  }
+
+  accounts.forEach(account => {
+    // Считаем баланс счёта (сумма всех транзакций этого счёта)
+    const balance = transactions
+      .filter(t => t.accountId === account.id)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const item = document.createElement('div');
+    item.className = 'account-item';
+    item.style.borderLeftColor = account.color || '#3498db';
+    item.innerHTML = `
+      <div class="account-item__icon">${account.emoji || '💼'}</div>
+      <div class="account-item__info">
+        <div class="account-item__name">${account.name}</div>
+        <div class="account-item__balance">Баланс: ${formatMoney(balance)}</div>
+      </div>
+      <div class="account-item__actions">
+        <button class="btn-edit-account" data-account-id="${account.id}" title="Редактировать">✎</button>
+        <button class="btn-delete-account" data-account-id="${account.id}" title="Удалить">🗑️</button>
+      </div>
+    `;
+    container.appendChild(item);
   });
 }
