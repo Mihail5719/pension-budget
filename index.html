@@ -420,6 +420,14 @@
                 <input type="text" class="modal__input" id="edit-item" placeholder="Например: Молоко, Хлеб">
             </label>
 
+            <!-- Поле выбора счёта (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Счёт:</span>
+                <select class="modal__select" id="edit-account">
+                    <!-- Счета заполняются через JavaScript -->
+                </select>
+            </label>
+
             <!-- Поле выбора даты -->
             <label class="modal__label">
                 <span class="modal__label-text">Дата:</span>
@@ -450,7 +458,7 @@
                 <input type="text" class="modal__input" id="account-name" placeholder="Например: Тинькофф, Наличные">
             </label>
 
-            <label class="modal__label">
+            <!-- <label class="modal__label">
                 <span class="modal__label-text">Иконка (эмодзи)</span>
                 <input type="text" class="modal__input" id="account-emoji" placeholder="💳 🏦 💼 💵" maxlength="2">
             </label>
@@ -459,7 +467,7 @@
                 <span class="modal__label-text">Цвет</span>
                 <input type="color" class="modal__input" id="account-color" value="#3498db"
                     style="height: 60px; padding: 8px;">
-            </label>
+            </label> -->
 
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-account">Отмена</button>

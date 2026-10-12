@@ -419,8 +419,7 @@ function setupEventListeners() {
       document.getElementById('account-modal-title').textContent =
         'Добавить счёт';
       document.getElementById('account-name').value = '';
-      document.getElementById('account-emoji').value = '';
-      document.getElementById('account-color').value = '#3498db';
+      // Убрали поля эмодзи и цвета — они больше не нужны
       document.getElementById('account-modal').classList.add('is-open');
     });
   }
@@ -438,8 +437,6 @@ function setupEventListeners() {
   if (btnSaveAccount) {
     btnSaveAccount.addEventListener('click', () => {
       const name = document.getElementById('account-name').value.trim();
-      const emoji = document.getElementById('account-emoji').value.trim();
-      const color = document.getElementById('account-color').value;
 
       if (!name) {
         alert('Пожалуйста, введите название счёта');
@@ -453,8 +450,9 @@ function setupEventListeners() {
         );
         if (account) {
           account.name = name;
-          account.emoji = emoji;
-          account.color = color;
+          // Эмодзи и цвет больше не меняем — оставляем как есть (или можно установить пустые значения)
+          // account.emoji = '';
+          // account.color = '';
           console.log('✅ Счёт обновлён:', account);
         }
       } else {
@@ -462,8 +460,8 @@ function setupEventListeners() {
         const newAccount = {
           id: 'account_' + Date.now(),
           name: name,
-          emoji: emoji,
-          color: color,
+          emoji: '', // Пустой эмодзи
+          color: '#3498db', // Дефолтный синий цвет (на всякий случай)
         };
         appData.settings.accounts.push(newAccount);
         console.log('✅ Счёт добавлен:', newAccount);
@@ -486,9 +484,7 @@ function setupEventListeners() {
         document.getElementById('account-modal-title').textContent =
           'Редактировать счёт';
         document.getElementById('account-name').value = account.name;
-        document.getElementById('account-emoji').value = account.emoji || '';
-        document.getElementById('account-color').value =
-          account.color || '#3498db';
+        // Убрали поля эмодзи и цвета — они больше не нужны
         document.getElementById('account-modal').classList.add('is-open');
       }
     }
@@ -559,7 +555,7 @@ function openIncomeModal() {
   INCOME_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
     option.value = category.id; // <-- ВАЖНО: сохраняем ID ('work'), а не имя!
-    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // <-- Собираем: эмодзи + чистое имя
+    option.textContent = acc.name;
     incomeCategorySelect.appendChild(option);
   });
 
@@ -663,7 +659,7 @@ function openExpenseModal() {
   EXPENSE_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
     option.value = category.id; // Сохраняем чистое имя (без эмодзи)
-    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Показываем с эмодзи
+    option.textContent = acc.name;
     expenseCategorySelect.appendChild(option);
   });
 
@@ -1059,7 +1055,7 @@ function openEditModal(transactionId) {
   editingTransactionId = transactionId;
 
   // Определяем тип транзакции (расход или доход)
-  const incomeFlag = isIncome(transaction);
+  const incomeFlag = isIncome(transaction); // ← ИСПРАВЛЕНО: была просто isIncome
   const categories = incomeFlag ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   // Заполняем выпадающий список категориями
@@ -1068,8 +1064,8 @@ function openEditModal(transactionId) {
   categories.forEach((category) => {
     const option = document.createElement('option');
     option.value = category.id;
-    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Добавили эмодзи
-    // Выбираем текущую категорию транзакции
+    // ← ИСПРАВЛЕНО: возвращаем название категории (возможно, с эмодзи, как было изначально)
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim();
     if (category.name === transaction.category) {
       option.selected = true;
     }
@@ -1079,7 +1075,8 @@ function openEditModal(transactionId) {
   // Заполняем подкатегории (только для расходов)
   const subcategoryLabel = document.getElementById('edit-subcategory-label');
   const subcategorySelect = document.getElementById('edit-subcategory');
-  if (isIncome) {
+  if (incomeFlag) {
+    // ← ИСПРАВЛЕНО: была просто isIncome
     subcategoryLabel.style.display = 'none';
   } else {
     subcategoryLabel.style.display = 'block';
@@ -1088,17 +1085,20 @@ function openEditModal(transactionId) {
     placeholder.value = '';
     placeholder.textContent = '-- выберите --';
     subcategorySelect.appendChild(placeholder);
+
     const currentCategory = EXPENSE_CATEGORIES.find(
       (c) => c.name === transaction.category,
     );
     const currentCategoryId = currentCategory ? currentCategory.id : '';
     const subs = SUBCATEGORIES[currentCategoryId] || [];
+
     subs.forEach((sub) => {
       const option = document.createElement('option');
       option.value = sub.id;
       option.textContent = sub.name;
       subcategorySelect.appendChild(option);
     });
+
     if (transaction.subcategory) {
       const currentSub = subs.find((s) => s.name === transaction.subcategory);
       if (currentSub) {
@@ -1110,8 +1110,27 @@ function openEditModal(transactionId) {
   // Заполняем сумму
   document.getElementById('edit-amount').value = transaction.amount;
 
-  // Заполняем предмет покупки (НОВОЕ)
+  // Заполняем предмет покупки
   document.getElementById('edit-item').value = transaction.item || '';
+
+  // === НОВОЕ: Заполняем выбор счёта ===
+  const accountSelect = document.getElementById('edit-account');
+  accountSelect.innerHTML = '';
+  const accounts = window.appData?.settings?.accounts || [];
+  const defaultAccountId = window.appData?.settings?.defaultAccountId || 'sber';
+
+  accounts.forEach((acc) => {
+    const option = document.createElement('option');
+    option.value = acc.id;
+    option.textContent = acc.name; 
+
+    // Выбираем текущий счёт транзакции (или дефолтный, если его нет у старых записей)
+    if (acc.id === (transaction.accountId || defaultAccountId)) {
+      option.selected = true;
+    }
+    accountSelect.appendChild(option);
+  });
+  // ======================================
 
   // Заполняем дату (формат YYYY-MM-DD для input type="date")
   const transactionDate = new Date(transaction.date);
@@ -1132,7 +1151,7 @@ function closeEditModal() {
 }
 
 /**
- * Сохранить изменения транзакции
+ * Сохранить изменения транзакции (v2.2)
  */
 function saveEditTransaction() {
   if (!editingTransactionId) return;
@@ -1143,6 +1162,11 @@ function saveEditTransaction() {
     document.getElementById('edit-amount').value.replace(',', '.'),
   );
   const dateStr = document.getElementById('edit-date').value;
+  const itemValue = document.getElementById('edit-item').value.trim();
+  
+  // === НОВОЕ: Получаем выбранный счёт ===
+  const accountId = document.getElementById('edit-account').value;
+  // ========================================
 
   // Валидация суммы
   if (isNaN(amount) || amount <= 0) {
@@ -1177,7 +1201,7 @@ function saveEditTransaction() {
 
   // Определяем подкатегорию (только для расходов)
   let subName = originalTransaction.subcategory || '';
-  if (!isIncome) {
+  if (!incomeFlag) { // ← ИСПРАВЛЕНО: было !isIncome (проверка функции вместо переменной)
     const subSelect = document.getElementById('edit-subcategory');
     const subId = subSelect.value;
     if (!subId) {
@@ -1200,9 +1224,6 @@ function saveEditTransaction() {
     originalDate.getSeconds(),
   );
 
-  // Получаем предмет покупки (НОВОЕ)
-  const itemValue = document.getElementById('edit-item').value.trim();
-
   // Обновляем транзакцию
   appData.transactions[transactionIndex] = {
     ...originalTransaction, // Сохраняем id и type
@@ -1210,7 +1231,10 @@ function saveEditTransaction() {
     subcategory: subName,
     amount: amount,
     date: newDate.toISOString(),
-    item: itemValue, // Сохраняем предмет покупки
+    item: itemValue,
+    // === НОВОЕ: сохраняем выбранный счёт (или оставляем старый/дефолтный) ===
+    accountId: accountId || originalTransaction.accountId || appData.settings.defaultAccountId,
+    // ========================================================================
   };
 
   // Сохраняем данные
@@ -1220,7 +1244,7 @@ function saveEditTransaction() {
   closeEditModal();
   renderAll(appData);
 
-  console.log('Транзакция обновлена:', appData.transactions[transactionIndex]);
+  console.log('✅ Транзакция обновлена:', appData.transactions[transactionIndex]);
 }
 
 // === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===
