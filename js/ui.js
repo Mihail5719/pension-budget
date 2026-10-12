@@ -861,11 +861,38 @@ export function renderAccountsList(accounts, transactions) {
     return;
   }
 
+  // Получаем настройки из глобального объекта appData
+  const periodStartStr = window.appData?.settings?.currentPeriodStart;
+  const initialBalance = window.appData?.settings?.initialBalance || 0;
+  const defaultAccountId = window.appData?.settings?.defaultAccountId;
+  const pensionAmount = window.appData?.settings?.pensionAmount || 0;
+
+  // Извлекаем только дату (YYYY-MM-DD) из periodStart, игнорируя время
+  const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
+
   accounts.forEach(account => {
-    // Считаем баланс счёта (сумма всех транзакций этого счёта)
-    const balance = transactions
-      .filter(t => t.accountId === account.id)
-      .reduce((sum, t) => sum + t.amount, 0);
+    // 1. Фильтруем транзакции: только нужный счёт И только с начала текущего периода
+    const periodTransactions = transactions.filter(t => {
+      if (t.accountId !== account.id) return false;
+      if (!periodStartDate) return true;
+      const txDate = t.date.split('T')[0];
+      return txDate >= periodStartDate;
+    });
+
+    // 2. Считаем баланс за период с учётом типа транзакции
+    let balance = periodTransactions.reduce((sum, t) => {
+      if (t.type === 'income') {
+        return sum + t.amount;  // Доход прибавляем
+      } else {
+        return sum - t.amount;  // Расход вычитаем
+      }
+    }, 0);
+
+    // 3. Если это счёт по умолчанию — добавляем начальный остаток И пенсию
+    if (account.id === defaultAccountId) {
+      balance += initialBalance;
+      balance += pensionAmount;  // ← ДОБАВЛЕНО: пенсия как доход
+    }
 
     const item = document.createElement('div');
     item.className = 'account-item';
@@ -878,7 +905,7 @@ export function renderAccountsList(accounts, transactions) {
       </div>
       <div class="account-item__actions">
         <button class="btn-edit-account" data-account-id="${account.id}" title="Редактировать">✎</button>
-        <button class="btn-delete-account" data-account-id="${account.id}" title="Удалить">🗑️</button>
+        <button class="btn-delete-account" data-account-id="${account.id}" title="Удалить">️</button>
       </div>
     `;
     container.appendChild(item);
