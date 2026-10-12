@@ -596,6 +596,9 @@ function closeIncomeModal() {
 function saveIncome() {
   const categoryId = incomeCategorySelect.value;
   const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
+  
+  // === НОВОЕ (v2.1): Получаем выбранный счёт ===
+  const accountId = document.getElementById('income-account').value;
 
   // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
@@ -604,9 +607,8 @@ function saveIncome() {
     return;
   }
 
-  // 2. Создаём и сохраняем транзакцию через модуль transactions.js
-  // (Внутри createIncome уже происходит push в массив и вызов saveData)
-  createIncome(appData, { categoryId, amount });
+  // 2. Создаём и сохраняем транзакцию через модуль transactions.js (передаем accountId!)
+  createIncome(appData, { categoryId, amount, accountId });
 
   // 3. UI-реакция: закрываем модалку и перерисовываем экраны
   closeIncomeModal();
@@ -618,7 +620,7 @@ function saveIncome() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  console.log('Добавлен доход, категория:', categoryId, 'сумма:', amount);
+  console.log('✅ Добавлен доход, категория:', categoryId, 'сумма:', amount, 'счёт:', accountId);
 }
 
 // Элементы модального окна расходов
@@ -706,6 +708,9 @@ function saveExpense() {
   const amount = parseFloat(expenseAmountInput.value.replace(',', '.'));
   const itemValue = document.getElementById('expense-item').value.trim();
   const subId = document.getElementById('expense-subcategory').value;
+  
+  // === НОВОЕ (v2.1): Получаем выбранный счёт ===
+  const accountId = document.getElementById('expense-account').value;
 
   // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
@@ -720,8 +725,8 @@ function saveExpense() {
     return;
   }
 
-  // 2. Создаём и сохраняем через модуль
-  createExpense(appData, { categoryId, amount, subId, item: itemValue });
+  // 2. Создаём и сохраняем через модуль (передаем accountId!)
+  createExpense(appData, { categoryId, amount, subId, item: itemValue, accountId });
 
   // 3. UI-реакция
   document.getElementById('expense-item').value = ''; // Очищаем поле
@@ -734,8 +739,10 @@ function saveExpense() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  console.log('Добавлен расход, категория:', categoryId, 'сумма:', amount);
+  console.log('✅ Добавлен расход, категория:', categoryId, 'сумма:', amount, 'счёт:', accountId);
 }
+
+
 
 // === Использование Неприкосновенного запаса ===
 function useReserve() {

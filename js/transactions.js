@@ -24,11 +24,11 @@ import {
 /**
  * Создаёт и сохраняет новую транзакцию расхода.
  * @param {Object} appData - Глобальное состояние приложения
- * @param {Object} formData - Данные из формы { categoryId, amount, subId, item }
+ * @param {Object} formData - Данные из формы { categoryId, amount, subId, item, accountId }
  * @returns {Object} Созданная транзакция
  */
 export function createExpense(appData, formData) {
-  const { categoryId, amount, subId, item } = formData;
+  const { categoryId, amount, subId, item, accountId } = formData; // ← ДОБАВЛЕНО
 
   const category = EXPENSE_CATEGORIES.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
@@ -45,6 +45,7 @@ export function createExpense(appData, formData) {
     amount: amount,
     type: 'expense',
     item: item || '',
+    accountId: accountId || appData.settings.defaultAccountId, // ← ДОБАВЛЕНО
   };
 
   appData.transactions.push(transaction);

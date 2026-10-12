@@ -1669,6 +1669,34 @@ input[type='tel'] {
   opacity: 1;
 }
 
+/* Цветные индикаторы счетов в истории (v2.1, Вариант Б) */
+.day-header__left {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Расстояние между датой и точками */
+}
+
+.account-dots {
+  display: flex;
+  gap: 4px; /* Расстояние между самими точками */
+}
+
+.account-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px; /* Делает их слегка скругленными квадратами (выглядит современно) */
+  display: inline-block;
+  flex-shrink: 0; /* Запрещаем точкам сжиматься на маленьких экранах */
+}
+
+/* Название банка в транзакции (v2.2) */
+.transaction__account-name {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #999);
+  margin-top: 2px;
+}
+
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)

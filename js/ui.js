@@ -135,78 +135,73 @@ export function renderTransactionList(transactions, pensionDay) {
       summaryHtml = `<span class="day-header__expense">Расход: -${formatMoney(group.expense)}</span>`;
     }
 
+    // === СИНЯЯ ПОЛОСКА (v2.2 — упрощенный вариант) ===
     const groupHeader = document.createElement('div');
     groupHeader.className = 'day-header';
-    
-    // 2. Оставляем в inline только переменные темы, остальное вынесем в CSS для гибкости
+
     groupHeader.style.cssText = `
       background-color: var(--bg-secondary, #f8f9fa);
       border-left: 4px solid #3498db;
       color: var(--text-primary, #555);
+      padding-left: 12px;
     `;
 
-    // 3. Используем классы для адаптивного управления через CSS
     groupHeader.innerHTML = `
       <span class="day-header__date">${formatDateOnly(firstTxDate)}</span>
       <span class="day-header__summary">${summaryHtml}</span>
     `;
-    
+    // ============================================
+
     listEl.appendChild(groupHeader);
 
-        group.transactions.forEach((transaction) => {
-          const itemEl = document.createElement('div');
-          itemEl.className = 'transaction';
-          itemEl.dataset.id = transaction.id;
-          if (transaction.type === 'reserve') {
-            itemEl.classList.add('transaction--reserve');
-          }
+    group.transactions.forEach((transaction) => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'transaction';
+      itemEl.dataset.id = transaction.id;
+      if (transaction.type === 'reserve') {
+        itemEl.classList.add('transaction--reserve');
+      }
 
-          const incomeFlag = isIncome(transaction);
-          const amountClass = incomeFlag
-            ? 'transaction__amount--income'
-            : 'transaction__amount';
-          const amountPrefix = incomeFlag ? '+' : '-';
-          const deleteAction = incomeFlag
-            ? 'delete-income'
-            : 'delete-transaction';
+      const incomeFlag = isIncome(transaction);
+      const amountClass = incomeFlag
+        ? 'transaction__amount--income'
+        : 'transaction__amount';
+      const amountPrefix = incomeFlag ? '+' : '-';
+      const deleteAction = incomeFlag ? 'delete-income' : 'delete-transaction';
 
-          const catStyle = categoryConfig[transaction.category] || {
-            emoji: '📦',
-            color: '#95a5a6',
-          };
-          const committedFlag = isCommitted(transaction);
-          const emoji = committedFlag ? '📋' : catStyle.emoji;
-          const displayName = `${emoji} ${transaction.category}`;
+      const catStyle = categoryConfig[transaction.category] || {
+        emoji: '📦',
+        color: '#95a5a6',
+      };
+      const committedFlag = isCommitted(transaction);
+      const emoji = committedFlag ? '📋' : catStyle.emoji;
+      const displayName = `${emoji} ${transaction.category}`;
 
-          // === НОВОЕ: Находим иконку и цвет счёта транзакции (v2.1) ===
-          const account = window.appData?.settings?.accounts?.find(
-            (a) => a.id === transaction.accountId,
-          );
-          const accountIcon = account ? account.emoji : '💼';
-          const accountColor = account ? account.color : '#95a5a6';
-          const accountName = account ? account.name : 'Счёт';
-          // ============================================================
+      // === НОВОЕ: Находим иконку и цвет счёта транзакции (v2.1) ===
+      const account = window.appData?.settings?.accounts?.find(
+        (a) => a.id === transaction.accountId,
+      );
+      const accountIcon = account ? account.emoji : '💼';
+      const accountColor = account ? account.color : '#95a5a6';
+      const accountName = account ? account.name : 'Счёт';
+      // ============================================================
 
-          const subLine = transaction.subcategory
-            ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
-            : '';
-          const noteLine =
-            committedFlag && transaction.note
-              ? `<span class="transaction__subcategory">${transaction.note}</span>`
-              : '';
-          const itemLine = transaction.item
-            ? `<span class="transaction__item">${transaction.item}</span>`
-            : '';
+      const subLine = transaction.subcategory
+        ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
+        : '';
+      const noteLine =
+        committedFlag && transaction.note
+          ? `<span class="transaction__subcategory">${transaction.note}</span>`
+          : '';
+      const itemLine = transaction.item
+        ? `<span class="transaction__item">${transaction.item}</span>`
+        : '';
 
-          itemEl.innerHTML = `
+            itemEl.innerHTML = `
         <div class="transaction__info">
-            <span class="transaction__category">
-                ${displayName}
-                <span class="transaction__account-icon" style="color: ${accountColor};" title="${accountName}">
-                    ${accountIcon}
-                </span>
-            </span>
+            <span class="transaction__category">${displayName}</span>
             ${subLine}${itemLine}${noteLine}
+            <span class="transaction__account-name">${accountName}</span>
         </div>
         <div class="transaction__right">
             <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
@@ -216,8 +211,8 @@ export function renderTransactionList(transactions, pensionDay) {
             </div>
         </div>
       `;
-          listEl.appendChild(itemEl);
-        });
+      listEl.appendChild(itemEl);
+    });
   });
 }
 
@@ -846,7 +841,7 @@ function initMoneyFields() {
 }
 
 /**
- * Отрисовка списка счетов в настройках (v2.1)
+ * Отрисовка списка счетов в настройках (v2.2 — упрощенно)
  * @param {Array} accounts - Массив счетов из settings
  * @param {Array} transactions - Все транзакции (для расчёта баланса)
  */
@@ -872,7 +867,7 @@ export function renderAccountsList(accounts, transactions) {
 
   accounts.forEach(account => {
     // 1. Фильтруем транзакции: только нужный счёт И только с начала текущего периода
-    const periodTransactions = transactions.filter(t => {
+    const periodTransactions = transactions.filter((t) => {
       if (t.accountId !== account.id) return false;
       if (!periodStartDate) return true;
       const txDate = t.date.split('T')[0];
@@ -882,30 +877,31 @@ export function renderAccountsList(accounts, transactions) {
     // 2. Считаем баланс за период с учётом типа транзакции
     let balance = periodTransactions.reduce((sum, t) => {
       if (t.type === 'income') {
-        return sum + t.amount;  // Доход прибавляем
+        return sum + t.amount; // Доход прибавляем
       } else {
-        return sum - t.amount;  // Расход вычитаем
+        return sum - t.amount; // Расход вычитаем
       }
     }, 0);
 
-    // 3. Если это счёт по умолчанию — добавляем начальный остаток И пенсию
+    // 3. Если это счёт по умолчанию — добавляем начальный остаток и пенсию
     if (account.id === defaultAccountId) {
       balance += initialBalance;
-      balance += pensionAmount;  // ← ДОБАВЛЕНО: пенсия как доход
+      balance += pensionAmount;
     }
 
     const item = document.createElement('div');
     item.className = 'account-item';
-    item.style.borderLeftColor = account.color || '#3498db';
+    item.style.borderLeft = 'none'; // Убираем цветную полоску
+    item.style.paddingLeft = '16px'; // Компенсируем отступ
+    // УБРАНА цветная полоска: item.style.borderLeftColor = account.color || '#3498db';
     item.innerHTML = `
-      <div class="account-item__icon">${account.emoji || '💼'}</div>
       <div class="account-item__info">
         <div class="account-item__name">${account.name}</div>
         <div class="account-item__balance">Баланс: ${formatMoney(balance)}</div>
       </div>
       <div class="account-item__actions">
         <button class="btn-edit-account" data-account-id="${account.id}" title="Редактировать">✎</button>
-        <button class="btn-delete-account" data-account-id="${account.id}" title="Удалить">️</button>
+        <button class="btn-delete-account" data-account-id="${account.id}" title="Удалить">🗑️</button>
       </div>
     `;
     container.appendChild(item);
