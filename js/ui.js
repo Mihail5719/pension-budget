@@ -6,6 +6,10 @@ import {
   getTodayPayments,
 } from './budget.js';
 
+// === Глобальная переменная для табов статистики (v2.4) ===
+let currentStatsAccountId = 'all';
+// ========================================================
+
 // ─── Предикаты типов операций (v2.0, коммит 2) ───
 const isIncome = (t) => t.type === 'income';
 const isExpense = (t) => t.type === 'expense';
@@ -450,6 +454,42 @@ function getCategoryStyle(name) {
   return { emoji: '📦', color: '#2C3E50' }; // Тёмный асфальтовый цвет
 }
 
+/**
+ * Отрисовка горизонтальных табов счетов в статистике (v2.4)
+ */
+function renderStatsTabs(accounts) {
+  const container = document.getElementById('stats-tabs-container');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  // 1. Таб "Все счета"
+  const allTab = document.createElement('button');
+  allTab.className = `stats-tab ${currentStatsAccountId === 'all' ? 'active' : ''}`;
+  allTab.textContent = 'Все счета';
+  allTab.onclick = () => {
+    currentStatsAccountId = 'all';
+    renderStatsTabs(accounts); // Перерисовываем табы для обновления класса active
+    renderStats(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+  };
+  container.appendChild(allTab);
+
+  // 2. Табы для каждого счёта
+  if (accounts && accounts.length > 0) {
+    accounts.forEach(acc => {
+      const tab = document.createElement('button');
+      tab.className = `stats-tab ${currentStatsAccountId === acc.id ? 'active' : ''}`;
+      tab.textContent = acc.name; // Только чистое название (минимализм)
+      tab.onclick = () => {
+        currentStatsAccountId = acc.id;
+        renderStatsTabs(accounts);
+        renderStats(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+      };
+      container.appendChild(tab);
+    });
+  }
+}
+
 // ========================================================================
 // 🌟 НОВАЯ ЕДИНАЯ ФУНКЦИЯ СТАТИСТИКИ (Идея 10 + Исправление пенсии + Отладка) 🌟
 // ========================================================================
@@ -463,6 +503,9 @@ export function renderStats(settings, fixedExpenses, transactions) {
     console.error('❌ Контейнеры статистики не найдены');
     return;
   }
+
+  // Отрисовываем табы счетов (v2.4)
+  renderStatsTabs(settings.accounts || []);
 
   // 1. Определяем период
   const startDate = settings.currentPeriodStart
@@ -479,6 +522,13 @@ export function renderStats(settings, fixedExpenses, transactions) {
   const fixedByCat = {};
 
   transactions.forEach((t) => {
+    // === НОВОЕ (v2.4): Пропускаем транзакции, если выбран конкретный счёт, а у транзакции другой ===
+    if (
+      currentStatsAccountId !== 'all' &&
+      t.accountId !== currentStatsAccountId
+    ) {
+      return;
+    }
     const tDate = new Date(t.date);
     if (tDate >= startDate && tDate <= endDate) {
       const sub = t.subcategory || 'Без подкатегории';
@@ -505,9 +555,15 @@ export function renderStats(settings, fixedExpenses, transactions) {
 
   const totalExpenses = totalNonFixed + totalFixed;
 
-  // 3. Верхняя часть
+    // 3. Верхняя часть
+  // === НОВОЕ (v2.4): Определяем название выбранного счёта для заголовка ===
+  const accountName = currentStatsAccountId === 'all' 
+    ? 'Все счета' 
+    : (settings.accounts?.find(a => a.id === currentStatsAccountId)?.name || 'Счёт');
+  // ========================================================================
+
   let topHtml = `
-    <h2 class="stats-title">Статистика</h2>
+    <h2 class="stats-title">Статистика: ${accountName}</h2>
     <div class="stats-summary-block">
       <div class="stats-row income">
         <span>Доходы:</span>
