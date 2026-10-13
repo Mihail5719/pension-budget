@@ -1745,6 +1745,17 @@ input[type='tel'] {
   font-weight: 600;
 }
 
+/* Цветная точка счёта в статистике (Вишенка v2.4) */
+.stats-account-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.1); /* Лёгкая обводка для читаемости */
+}
+
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)

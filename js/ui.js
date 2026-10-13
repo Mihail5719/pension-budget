@@ -602,8 +602,20 @@ export function renderStats(settings, fixedExpenses, transactions) {
           : '0.0';
 
       sectionHtml += `<div class="breakdown__card">`;
+      // === ВИШЕНКА: Цветная точка счёта (v2.4) ===
+      let accountDotHtml = '';
+      if (currentStatsAccountId !== 'all') {
+        const acc = settings.accounts?.find(
+          (a) => a.id === currentStatsAccountId,
+        );
+        if (acc && acc.color) {
+          accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
+        }
+      }
+      // ============================================
+
       sectionHtml += `<div class="breakdown__header">`;
-      sectionHtml += `<span>${style.emoji} ${cat}</span>`;
+      sectionHtml += `<span>${style.emoji} ${cat} ${accountDotHtml}</span>`;
       sectionHtml += `<span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
 
       const subs = Object.keys(entry.subs).sort(
