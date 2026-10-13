@@ -186,21 +186,29 @@ export function renderTransactionList(transactions, pensionDay) {
       const accountName = account ? account.name : 'Счёт';
       // ============================================================
 
-      const subLine = transaction.subcategory
-        ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
-        : '';
-      const noteLine =
-        committedFlag && transaction.note
-          ? `<span class="transaction__subcategory">${transaction.note}</span>`
-          : '';
-      const itemLine = transaction.item
-        ? `<span class="transaction__item">${transaction.item}</span>`
-        : '';
+            const subLine = transaction.subcategory
+              ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
+              : '';
 
-            itemEl.innerHTML = `
+            const itemLine = transaction.item
+              ? `<span class="transaction__item">${transaction.item}</span>`
+              : '';
+
+            // === НОВОЕ: Место покупки (Магазин) ===
+            const storeLine = transaction.store
+              ? `<span class="transaction__store">📍 ${transaction.store}</span>`
+              : '';
+            // ========================================
+
+            const noteLine =
+              committedFlag && transaction.note
+                ? `<span class="transaction__subcategory">${transaction.note}</span>`
+                : '';
+
+                  itemEl.innerHTML = `
         <div class="transaction__info">
             <span class="transaction__category">${displayName}</span>
-            ${subLine}${itemLine}${noteLine}
+            ${subLine}${itemLine}${storeLine}${noteLine}
             <span class="transaction__account-name">${accountName}</span>
         </div>
         <div class="transaction__right">

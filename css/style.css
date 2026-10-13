@@ -1697,6 +1697,15 @@ input[type='tel'] {
   margin-top: 2px;
 }
 
+/* Место покупки в транзакции (v2.3) */
+.transaction__store {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #7f8c8d);
+  margin-top: 2px;
+  font-style: italic; /* Легкий акцент, чтобы отличать от предмета покупки */
+}
+
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)

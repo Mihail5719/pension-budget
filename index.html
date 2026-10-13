@@ -343,6 +343,12 @@
                 <input type="text" class="modal__input" id="expense-item" placeholder="Например: Молоко, Бензин АИ-95">
             </label>
 
+            <!-- Поле места покупки (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Место покупки (необязательно):</span>
+                <input type="text" class="modal__input" id="expense-store" placeholder="Например: Пятёрочка, Магнит">
+            </label>
+
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-expense">Отмена</button>
                 <button class="btn btn--primary" id="btn-save-expense">Записать</button>
@@ -355,24 +361,38 @@
         <div class="modal__overlay"></div>
         <div class="modal__content">
             <h2 class="modal__title">Добавить доход</h2>
+    
             <label class="modal__label">
                 <span class="modal__label-text">Тип дохода</span>
                 <select class="modal__select" id="income-category"></select>
             </label>
-
-            <!-- Выбор счёта (v2.1) -->
+    
+            <!-- Выбор счёта -->
             <label class="modal__label">
                 <span class="modal__label-text">Счёт:</span>
                 <select class="modal__select" id="income-account">
                     <!-- Счета будут добавляться через JavaScript -->
                 </select>
             </label>
-
+    
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
-                <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal"
-                    min="0" step="0.01">
+                <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal" min="0"
+                    step="0.01">
             </label>
+    
+            <!-- Поле предмета (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Предмет (необязательно):</span>
+                <input type="text" class="modal__input" id="income-item" placeholder="Например: Зарплата, Подарок">
+            </label>
+    
+            <!-- Поле источника (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Источник (необязательно):</span>
+                <input type="text" class="modal__input" id="income-store" placeholder="Например: ООО Ромашка, Иван И.">
+            </label>
+    
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-income">Отмена</button>
                 <button class="btn btn--success" id="btn-save-income">Добавить</button>
@@ -418,6 +438,12 @@
             <label class="modal__label">
                 <span class="modal__label-text">Предмет покупки (необязательно):</span>
                 <input type="text" class="modal__input" id="edit-item" placeholder="Например: Молоко, Хлеб">
+            </label>
+
+            <!-- Поле места покупки (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Место покупки (необязательно):</span>
+                <input type="text" class="modal__input" id="edit-store" placeholder="Например: Пятёрочка, Магнит">
             </label>
 
             <!-- Поле выбора счёта (НОВОЕ) -->

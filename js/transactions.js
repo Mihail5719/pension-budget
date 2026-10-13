@@ -28,7 +28,7 @@ import {
  * @returns {Object} Созданная транзакция
  */
 export function createExpense(appData, formData) {
-  const { categoryId, amount, subId, item, accountId } = formData; // ← ДОБАВЛЕНО
+  const { categoryId, amount, subId, item, store, accountId } = formData;
 
   const category = EXPENSE_CATEGORIES.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
@@ -37,16 +37,17 @@ export function createExpense(appData, formData) {
   const sub = subs.find((s) => s.id === subId);
   const subName = sub ? sub.name : subId;
 
-  const transaction = {
-    id: Date.now(),
-    date: new Date().toISOString(),
-    category: categoryName,
-    subcategory: subName,
-    amount: amount,
-    type: 'expense',
-    item: item || '',
-    accountId: accountId || appData.settings.defaultAccountId, // ← ДОБАВЛЕНО
-  };
+    const transaction = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      category: categoryName,
+      subcategory: subName,
+      amount: amount,
+      type: 'expense',
+      item: item || '',
+      store: store || '', // ← НОВОЕ
+      accountId: accountId || appData.settings.defaultAccountId,
+    };
 
   appData.transactions.push(transaction);
   saveData(appData);
@@ -61,7 +62,7 @@ export function createExpense(appData, formData) {
  * @returns {Object} Созданная транзакция
  */
 export function createIncome(appData, formData) {
-  const { categoryId, amount } = formData;
+  const { categoryId, amount, item, store, accountId } = formData; // ← Убедитесь, что store и item здесь есть
 
   const category = INCOME_CATEGORIES.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
@@ -72,6 +73,9 @@ export function createIncome(appData, formData) {
     category: categoryName,
     amount: amount,
     type: 'income',
+    item: item || '', // ← Убедитесь, что это есть
+    store: store || '', // ← Убедитесь, что это есть
+    accountId: accountId || appData.settings.defaultAccountId,
   };
 
   appData.transactions.push(transaction);

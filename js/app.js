@@ -554,8 +554,8 @@ function openIncomeModal() {
   // Заполняем список категориями с эмодзи
   INCOME_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
-    option.value = category.id; // <-- ВАЖНО: сохраняем ID ('work'), а не имя!
-    option.textContent = acc.name;
+    option.value = category.id;
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim();
     incomeCategorySelect.appendChild(option);
   });
 
@@ -563,7 +563,7 @@ function openIncomeModal() {
   const accountSelect = document.getElementById('income-account');
   if (accountSelect) {
     accountSelect.innerHTML = '';
-    appData.settings.accounts.forEach(account => {
+    appData.settings.accounts.forEach((account) => {
       const option = document.createElement('option');
       option.value = account.id;
       option.textContent = `${account.emoji || ''} ${account.name}`.trim();
@@ -588,13 +588,18 @@ function closeIncomeModal() {
   incomeAmountInput.value = '';
 }
 
-// Сохранение дохода
+// Сохранение дохода (v2.3)
 function saveIncome() {
   const categoryId = incomeCategorySelect.value;
   const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
   
-  // === НОВОЕ (v2.1): Получаем выбранный счёт ===
+  // Получаем выбранный счёт
   const accountId = document.getElementById('income-account').value;
+  
+  // === НОВОЕ: Получаем предмет и источник ===
+  const itemValue = document.getElementById('income-item').value.trim();
+  const storeValue = document.getElementById('income-store').value.trim();
+  // ============================================
 
   // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
@@ -603,10 +608,20 @@ function saveIncome() {
     return;
   }
 
-  // 2. Создаём и сохраняем транзакцию через модуль transactions.js (передаем accountId!)
-  createIncome(appData, { categoryId, amount, accountId });
+  // 2. Создаём и сохраняем транзакцию (передаем все новые поля!)
+  createIncome(appData, { 
+    categoryId, 
+    amount, 
+    item: itemValue, 
+    store: storeValue, 
+    accountId 
+  });
 
-  // 3. UI-реакция: закрываем модалку и перерисовываем экраны
+  // 3. UI-реакция: очищаем поля, закрываем модалку и перерисовываем экраны
+  incomeAmountInput.value = '';
+  document.getElementById('income-item').value = '';     // ← НОВОЕ
+  document.getElementById('income-store').value = '';    // ← НОВОЕ
+  
   closeIncomeModal();
 
   renderTodayScreen(
@@ -655,11 +670,11 @@ function openExpenseModal() {
   // 1. Очищаем список (на случай, если он уже был заполнен)
   expenseCategorySelect.innerHTML = '';
 
-  // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
+  // 2. Заполняем список категориями с эмодзи
   EXPENSE_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
-    option.value = category.id; // Сохраняем чистое имя (без эмодзи)
-    option.textContent = acc.name;
+    option.value = category.id;
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim();
     expenseCategorySelect.appendChild(option);
   });
 
@@ -667,7 +682,7 @@ function openExpenseModal() {
   const accountSelect = document.getElementById('expense-account');
   if (accountSelect) {
     accountSelect.innerHTML = '';
-    appData.settings.accounts.forEach(account => {
+    appData.settings.accounts.forEach((account) => {
       const option = document.createElement('option');
       option.value = account.id;
       option.textContent = `${account.emoji || ''} ${account.name}`.trim();
@@ -703,9 +718,8 @@ function saveExpense() {
   const categoryId = expenseCategorySelect.value;
   const amount = parseFloat(expenseAmountInput.value.replace(',', '.'));
   const itemValue = document.getElementById('expense-item').value.trim();
+  const storeValue = document.getElementById('expense-store').value.trim(); // ← НОВОЕ
   const subId = document.getElementById('expense-subcategory').value;
-  
-  // === НОВОЕ (v2.1): Получаем выбранный счёт ===
   const accountId = document.getElementById('expense-account').value;
 
   // 1. Валидация
@@ -722,11 +736,19 @@ function saveExpense() {
   }
 
   // 2. Создаём и сохраняем через модуль (передаем accountId!)
-  createExpense(appData, { categoryId, amount, subId, item: itemValue, accountId });
+    createExpense(appData, {
+      categoryId,
+      amount,
+      subId,
+      item: itemValue,
+      store: storeValue,
+      accountId,
+    });
 
   // 3. UI-реакция
-  document.getElementById('expense-item').value = ''; // Очищаем поле
-  closeExpenseModal();
+    document.getElementById('expense-item').value = ''; // Очищаем поле
+    document.getElementById('expense-store').value = ''; // ← НОВОЕ
+    closeExpenseModal();
 
   renderTodayScreen(
     appData.settings,
@@ -1113,6 +1135,9 @@ function openEditModal(transactionId) {
   // Заполняем предмет покупки
   document.getElementById('edit-item').value = transaction.item || '';
 
+  // Заполняем место покупки (НОВОЕ)
+  document.getElementById('edit-store').value = transaction.store || '';
+
   // === НОВОЕ: Заполняем выбор счёта ===
   const accountSelect = document.getElementById('edit-account');
   accountSelect.innerHTML = '';
@@ -1122,7 +1147,7 @@ function openEditModal(transactionId) {
   accounts.forEach((acc) => {
     const option = document.createElement('option');
     option.value = acc.id;
-    option.textContent = acc.name; 
+    option.textContent = acc.name;
 
     // Выбираем текущий счёт транзакции (или дефолтный, если его нет у старых записей)
     if (acc.id === (transaction.accountId || defaultAccountId)) {
@@ -1163,7 +1188,8 @@ function saveEditTransaction() {
   );
   const dateStr = document.getElementById('edit-date').value;
   const itemValue = document.getElementById('edit-item').value.trim();
-  
+  const storeValue = document.getElementById('edit-store').value.trim(); // ← НОВОЕ
+
   // === НОВОЕ: Получаем выбранный счёт ===
   const accountId = document.getElementById('edit-account').value;
   // ========================================
@@ -1201,7 +1227,8 @@ function saveEditTransaction() {
 
   // Определяем подкатегорию (только для расходов)
   let subName = originalTransaction.subcategory || '';
-  if (!incomeFlag) { // ← ИСПРАВЛЕНО: было !isIncome (проверка функции вместо переменной)
+  if (!incomeFlag) {
+    // ← ИСПРАВЛЕНО: было !isIncome (проверка функции вместо переменной)
     const subSelect = document.getElementById('edit-subcategory');
     const subId = subSelect.value;
     if (!subId) {
@@ -1225,17 +1252,19 @@ function saveEditTransaction() {
   );
 
   // Обновляем транзакцию
-  appData.transactions[transactionIndex] = {
-    ...originalTransaction, // Сохраняем id и type
-    category: categoryName,
-    subcategory: subName,
-    amount: amount,
-    date: newDate.toISOString(),
-    item: itemValue,
-    // === НОВОЕ: сохраняем выбранный счёт (или оставляем старый/дефолтный) ===
-    accountId: accountId || originalTransaction.accountId || appData.settings.defaultAccountId,
-    // ========================================================================
-  };
+    appData.transactions[transactionIndex] = {
+      ...originalTransaction,
+      category: categoryName,
+      subcategory: subName,
+      amount: amount,
+      date: newDate.toISOString(),
+      item: itemValue,
+      store: storeValue, // ← НОВОЕ
+      accountId:
+        accountId ||
+        originalTransaction.accountId ||
+        appData.settings.defaultAccountId,
+    };
 
   // Сохраняем данные
   saveData(appData);
@@ -1244,7 +1273,10 @@ function saveEditTransaction() {
   closeEditModal();
   renderAll(appData);
 
-  console.log('✅ Транзакция обновлена:', appData.transactions[transactionIndex]);
+  console.log(
+    '✅ Транзакция обновлена:',
+    appData.transactions[transactionIndex],
+  );
 }
 
 // === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===
@@ -1304,10 +1336,25 @@ function processImportedFile(event) {
       // Заменяем данные
       appData = importedData;
       window.appData = appData; // Синхронизируем с глобальной
+
+      // === НОВОЕ: Обновляем время последней синхронизации на текущее ===
+      if (!appData.settings) appData.settings = {};
+      appData.settings.lastExportDate = new Date().toISOString();
+      // =================================================================
+
       saveData(appData);
 
       // Перерисовываем всё
       renderAll(appData);
+
+      // === НОВОЕ: Принудительно обновляем индикатор синхронизации ===
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(
+          appData.transactions,
+          appData.settings.lastExportDate,
+        );
+      }
+      // =============================================================
 
       alert('✅ Данные успешно восстановлены!');
     } catch (error) {
