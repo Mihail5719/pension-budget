@@ -306,16 +306,22 @@ export function updateSyncIndicator(transactions, lastExportDate) {
 
   const count = transactions ? transactions.length : 0;
   let dateStr = 'не экспортировалось';
+
   if (lastExportDate) {
     const date = new Date(lastExportDate);
-    dateStr = date.toLocaleString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+
+    // === ЖЕЛЕЗОБЕТОННОЕ ФОРМАТИРОВАНИЕ (v2.5) ===
+    // Явно извлекаем локальные компоненты времени, чтобы избежать ошибок toLocaleString
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Месяцы в JS начинаются с 0
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    dateStr = `${day}.${month}.${year}, ${hours}:${minutes}`;
+    // ===============================================
   }
+
   indicatorText.textContent = `Записей: ${count} | Обновлено: ${dateStr}`;
 }
 

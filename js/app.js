@@ -1526,48 +1526,73 @@ function processImportedFile(event) {
     try {
       const importedData = JSON.parse(e.target.result);
 
-      // Проверяем структуру данных
+      // 1. Проверяем базовую структуру данных
       if (
         !importedData.settings ||
         !importedData.fixedExpenses ||
         !importedData.transactions
       ) {
-        throw new Error('Неверный формат файла');
+        throw new Error(
+          'Неверный формат файла: отсутствуют основные разделы данных',
+        );
       }
 
-      // Подтверждение
-      if (!confirm('⚠️ Это заменит все текущие данные. Продолжить?')) {
+      // 2. Подтверждение
+      if (
+        !confirm(
+          '⚠️ Это заменит все текущие данные на данные из файла. Продолжить?',
+        )
+      ) {
         return;
       }
 
-      // Заменяем данные
+      // 3. Заменяем данные
       appData = importedData;
-      window.appData = appData; // Синхронизируем с глобальной
+      window.appData = appData; // Синхронизируем с глобальной областью видимости
 
-      // === НОВОЕ: Обновляем время последней синхронизации на текущее ===
-      if (!appData.settings) appData.settings = {};
-      appData.settings.lastExportDate = new Date().toISOString();
-      // =================================================================
+      // 4. === СТРАХОВКА: Гарантируем наличие новых структур (обратная совместимость, v2.5) ===
+      if (
+        !appData.settings.accounts ||
+        appData.settings.accounts.length === 0
+      ) {
+        // Если импортирован старый файл без счетов, создаём дефолтный
+        appData.settings.accounts = [
+          {
+            id: 'account_default_' + Date.now(),
+            name: 'Основной счёт',
+            color: '#3498db',
+          },
+        ];
+        appData.settings.defaultAccountId = appData.settings.accounts[0].id;
+        console.log(
+          '⚠️ При импорте создан счёт по умолчанию для совместимости',
+        );
+      }
 
+      if (!appData.settings.lastExportDate) {
+        appData.settings.lastExportDate = new Date().toISOString();
+      }
+      // ================================================================================
+
+      // 5. Сохраняем и перерисовываем
       saveData(appData);
-
-      // Перерисовываем всё
       renderAll(appData);
 
-      // === НОВОЕ: Принудительно обновляем индикатор синхронизации ===
+      // 6. Принудительно обновляем индикатор синхронизации
       if (typeof updateSyncIndicator === 'function') {
         updateSyncIndicator(
           appData.transactions,
           appData.settings.lastExportDate,
         );
       }
-      // =============================================================
 
       alert('✅ Данные успешно восстановлены!');
     } catch (error) {
+      console.error('Ошибка импорта:', error);
       alert('❌ Ошибка при импорте: ' + error.message);
     }
   };
+
   reader.readAsText(file);
 
   // Сбрасываем input, чтобы можно было импортировать тот же файл повторно
