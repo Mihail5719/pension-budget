@@ -192,3 +192,39 @@ export function getCategoriesByType(type) {
   if (type === 'income') return INCOME_CATEGORIES;
   return EXPENSE_CATEGORIES;
 }
+
+/**
+ * Создать перевод между счетами (v2.5)
+ * @param {Object} appData - основные данные приложения
+ * @param {Object} formData - данные перевода
+ * @returns {Object} созданная транзакция
+ */
+export function createTransfer(appData, formData) {
+  const { fromAccountId, toAccountId, amount, note } = formData;
+
+  // Валидация
+  if (fromAccountId === toAccountId) {
+    throw new Error('Нельзя перевести деньги на тот же счёт');
+  }
+
+  if (isNaN(amount) || amount <= 0) {
+    throw new Error('Сумма должна быть больше нуля');
+  }
+
+  // Создаём транзакцию типа "transfer"
+  const transaction = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    type: 'transfer',
+    amount: amount,
+    fromAccountId: fromAccountId,
+    toAccountId: toAccountId,
+    note: note || '',
+  };
+
+  appData.transactions.push(transaction);
+  saveData(appData);
+
+  console.log('✅ Перевод создан:', transaction);
+  return transaction;
+}

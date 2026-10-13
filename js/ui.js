@@ -114,18 +114,22 @@ export function renderTransactionList(transactions, pensionDay) {
     }
     grouped[dateKey].transactions.push(tx);
 
-    if (isIncome(tx)) {
-      grouped[dateKey].income += tx.amount;
-    } else {
-      grouped[dateKey].expense += tx.amount;
-    }
+            if (isIncome(tx)) {
+              grouped[dateKey].income += tx.amount;
+            } else if (tx.type === 'transfer') {
+              // Переводы НЕ считаются ни доходом, ни расходом
+            } else {
+              grouped[dateKey].expense += tx.amount;
+            }
   });
+
+          
 
   Object.keys(grouped).forEach((dateKey) => {
     const group = grouped[dateKey];
     const firstTxDate = group.transactions[0].date;
 
-    // 1. Формируем красивую разметку для сумм (без неразрывных пробелов, чтобы текст мог переноситься)
+    // 1. Формируем красивую разметку для сумм (v2.5 — скрываем нулевые итоги)
     let summaryHtml = '';
     if (group.income > 0 && group.expense > 0) {
       summaryHtml = `
@@ -135,9 +139,10 @@ export function renderTransactionList(transactions, pensionDay) {
       `;
     } else if (group.income > 0) {
       summaryHtml = `<span class="day-header__income">Доход: +${formatMoney(group.income)}</span>`;
-    } else {
+    } else if (group.expense > 0) {
       summaryHtml = `<span class="day-header__expense">Расход: -${formatMoney(group.expense)}</span>`;
     }
+    // Если и доход, и расход равны 0 — summaryHtml остаётся пустым, ничего не показываем
 
     // === СИНЯЯ ПОЛОСКА (v2.2 — упрощенный вариант) ===
     const groupHeader = document.createElement('div');
@@ -166,6 +171,36 @@ export function renderTransactionList(transactions, pensionDay) {
         itemEl.classList.add('transaction--reserve');
       }
 
+      // === НОВОЕ: Отрисовка перевода между счетами (v2.5) ===
+      if (transaction.type === 'transfer') {
+        const fromAccount = window.appData?.settings?.accounts?.find(
+          (a) => a.id === transaction.fromAccountId,
+        );
+        const toAccount = window.appData?.settings?.accounts?.find(
+          (a) => a.id === transaction.toAccountId,
+        );
+        const fromName = fromAccount ? fromAccount.name : 'Счёт';
+        const toName = toAccount ? toAccount.name : 'Счёт';
+
+        itemEl.innerHTML = `
+          <div class="transaction__info">
+              <span class="transaction__category">⇄ Перевод</span>
+              <span class="transaction__subcategory">С ${fromName} на ${toName}</span>
+              ${transaction.note ? `<span class="transaction__item">💬 ${transaction.note}</span>` : ''}
+          </div>
+          <div class="transaction__right">
+              <span class="transaction__amount transaction__amount--transfer">${formatMoney(transaction.amount)}</span>
+              <div class="transaction__actions">
+                  <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
+                  <button class="btn-delete" data-action="delete-transaction" data-id="${transaction.id}" title="Удалить">✕</button>
+              </div>
+          </div>
+        `;
+        listEl.appendChild(itemEl);
+        return; // Пропускаем остальной код для этой транзакции
+      }
+      // ======================================================
+
       const incomeFlag = isIncome(transaction);
       const amountClass = incomeFlag
         ? 'transaction__amount--income'
@@ -190,26 +225,26 @@ export function renderTransactionList(transactions, pensionDay) {
       const accountName = account ? account.name : 'Счёт';
       // ============================================================
 
-            const subLine = transaction.subcategory
-              ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
-              : '';
+      const subLine = transaction.subcategory
+        ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
+        : '';
 
-            const itemLine = transaction.item
-              ? `<span class="transaction__item">${transaction.item}</span>`
-              : '';
+      const itemLine = transaction.item
+        ? `<span class="transaction__item">${transaction.item}</span>`
+        : '';
 
-            // === НОВОЕ: Место покупки (Магазин) ===
-            const storeLine = transaction.store
-              ? `<span class="transaction__store">📍 ${transaction.store}</span>`
-              : '';
-            // ========================================
+      // === НОВОЕ: Место покупки (Магазин) ===
+      const storeLine = transaction.store
+        ? `<span class="transaction__store">📍 ${transaction.store}</span>`
+        : '';
+      // ========================================
 
-            const noteLine =
-              committedFlag && transaction.note
-                ? `<span class="transaction__subcategory">${transaction.note}</span>`
-                : '';
+      const noteLine =
+        committedFlag && transaction.note
+          ? `<span class="transaction__subcategory">${transaction.note}</span>`
+          : '';
 
-                  itemEl.innerHTML = `
+      itemEl.innerHTML = `
         <div class="transaction__info">
             <span class="transaction__category">${displayName}</span>
             ${subLine}${itemLine}${storeLine}${noteLine}
@@ -917,7 +952,7 @@ function initMoneyFields() {
 }
 
 /**
- * Отрисовка списка счетов в настройках (v2.2 — упрощенно)
+ * Отрисовка списка счетов в настройках (v2.5 — с учётом переводов)
  * @param {Array} accounts - Массив счетов из settings
  * @param {Array} transactions - Все транзакции (для расчёта баланса)
  */
@@ -942,21 +977,40 @@ export function renderAccountsList(accounts, transactions) {
   const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
 
   accounts.forEach(account => {
-    // 1. Фильтруем транзакции: только нужный счёт И только с начала текущего периода
-    const periodTransactions = transactions.filter((t) => {
-      if (t.accountId !== account.id) return false;
-      if (!periodStartDate) return true;
-      const txDate = t.date.split('T')[0];
-      return txDate >= periodStartDate;
+    // 1. Фильтруем транзакции, которые ВЛИЯЮТ на этот счёт
+    const accountTransactions = transactions.filter((t) => {
+      // Если есть ограничение по дате, проверяем его
+      if (periodStartDate) {
+        const txDate = t.date.split('T')[0];
+        if (txDate < periodStartDate) return false;
+      }
+
+      // Транзакция влияет на счёт, если:
+      // - это обычная операция на этом счёте (accountId)
+      // - это перевод С этого счёта (fromAccountId)
+      // - это перевод НА этот счёт (toAccountId)
+      return t.accountId === account.id || 
+             t.fromAccountId === account.id || 
+             t.toAccountId === account.id;
     });
 
-    // 2. Считаем баланс за период с учётом типа транзакции
-    let balance = periodTransactions.reduce((sum, t) => {
+    // 2. Считаем баланс за период с учётом ВСЕХ типов транзакций
+    let balance = accountTransactions.reduce((sum, t) => {
       if (t.type === 'income') {
         return sum + t.amount; // Доход прибавляем
-      } else {
+      } 
+      else if (t.type === 'expense') {
         return sum - t.amount; // Расход вычитаем
+      } 
+      else if (t.type === 'transfer') {
+        if (t.fromAccountId === account.id) {
+          return sum - t.amount; // Деньги ушли с этого счёта
+        } 
+        else if (t.toAccountId === account.id) {
+          return sum + t.amount; // Деньги пришли на этот счёт
+        }
       }
+      return sum;
     }, 0);
 
     // 3. Если это счёт по умолчанию — добавляем начальный остаток и пенсию
@@ -967,9 +1021,9 @@ export function renderAccountsList(accounts, transactions) {
 
     const item = document.createElement('div');
     item.className = 'account-item';
-    item.style.borderLeft = 'none'; // Убираем цветную полоску
-    item.style.paddingLeft = '16px'; // Компенсируем отступ
-    // УБРАНА цветная полоска: item.style.borderLeftColor = account.color || '#3498db';
+    item.style.borderLeft = 'none'; 
+    item.style.paddingLeft = '16px'; 
+    
     item.innerHTML = `
       <div class="account-item__info">
         <div class="account-item__name">${account.name}</div>

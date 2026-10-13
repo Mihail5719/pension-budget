@@ -23,6 +23,7 @@ import {
 import {
   createExpense,
   createIncome,
+  createTransfer, 
   updateTransaction,
   deleteTransaction,
   deleteTransactionsByRange,
@@ -118,12 +119,21 @@ function setupEventListeners() {
   expenseSaveBtn = document.getElementById('btn-save-expense');
   expenseCancelBtn = document.getElementById('btn-cancel-expense');
 
-  // Инициализация элементов модального окна доходов
+    // Инициализация элементов модального окна доходов
   incomeModal = document.getElementById('income-modal');
   incomeCategorySelect = document.getElementById('income-category');
   incomeAmountInput = document.getElementById('income-amount');
   incomeSaveBtn = document.getElementById('btn-save-income');
   incomeCancelBtn = document.getElementById('btn-cancel-income');
+
+  // === Инициализация элементов модального окна переводов (v2.5) ===
+  const transferModal = document.getElementById('transfer-modal');
+  const transferFromSelect = document.getElementById('transfer-from-account');
+  const transferToSelect = document.getElementById('transfer-to-account');
+  const transferAmountInput = document.getElementById('transfer-amount');
+  const transferSaveBtn = document.getElementById('btn-save-transfer');
+  const transferCancelBtn = document.getElementById('btn-cancel-transfer');
+  // =================================================================
 
   // Заполняем выпадающий список категориями доходов
   INCOME_CATEGORIES.forEach((category) => {
@@ -140,6 +150,12 @@ function setupEventListeners() {
   // Кнопка "Добавить доход"
   const btnAddIncome = document.getElementById('btn-add-income');
   btnAddIncome.addEventListener('click', openIncomeModal);
+
+  // Обработчик кнопки "Перевод между счетами" (v2.5)
+  const btnAddTransfer = document.getElementById('btn-add-transfer');
+  if (btnAddTransfer) {
+    btnAddTransfer.addEventListener('click', openTransferModal);
+  }
 
   // === Кнопка "Использовать НЗ" ===
   const btnUseReserve = document.getElementById('btn-use-reserve');
@@ -173,9 +189,14 @@ function setupEventListeners() {
   expenseSaveBtn.addEventListener('click', saveExpense);
   expenseCancelBtn.addEventListener('click', closeExpenseModal);
 
-  // Кнопки в модальном окне доходов
+    // Кнопки в модальном окне доходов
   incomeSaveBtn.addEventListener('click', saveIncome);
   incomeCancelBtn.addEventListener('click', closeIncomeModal);
+
+  // === Кнопки в модальном окне переводов (v2.5) ===
+  if (transferSaveBtn) transferSaveBtn.addEventListener('click', saveTransfer);
+  if (transferCancelBtn) transferCancelBtn.addEventListener('click', closeTransferModal);
+  // ================================================
 
   // Закрытие по клику на оверлей (расходы)
   expenseModal.addEventListener('click', (e) => {
@@ -184,31 +205,36 @@ function setupEventListeners() {
     }
   });
 
-  // Закрытие по клику на оверлей (доходы)
+    // Закрытие по клику на оверлей (доходы)
   incomeModal.addEventListener('click', (e) => {
     if (e.target === incomeModal.querySelector('.modal__overlay')) {
       closeIncomeModal();
     }
   });
 
-  // Закрытие по Escape
+  // === Закрытие по клику на оверлей (переводы, v2.5) ===
+  if (transferModal) {
+    transferModal.addEventListener('click', (e) => {
+      if (e.target === transferModal.querySelector('.modal__overlay')) {
+        closeTransferModal();
+      }
+    });
+  }
+  // ==================================================
+
+    // Закрытие по Escape и сохранение по Enter
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (expenseModal.classList.contains('is-open')) {
-        closeExpenseModal();
-      }
-      if (incomeModal.classList.contains('is-open')) {
-        closeIncomeModal();
-      }
+      if (expenseModal.classList.contains('is-open')) closeExpenseModal();
+      if (incomeModal.classList.contains('is-open')) closeIncomeModal();
+      // <-- НОВОЕ (v2.5)
+      if (transferModal && transferModal.classList.contains('is-open')) closeTransferModal(); 
     }
-    // Сохранение по Enter
     if (e.key === 'Enter') {
-      if (expenseModal.classList.contains('is-open')) {
-        saveExpense();
-      }
-      if (incomeModal.classList.contains('is-open')) {
-        saveIncome();
-      }
+      if (expenseModal.classList.contains('is-open')) saveExpense();
+      if (incomeModal.classList.contains('is-open')) saveIncome();
+      // <-- НОВОЕ (v2.5)
+      if (transferModal && transferModal.classList.contains('is-open')) saveTransfer(); 
     }
   });
 
@@ -588,17 +614,72 @@ function closeIncomeModal() {
   incomeAmountInput.value = '';
 }
 
+/**
+ * Открыть модальное окно перевода (v2.5)
+ */
+function openTransferModal() {
+  const fromSelect = document.getElementById('transfer-from-account');
+  const toSelect = document.getElementById('transfer-to-account');
+  
+  if (!fromSelect || !toSelect) return;
+
+  // Очищаем списки
+  fromSelect.innerHTML = '';
+  toSelect.innerHTML = '';
+
+  // Заполняем счетами
+  const accounts = appData.settings.accounts || [];
+  const defaultAccountId = appData.settings.defaultAccountId || 'sber';
+
+  accounts.forEach(acc => {
+    // Для "Откуда"
+    const optionFrom = document.createElement('option');
+    optionFrom.value = acc.id;
+    optionFrom.textContent = acc.name;
+    if (acc.id === defaultAccountId) optionFrom.selected = true;
+    fromSelect.appendChild(optionFrom);
+
+    // Для "Куда"
+    const optionTo = document.createElement('option');
+    optionTo.value = acc.id;
+    optionTo.textContent = acc.name;
+    toSelect.appendChild(optionTo);
+  });
+
+  // Очищаем поля
+  document.getElementById('transfer-amount').value = '';
+  document.getElementById('transfer-note').value = '';
+
+  // Открываем модалку
+  document.getElementById('transfer-modal').classList.add('is-open');
+  document.getElementById('transfer-amount').focus();
+}
+
+/**
+ * Закрыть модальное окно перевода (v2.5)
+ */
+function closeTransferModal() {
+  document.getElementById('transfer-modal').classList.remove('is-open');
+}
+
+// Обработчик кнопки "Отмена" в модалке перевода (v2.5)
+const btnCancelTransfer = document.getElementById('btn-cancel-transfer');
+if (btnCancelTransfer) {
+  btnCancelTransfer.addEventListener('click', closeTransferModal);
+}
+
 // Сохранение дохода (v2.3)
 function saveIncome() {
   const categoryId = incomeCategorySelect.value;
   const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
-  
+
   // Получаем выбранный счёт
   const accountId = document.getElementById('income-account').value;
-  
+
   // === НОВОЕ: Получаем предмет и источник ===
-  const itemValue = document.getElementById('income-item').value.trim();
-  const storeValue = document.getElementById('income-store').value.trim();
+  const itemValue = document.getElementById('edit-item').value.trim();
+  const storeValue = document.getElementById('edit-store').value.trim();
+  const noteValue = document.getElementById('edit-note').value.trim(); // НОВОЕ
   // ============================================
 
   // 1. Валидация
@@ -609,19 +690,19 @@ function saveIncome() {
   }
 
   // 2. Создаём и сохраняем транзакцию (передаем все новые поля!)
-  createIncome(appData, { 
-    categoryId, 
-    amount, 
-    item: itemValue, 
-    store: storeValue, 
-    accountId 
+  createIncome(appData, {
+    categoryId,
+    amount,
+    item: itemValue,
+    store: storeValue,
+    accountId,
   });
 
   // 3. UI-реакция: очищаем поля, закрываем модалку и перерисовываем экраны
   incomeAmountInput.value = '';
-  document.getElementById('income-item').value = '';     // ← НОВОЕ
-  document.getElementById('income-store').value = '';    // ← НОВОЕ
-  
+  document.getElementById('income-item').value = ''; // ← НОВОЕ
+  document.getElementById('income-store').value = ''; // ← НОВОЕ
+
   closeIncomeModal();
 
   renderTodayScreen(
@@ -631,8 +712,56 @@ function saveIncome() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  console.log('✅ Добавлен доход, категория:', categoryId, 'сумма:', amount, 'счёт:', accountId);
+  console.log(
+    '✅ Добавлен доход, категория:',
+    categoryId,
+    'сумма:',
+    amount,
+    'счёт:',
+    accountId,
+  );
 }
+
+// ... конец функции saveIncome() ...
+
+
+// === НОВОЕ: Сохранение перевода между счетами (v2.5) ===
+function saveTransfer() {
+  const fromAccountId = document.getElementById('transfer-from-account').value;
+  const toAccountId = document.getElementById('transfer-to-account').value;
+  const amount = parseFloat(document.getElementById('transfer-amount').value.replace(',', '.'));
+  const noteValue = document.getElementById('transfer-note').value.trim();
+
+  if (fromAccountId === toAccountId) {
+    alert('❌ Выберите разные счета для перевода');
+    return;
+  }
+
+  if (isNaN(amount) || amount <= 0) {
+    alert('Пожалуйста, введите корректную сумму');
+    document.getElementById('transfer-amount').focus();
+    return;
+  }
+
+  try {
+    createTransfer(appData, {
+      fromAccountId,
+      toAccountId,
+      amount,
+      note: noteValue,
+    });
+
+    document.getElementById('transfer-amount').value = '';
+    document.getElementById('transfer-note').value = '';
+    closeTransferModal();
+    renderAll(appData);
+
+    console.log('✅ Перевод выполнен:', amount, '₽');
+  } catch (error) {
+    alert('❌ Ошибка: ' + error.message);
+  }
+}
+// ======================================================
 
 // Элементы модального окна расходов
 let expenseModal,
@@ -1138,6 +1267,9 @@ function openEditModal(transactionId) {
   // Заполняем место покупки (НОВОЕ)
   document.getElementById('edit-store').value = transaction.store || '';
 
+  // Заполняем комментарий (НОВОЕ)
+  document.getElementById('edit-note').value = transaction.note || '';
+
   // === НОВОЕ: Заполняем выбор счёта ===
   const accountSelect = document.getElementById('edit-account');
   accountSelect.innerHTML = '';
@@ -1165,6 +1297,76 @@ function openEditModal(transactionId) {
   // Открываем модальное окно
   document.getElementById('edit-modal').classList.add('is-open');
   document.getElementById('edit-amount').focus();
+
+  // === НОВОЕ: Умное отображение полей в зависимости от типа транзакции (v2.5) ===
+  const isTransfer = transaction.type === 'transfer'; // ИСПРАВЛЕНО: используем transaction, а не originalTransaction
+
+  // Получаем ссылки на лейблы (используем уже объявленные переменные, чтобы не было дублирования const)
+  const categoryLabel = categorySelect.closest('.modal__label');
+  // subcategoryLabel и subcategorySelect уже объявлены выше в функции, используем их!
+  const itemLabel = document
+    .getElementById('edit-item')
+    ?.closest('.modal__label');
+  const storeLabel = document
+    .getElementById('edit-store')
+    ?.closest('.modal__label');
+  const accountLabel = accountSelect.closest('.modal__label');
+
+  const fromLabel = document.getElementById('edit-transfer-from-label');
+  const toLabel = document.getElementById('edit-transfer-to-label');
+  const fromSelect = document.getElementById('edit-transfer-from');
+  const toSelect = document.getElementById('edit-transfer-to');
+
+  if (isTransfer) {
+    // Для переводов: скрываем категорию, подкатегорию, предмет, магазин, обычный счёт
+    if (categoryLabel) categoryLabel.style.display = 'none';
+    if (subcategoryLabel) subcategoryLabel.style.display = 'none';
+    if (itemLabel) itemLabel.style.display = 'none';
+    if (storeLabel) storeLabel.style.display = 'none';
+    if (accountLabel) accountLabel.style.display = 'none';
+
+    // === СКРЫВАЕМ поле "Счёт" (прямое скрытие) ===
+    const editAccountSelect = document.getElementById('edit-account');
+    if (editAccountSelect) {
+      editAccountSelect.parentElement.style.display = 'none'; // Скрываем родительский label
+    }
+
+    // Показываем поля "Откуда" и "Куда"
+    if (fromLabel) fromLabel.style.display = 'block';
+    if (toLabel) toLabel.style.display = 'block';
+
+    // Заполняем списки счетов для перевода
+    if (fromSelect && toSelect) {
+      fromSelect.innerHTML = '';
+      toSelect.innerHTML = '';
+      const accounts = appData.settings.accounts || [];
+      accounts.forEach((acc) => {
+        const optFrom = document.createElement('option');
+        optFrom.value = acc.id;
+        optFrom.textContent = acc.name;
+        if (acc.id === transaction.fromAccountId) optFrom.selected = true; // ИСПРАВЛЕНО
+        fromSelect.appendChild(optFrom);
+
+        const optTo = document.createElement('option');
+        optTo.value = acc.id;
+        optTo.textContent = acc.name;
+        if (acc.id === transaction.toAccountId) optTo.selected = true; // ИСПРАВЛЕНО
+        toSelect.appendChild(optTo);
+      });
+    }
+  } else {
+    // Для обычных транзакций: показываем все стандартные поля
+    if (categoryLabel) categoryLabel.style.display = 'block';
+    if (subcategoryLabel) subcategoryLabel.style.display = 'block';
+    if (itemLabel) itemLabel.style.display = 'block';
+    if (storeLabel) storeLabel.style.display = 'block';
+    if (accountLabel) accountLabel.style.display = 'block';
+
+    // Скрываем поля "Откуда" и "Куда"
+    if (fromLabel) fromLabel.style.display = 'none';
+    if (toLabel) toLabel.style.display = 'none';
+  }
+  // ===========================================================================
 }
 
 /**
@@ -1176,107 +1378,112 @@ function closeEditModal() {
 }
 
 /**
- * Сохранить изменения транзакции (v2.2)
+ * Сохранить изменения транзакции (v2.5 — с поддержкой переводов и комментария)
  */
 function saveEditTransaction() {
   if (!editingTransactionId) return;
 
-  // Получаем новые значения
+  // 1. Получаем базовые значения
   const categoryId = document.getElementById('edit-category').value;
-  const amount = parseFloat(
-    document.getElementById('edit-amount').value.replace(',', '.'),
-  );
+  const amount = parseFloat(document.getElementById('edit-amount').value.replace(',', '.'));
   const dateStr = document.getElementById('edit-date').value;
-  const itemValue = document.getElementById('edit-item').value.trim();
-  const storeValue = document.getElementById('edit-store').value.trim(); // ← НОВОЕ
-
-  // === НОВОЕ: Получаем выбранный счёт ===
   const accountId = document.getElementById('edit-account').value;
-  // ========================================
+  
+  // === НОВОЕ: Читаем комментарий (работает и для расходов, и для переводов) ===
+  const noteValue = document.getElementById('edit-note')?.value.trim() || '';
+  // ===========================================================================
 
-  // Валидация суммы
+  // Объявляем переменные для предмета, магазина и подкатегории (заполним их ниже)
+  let itemValue = '';
+  let storeValue = '';
+  let subName = '';
+
+  // 2. Валидация суммы
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     document.getElementById('edit-amount').focus();
     return;
   }
 
-  // Валидация даты
+  // 3. Валидация даты
   if (!dateStr) {
     alert('Пожалуйста, выберите дату');
     return;
   }
 
-  // Находим транзакцию
-  const transactionIndex = appData.transactions.findIndex(
-    (t) => t.id === editingTransactionId,
-  );
+  // 4. Находим транзакцию
+  const transactionIndex = appData.transactions.findIndex((t) => t.id === editingTransactionId);
   if (transactionIndex === -1) {
     alert('Транзакция не найдена');
     return;
   }
 
-  // Определяем тип транзакции (сохраняем оригинальный тип)
   const originalTransaction = appData.transactions[transactionIndex];
   const incomeFlag = isIncome(originalTransaction);
   const categories = incomeFlag ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-
-  // Находим название категории
   const category = categories.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
 
-  // Определяем подкатегорию (только для расходов)
-  let subName = originalTransaction.subcategory || '';
-  if (!incomeFlag) {
-    // ← ИСПРАВЛЕНО: было !isIncome (проверка функции вместо переменной)
-    const subSelect = document.getElementById('edit-subcategory');
-    const subId = subSelect.value;
-    if (!subId) {
-      alert('Пожалуйста, выберите подкатегорию');
-      subSelect.focus();
-      return;
+  // 5. === Умная обработка полей в зависимости от типа транзакции (v2.5) ===
+  if (originalTransaction.type === 'transfer') {
+    // Для переводов: подкатегории, предмета и магазина не существует.
+    subName = '';
+    itemValue = '';
+    storeValue = '';
+  } else {
+    // Стандартная логика только для расходов и доходов
+    if (!incomeFlag) {
+      const subSelect = document.getElementById('edit-subcategory');
+      const subId = subSelect.value;
+      if (!subId) {
+        alert('Пожалуйста, выберите подкатегорию');
+        subSelect.focus();
+        return;
+      }
+      const currentCategoryId = category ? category.id : categoryId;
+      const subs = SUBCATEGORIES[currentCategoryId] || [];
+      const sub = subs.find((s) => s.id === subId);
+      subName = sub ? sub.name : subId;
     }
-    const currentCategoryId = category ? category.id : categoryId;
-    const subs = SUBCATEGORIES[currentCategoryId] || [];
-    const sub = subs.find((s) => s.id === subId);
-    subName = sub ? sub.name : subId;
-  }
 
-  // Создаём новую дату (сохраняем оригинальное время)
+    // Читаем предмет и место покупки из полей ввода (только для обычных транзакций)
+    itemValue = document.getElementById('edit-item')?.value.trim() || '';
+    storeValue = document.getElementById('edit-store')?.value.trim() || '';
+  }
+  // ===========================================================================
+
+  // 6. Создаём новую дату (сохраняем оригинальное время)
   const originalDate = new Date(originalTransaction.date);
   const newDate = new Date(dateStr);
-  newDate.setHours(
-    originalDate.getHours(),
-    originalDate.getMinutes(),
-    originalDate.getSeconds(),
-  );
+  newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), originalDate.getSeconds());
 
-  // Обновляем транзакцию
-    appData.transactions[transactionIndex] = {
-      ...originalTransaction,
-      category: categoryName,
-      subcategory: subName,
-      amount: amount,
-      date: newDate.toISOString(),
-      item: itemValue,
-      store: storeValue, // ← НОВОЕ
-      accountId:
-        accountId ||
-        originalTransaction.accountId ||
-        appData.settings.defaultAccountId,
-    };
+  // 7. Обновляем транзакцию
+  const updatedTransaction = {
+    ...originalTransaction, // Сохраняем id, type и т.д.
+    category: categoryName,
+    subcategory: subName,
+    amount: amount,
+    date: newDate.toISOString(),
+    item: itemValue,
+    store: storeValue,
+    note: noteValue, // === НОВОЕ: Сохраняем комментарий ===
+    accountId: accountId || originalTransaction.accountId || appData.settings.defaultAccountId,
+  };
 
-  // Сохраняем данные
+  // Если это перевод — обновляем счета "Откуда" и "Куда"
+  if (originalTransaction.type === 'transfer') {
+    updatedTransaction.fromAccountId = document.getElementById('edit-transfer-from')?.value || originalTransaction.fromAccountId;
+    updatedTransaction.toAccountId = document.getElementById('edit-transfer-to')?.value || originalTransaction.toAccountId;
+  }
+
+  appData.transactions[transactionIndex] = updatedTransaction;
+
+  // 8. Сохраняем данные и перерисовываем интерфейс
   saveData(appData);
-
-  // Закрываем модалку и перерисовываем интерфейс
   closeEditModal();
   renderAll(appData);
 
-  console.log(
-    '✅ Транзакция обновлена:',
-    appData.transactions[transactionIndex],
-  );
+  console.log('✅ Транзакция обновлена:', appData.transactions[transactionIndex]);
 }
 
 // === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===

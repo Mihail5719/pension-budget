@@ -1756,6 +1756,37 @@ input[type='tel'] {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.1); /* Лёгкая обводка для читаемости */
 }
 
+/* Кнопка перевода между счетами (v2.5) */
+.btn--transfer {
+  background-color: #9b59b6; /* Фиолетовый */
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.btn--transfer:hover {
+  background-color: #8e44ad;
+}
+
+.btn--transfer:active {
+  transform: scale(0.98);
+}
+
+/* Сумма перевода в истории (v2.5) — повышенная специфичность */
+.transaction__amount.transaction__amount--transfer {
+  color: #7f8c8d; /* Нейтральный серый цвет */
+  font-weight: 500;
+}
+
+
+
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)

@@ -96,13 +96,18 @@
 
                 <!-- Блок "Сегодня к оплате" (внутри секции, сразу после карточки) -->
                 <div id="today-payments-container" class="today-payments"></div>
-
+                
                 <button class="btn btn--primary btn--large" id="btn-add-expense">
                     Записать расход
                 </button>
-
+                
                 <button class="btn btn--success btn--large" id="btn-add-income">
                     Добавить доход
+                </button>
+                
+                <!-- Кнопка перевода между счетами (НОВОЕ, v2.5) -->
+                <button class="btn btn--transfer btn--large" id="btn-add-transfer">
+                    ⇄ Перевод между счетами
                 </button>
 
                 <!-- Кнопка "Использовать НЗ" -->
@@ -402,79 +407,128 @@
         </div>
     </div>
 
+    <!-- Модальное окно для перевода между счетами (v2.5) -->
+    <div class="modal" id="transfer-modal">
+        <div class="modal__overlay"></div>
+        <div class="modal__content">
+            <h2 class="modal__title">Перевод между счетами</h2>
+    
+            <!-- Откуда -->
+            <label class="modal__label">
+                <span class="modal__label-text">Откуда:</span>
+                <select class="modal__select" id="transfer-from-account">
+                    <!-- Счета заполняются через JavaScript -->
+                </select>
+            </label>
+    
+            <!-- Куда -->
+            <label class="modal__label">
+                <span class="modal__label-text">Куда:</span>
+                <select class="modal__select" id="transfer-to-account">
+                    <!-- Счета заполняются через JavaScript -->
+                </select>
+            </label>
+    
+            <!-- Сумма -->
+            <label class="modal__label">
+                <span class="modal__label-text">Сумма (₽):</span>
+                <input type="number" class="modal__input" id="transfer-amount" placeholder="0.00" inputmode="decimal"
+                    min="0" step="0.01">
+            </label>
+    
+            <!-- Комментарий (опционально) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Комментарий (необязательно):</span>
+                <input type="text" class="modal__input" id="transfer-note" placeholder="Например: На продукты">
+            </label>
+    
+            <!-- Кнопки -->
+            <div class="modal__buttons">
+                <button class="btn btn--secondary" id="btn-cancel-transfer">Отмена</button>
+                <button class="btn btn--primary" id="btn-save-transfer">Перевести</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 
       МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ ТРАНЗАКЦИИ
       Используется для изменения существующих записей (расходов и доходов)
     -->
     <div class="modal" id="edit-modal">
-        <!-- Затемнённый фон (оверлей) -->
         <div class="modal__overlay"></div>
-
-        <!-- Содержимое модального окна -->
         <div class="modal__content">
             <h3 class="modal__title">Редактировать запись</h3>
-
-            <!-- Выпадающий список категорий -->
+    
+            <!-- Категория -->
             <label class="modal__label">
                 <span class="modal__label-text">Категория:</span>
-                <select class="modal__select" id="edit-category">
-                    <!-- Категории заполняются через JavaScript -->
-                </select>
+                <select class="modal__select" id="edit-category"></select>
             </label>
-
-            <!-- Выпадающий список подкатегорий (только для расходов) -->
+    
+            <!-- Подкатегория (только для расходов) -->
             <label class="modal__label" id="edit-subcategory-label" style="display: none;">
                 <span class="modal__label-text">Подкатегория:</span>
                 <select class="modal__select" id="edit-subcategory">
                     <option value="">-- выберите --</option>
                 </select>
             </label>
-
-            <!-- Поле ввода суммы -->
+    
+            <!-- Сумма -->
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽):</span>
                 <input type="number" class="modal__input" id="edit-amount" placeholder="0" inputmode="numeric" min="1">
             </label>
-
-            <!-- Поле предмета покупки (НОВОЕ ПОЛЕ) -->
+    
+            <!-- Предмет покупки -->
             <label class="modal__label">
                 <span class="modal__label-text">Предмет покупки (необязательно):</span>
                 <input type="text" class="modal__input" id="edit-item" placeholder="Например: Молоко, Хлеб">
             </label>
-
-            <!-- Поле места покупки (НОВОЕ) -->
+    
+            <!-- Место покупки -->
             <label class="modal__label">
                 <span class="modal__label-text">Место покупки (необязательно):</span>
                 <input type="text" class="modal__input" id="edit-store" placeholder="Например: Пятёрочка, Магнит">
             </label>
-
-            <!-- Поле выбора счёта (НОВОЕ) -->
-            <label class="modal__label">
+    
+            <!-- Счёт (только для обычных транзакций) -->
+            <label class="modal__label" id="edit-account-label">
                 <span class="modal__label-text">Счёт:</span>
-                <select class="modal__select" id="edit-account">
-                    <!-- Счета заполняются через JavaScript -->
-                </select>
+                <select class="modal__select" id="edit-account"></select>
             </label>
-
-            <!-- Поле выбора даты -->
+    
+            <!-- Откуда (только для переводов) -->
+            <label class="modal__label" id="edit-transfer-from-label" style="display: none;">
+                <span class="modal__label-text">Откуда:</span>
+                <select class="modal__select" id="edit-transfer-from"></select>
+            </label>
+    
+            <!-- Куда (только для переводов) -->
+            <label class="modal__label" id="edit-transfer-to-label" style="display: none;">
+                <span class="modal__label-text">Куда:</span>
+                <select class="modal__select" id="edit-transfer-to"></select>
+            </label>
+    
+            <!-- Дата -->
             <label class="modal__label">
                 <span class="modal__label-text">Дата:</span>
                 <input type="date" class="modal__input" id="edit-date"
                     style="font-size: 18px; font-weight: 400; text-align: left;">
             </label>
-
-            <!-- Кнопки подтверждения и отмены -->
+    
+            <!-- Комментарий (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Комментарий (необязательно):</span>
+                <input type="text" class="modal__input" id="edit-note" placeholder="Например: На продукты">
+            </label>
+    
+            <!-- Кнопки -->
             <div class="modal__buttons">
-                <button class="btn btn--primary" id="btn-save-edit">
-                    Сохранить
-                </button>
-                <button class="btn btn--secondary" id="btn-cancel-edit">
-                    Отмена
-                </button>
+                <button class="btn btn--primary" id="btn-save-edit">Сохранить</button>
+                <button class="btn btn--secondary" id="btn-cancel-edit">Отмена</button>
             </div>
         </div>
     </div>
-
     <!-- Модальное окно для добавления/редактирования счёта (v2.1) -->
     <div class="modal" id="account-modal">
         <div class="modal__overlay"></div>
