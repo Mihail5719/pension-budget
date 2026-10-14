@@ -64,9 +64,10 @@
             </section>
             <!-- Экран 1: Сегодня -->
             <section class="screen screen--today" id="screen-today">
-                <h2 class="screen__title screen__title--hidden">Главный экран</h2>
-
-                <div class="today-card">
+                    <h2 class="screen__title screen__title--hidden">Главный экран</h2>
+                    <!-- Горизонтальные табы счетов на экране "Сегодня" (v2.6) -->
+                    <div id="today-tabs-container" class="stats-tabs"></div>
+                    <div class="today-card">
                     <div class="today-card__label">Осталось до пенсии</div>
                     <div class="today-card__amount" id="remaining-amount">0 ₽</div>
                     <div class="today-card__indicator" id="indicator"></div>

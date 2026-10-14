@@ -6,6 +6,9 @@ import {
   getTodayPayments,
 } from './budget.js';
 
+// Текущий выбранный счёт на экране "Сегодня" ('all' или ID счёта)
+let currentTodayAccountId = 'all';
+
 // === Глобальная переменная для табов статистики (v2.4) ===
 let currentStatsAccountId = 'all';
 // ========================================================
@@ -14,18 +17,118 @@ let currentStatsAccountId = 'all';
 const isIncome = (t) => t.type === 'income';
 const isExpense = (t) => t.type === 'expense';
 const isCommitted = (t) => t.type === 'committed';
-// деньги, покинувшие кошелёк: влияют на баланс,
-// но в круг жизни попадает только isExpense
 const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
 // ─── конец блока предикатов ───
 
 // Обновление экрана "Сегодня"
 export function renderTodayScreen(settings, fixedExpenses, transactions) {
-  const result = calculateDailyLimit(settings, fixedExpenses, transactions);
-  const indicatorState = getIndicatorState(
-    result.dailyLimit,
-    result.freeBudget,
-  );
+  // 1. Отрисовка табов счетов (v2.6)
+  renderTodayTabs(settings.accounts || []);
+
+  let result;
+
+  if (currentTodayAccountId === 'all') {
+    // === "ВСЕ СЧЕТА": стандартный глобальный расчёт ===
+    result = calculateDailyLimit(settings, fixedExpenses, transactions);
+    
+  } else {
+    // === КОНКРЕТНЫЙ СЧЁТ ===
+    const isDefault = currentTodayAccountId === settings.defaultAccountId;
+    
+    // 1. Фильтруем транзакции только этого счёта
+    const accTx = transactions.filter((t) =>
+      t.accountId === currentTodayAccountId ||
+      t.fromAccountId === currentTodayAccountId ||
+      t.toAccountId === currentTodayAccountId
+    );
+
+    // 2. Для счёта по умолчанию считаем только транзакции ТЕКУЩЕГО ПЕРИОДА
+    // (старые транзакции уже учтены в initialBalance)
+    const periodStartStr = settings.currentPeriodStart;
+    const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
+    
+    let balance = 0;
+    
+    if (isDefault) {
+      // Для Сбера: начальный остаток + пенсия (если отмечена) + транзакции текущего периода
+      balance += settings.initialBalance || 0;
+      if (settings.currentPeriodStart) {
+        balance += settings.pensionAmount || 0;
+      }
+      
+      // Считаем только транзакции текущего периода
+      const periodTx = periodStartDate 
+        ? accTx.filter(t => t.date.split('T')[0] >= periodStartDate)
+        : accTx;
+      
+      balance += periodTx.reduce((sum, t) => {
+        if (t.type === 'income') return sum + t.amount;
+        if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
+        if (t.type === 'transfer') {
+          if (t.fromAccountId === currentTodayAccountId) return sum - t.amount;
+          if (t.toAccountId === currentTodayAccountId) return sum + t.amount;
+        }
+        return sum;
+      }, 0);
+      
+      // Вычитаем НЗ и фиксированные платежи
+      balance -= settings.reserveAmount || 0;
+      const paidIds = new Set(periodTx.filter((t) => t.paymentId).map((t) => t.paymentId));
+      const fixedTotal = fixedExpenses
+        .filter((p) => !paidIds.has(p.id))
+        .reduce((sum, p) => sum + p.amount, 0);
+      balance -= fixedTotal;
+      
+    } else {
+      // Для других счетов: только баланс из всех их транзакций
+      balance = accTx.reduce((sum, t) => {
+        if (t.type === 'income') return sum + t.amount;
+        if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
+        if (t.type === 'transfer') {
+          if (t.fromAccountId === currentTodayAccountId) return sum - t.amount;
+          if (t.toAccountId === currentTodayAccountId) return sum + t.amount;
+        }
+        return sum;
+      }, 0);
+    }
+
+    // 3. Считаем потраченное в текущем периоде
+    const periodSpent = accTx
+      .filter((t) => {
+        if (!periodStartDate) return t.type === 'expense' || t.type === 'committed';
+        return (t.type === 'expense' || t.type === 'committed') && t.date.split('T')[0] >= periodStartDate;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // 4. Считаем дни до пенсии
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let endDate;
+    if (settings.currentPeriodStart) {
+      endDate = new Date(settings.currentPeriodStart);
+      endDate.setMonth(endDate.getMonth() + 1);
+      endDate.setDate(settings.pensionDay);
+      endDate.setHours(23, 59, 59, 999);
+    } else {
+      endDate = new Date(today.getFullYear(), today.getMonth(), settings.pensionDay);
+      if (endDate <= today) endDate.setMonth(endDate.getMonth() + 1);
+    }
+    const diffTime = endDate.getTime() - today.getTime();
+    const daysLeft = Math.max(Math.floor(diffTime / (1000 * 60 * 60 * 24)), 1);
+
+    // 5. Формируем результат
+    result = {
+      dailyLimit: balance / daysLeft,
+      remaining: balance,
+      spent: periodSpent,
+      daysLeft: daysLeft,
+      currentBalance: balance,
+      freeBudget: balance,
+    };
+  }
+
+  // === ДАЛЕЕ СТАНДАРТНАЯ ОТРИСОВКА ===
+  const indicatorState = getIndicatorState(result.dailyLimit, result.freeBudget);
   const todayPayments = getTodayPayments(fixedExpenses);
   renderTodayPayments(todayPayments);
 
@@ -39,13 +142,13 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   const dailyLimitEl = document.getElementById('daily-limit');
   dailyLimitEl.textContent = formatMoney(result.dailyLimit);
 
-  document.getElementById('spent-total').textContent = formatMoney(
-    result.spent,
-  );
+  document.getElementById('spent-total').textContent = formatMoney(result.spent);
   document.getElementById('days-left').textContent = result.daysLeft;
 
   const headerSubtitle = document.querySelector('.header__subtitle');
-  headerSubtitle.textContent = `Пенсия: ${settings.pensionDay} числа`;
+  if (headerSubtitle) {
+    headerSubtitle.textContent = `Пенсия: ${settings.pensionDay} числа`;
+  }
 
   const btnMarkPension = document.getElementById('btn-mark-pension');
   const pensionStatusText = document.getElementById('pension-status-text');
@@ -59,10 +162,7 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     let isMarked = false;
     if (settings.currentPeriodStart) {
       const startDate = new Date(settings.currentPeriodStart);
-      if (
-        startDate.getMonth() === currentMonth &&
-        startDate.getFullYear() === currentYear
-      ) {
+      if (startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear) {
         isMarked = true;
       }
     }
@@ -74,15 +174,18 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
       const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
       pensionDateDisplay.textContent = `✅ Пенсия получена: ${dateStr}`;
     } else {
-      btnMarkPension.style.display = 'block';
+      if (currentTodayAccountId === 'all' || currentTodayAccountId === settings.defaultAccountId) {
+        btnMarkPension.style.display = 'block';
+      } else {
+        btnMarkPension.style.display = 'none';
+      }
       pensionStatusText.style.display = 'none';
     }
   }
 
   const noReserveWarning = document.getElementById('no-reserve-warning');
   if (noReserveWarning) {
-    noReserveWarning.style.display =
-      settings.reserveAmount <= 0 ? 'flex' : 'none';
+    noReserveWarning.style.display = settings.reserveAmount <= 0 ? 'flex' : 'none';
   }
 
   const btnUseReserve = document.getElementById('btn-use-reserve');
@@ -114,22 +217,19 @@ export function renderTransactionList(transactions, pensionDay) {
     }
     grouped[dateKey].transactions.push(tx);
 
-            if (isIncome(tx)) {
-              grouped[dateKey].income += tx.amount;
-            } else if (tx.type === 'transfer') {
-              // Переводы НЕ считаются ни доходом, ни расходом
-            } else {
-              grouped[dateKey].expense += tx.amount;
-            }
+    if (isIncome(tx)) {
+      grouped[dateKey].income += tx.amount;
+    } else if (tx.type === 'transfer') {
+      // Переводы НЕ считаются ни доходом, ни расходом
+    } else {
+      grouped[dateKey].expense += tx.amount;
+    }
   });
-
-          
 
   Object.keys(grouped).forEach((dateKey) => {
     const group = grouped[dateKey];
     const firstTxDate = group.transactions[0].date;
 
-    // 1. Формируем красивую разметку для сумм (v2.5 — скрываем нулевые итоги)
     let summaryHtml = '';
     if (group.income > 0 && group.expense > 0) {
       summaryHtml = `
@@ -142,12 +242,9 @@ export function renderTransactionList(transactions, pensionDay) {
     } else if (group.expense > 0) {
       summaryHtml = `<span class="day-header__expense">Расход: -${formatMoney(group.expense)}</span>`;
     }
-    // Если и доход, и расход равны 0 — summaryHtml остаётся пустым, ничего не показываем
 
-    // === СИНЯЯ ПОЛОСКА (v2.2 — упрощенный вариант) ===
     const groupHeader = document.createElement('div');
     groupHeader.className = 'day-header';
-
     groupHeader.style.cssText = `
       background-color: var(--bg-secondary, #f8f9fa);
       border-left: 4px solid #3498db;
@@ -159,8 +256,6 @@ export function renderTransactionList(transactions, pensionDay) {
       <span class="day-header__date">${formatDateOnly(firstTxDate)}</span>
       <span class="day-header__summary">${summaryHtml}</span>
     `;
-    // ============================================
-
     listEl.appendChild(groupHeader);
 
     group.transactions.forEach((transaction) => {
@@ -171,7 +266,6 @@ export function renderTransactionList(transactions, pensionDay) {
         itemEl.classList.add('transaction--reserve');
       }
 
-      // === НОВОЕ: Отрисовка перевода между счетами (v2.5) ===
       if (transaction.type === 'transfer') {
         const fromAccount = window.appData?.settings?.accounts?.find(
           (a) => a.id === transaction.fromAccountId,
@@ -197,9 +291,8 @@ export function renderTransactionList(transactions, pensionDay) {
           </div>
         `;
         listEl.appendChild(itemEl);
-        return; // Пропускаем остальной код для этой транзакции
+        return;
       }
-      // ======================================================
 
       const incomeFlag = isIncome(transaction);
       const amountClass = incomeFlag
@@ -216,29 +309,22 @@ export function renderTransactionList(transactions, pensionDay) {
       const emoji = committedFlag ? '📋' : catStyle.emoji;
       const displayName = `${emoji} ${transaction.category}`;
 
-      // === НОВОЕ: Находим иконку и цвет счёта транзакции (v2.1) ===
       const account = window.appData?.settings?.accounts?.find(
         (a) => a.id === transaction.accountId,
       );
       const accountIcon = account ? account.emoji : '💼';
       const accountColor = account ? account.color : '#95a5a6';
       const accountName = account ? account.name : 'Счёт';
-      // ============================================================
 
       const subLine = transaction.subcategory
         ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
         : '';
-
       const itemLine = transaction.item
         ? `<span class="transaction__item">${transaction.item}</span>`
         : '';
-
-      // === НОВОЕ: Место покупки (Магазин) ===
       const storeLine = transaction.store
         ? `<span class="transaction__store">📍 ${transaction.store}</span>`
         : '';
-      // ========================================
-
       const noteLine =
         committedFlag && transaction.note
           ? `<span class="transaction__subcategory">${transaction.note}</span>`
@@ -309,17 +395,13 @@ export function updateSyncIndicator(transactions, lastExportDate) {
 
   if (lastExportDate) {
     const date = new Date(lastExportDate);
-
-    // === ЖЕЛЕЗОБЕТОННОЕ ФОРМАТИРОВАНИЕ (v2.5) ===
-    // Явно извлекаем локальные компоненты времени, чтобы избежать ошибок toLocaleString
     const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Месяцы в JS начинаются с 0
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
 
     dateStr = `${day}.${month}.${year}, ${hours}:${minutes}`;
-    // ===============================================
   }
 
   indicatorText.textContent = `Записей: ${count} | Обновлено: ${dateStr}`;
@@ -329,7 +411,6 @@ export function updateSyncIndicator(transactions, lastExportDate) {
 export function renderAll(data) {
   renderTodayScreen(data.settings, data.fixedExpenses, data.transactions);
   renderTransactionList(data.transactions, data.settings.pensionDay);
-  // ВЫЗЫВАЕМ НОВУЮ ЕДИНУЮ ФУНКЦИЮ СТАТИСТИКИ
   renderStats(data.settings, data.fixedExpenses, data.transactions);
   renderSettings(data.settings, data.fixedExpenses);
   renderAccountsList(data.settings.accounts, data.transactions);
@@ -465,115 +546,134 @@ const categoryConfig = {
 };
 
 function getCategoryStyle(name) {
-  // 1. Точное совпадение с настройками
   if (categoryConfig[name]) return categoryConfig[name];
-
   const lowerName = name.toLowerCase();
-
-  // 2. Явные переопределения для проблемных категорий (высокая контрастность)
   if (
     lowerName.includes('кредит') ||
     lowerName.includes('долг') ||
     lowerName.includes('займ')
   ) {
-    return { emoji: '💳', color: '#E67E22' }; // Яркий насыщенный оранжевый
+    return { emoji: '💳', color: '#E67E22' };
   }
   if (
     lowerName.includes('разное') ||
     lowerName.includes('другое') ||
     lowerName.includes('прочее')
   ) {
-    return { emoji: '📦', color: '#34495E' }; // Глубокий тёмно-синий/графит (идеальный контраст и на белом, и на чёрном)
+    return { emoji: '📦', color: '#34495E' };
   }
-
-  // 3. Поиск по частичному совпадению в categoryConfig
   for (const key in categoryConfig) {
     if (lowerName.includes(key.toLowerCase())) return categoryConfig[key];
   }
-
-  // 4. Фолбэк по умолчанию (вместо бледного #95a5a6)
-  return { emoji: '📦', color: '#2C3E50' }; // Тёмный асфальтовый цвет
+  return { emoji: '📦', color: '#2C3E50' };
 }
 
-/**
- * Отрисовка горизонтальных табов счетов в статистике (v2.4)
- */
 function renderStatsTabs(accounts) {
   const container = document.getElementById('stats-tabs-container');
   if (!container) return;
-
   container.innerHTML = '';
 
-  // 1. Таб "Все счета"
   const allTab = document.createElement('button');
   allTab.className = `stats-tab ${currentStatsAccountId === 'all' ? 'active' : ''}`;
   allTab.textContent = 'Все счета';
   allTab.onclick = () => {
     currentStatsAccountId = 'all';
-    renderStatsTabs(accounts); // Перерисовываем табы для обновления класса active
-    renderStats(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+    renderStatsTabs(accounts);
+    renderStats(
+      window.appData.settings,
+      window.appData.fixedExpenses,
+      window.appData.transactions,
+    );
   };
   container.appendChild(allTab);
 
-  // 2. Табы для каждого счёта
   if (accounts && accounts.length > 0) {
-    accounts.forEach(acc => {
+    accounts.forEach((acc) => {
       const tab = document.createElement('button');
       tab.className = `stats-tab ${currentStatsAccountId === acc.id ? 'active' : ''}`;
-      tab.textContent = acc.name; // Только чистое название (минимализм)
+      tab.textContent = acc.name;
       tab.onclick = () => {
         currentStatsAccountId = acc.id;
         renderStatsTabs(accounts);
-        renderStats(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+        renderStats(
+          window.appData.settings,
+          window.appData.fixedExpenses,
+          window.appData.transactions,
+        );
       };
       container.appendChild(tab);
     });
   }
 }
 
-// ========================================================================
-// 🌟 НОВАЯ ЕДИНАЯ ФУНКЦИЯ СТАТИСТИКИ (Идея 10 + Исправление пенсии + Отладка) 🌟
-// ========================================================================
+function renderTodayTabs(accounts) {
+  const container = document.getElementById('today-tabs-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const allTab = document.createElement('button');
+  allTab.className = `stats-tab ${currentTodayAccountId === 'all' ? 'active' : ''}`;
+  allTab.textContent = 'Все счета';
+  allTab.onclick = () => {
+    currentTodayAccountId = 'all';
+    renderTodayTabs(accounts);
+    renderTodayScreen(
+      window.appData.settings,
+      window.appData.fixedExpenses,
+      window.appData.transactions,
+    );
+  };
+  container.appendChild(allTab);
+
+  if (accounts && accounts.length > 0) {
+    accounts.forEach((acc) => {
+      const tab = document.createElement('button');
+      tab.className = `stats-tab ${currentTodayAccountId === acc.id ? 'active' : ''}`;
+      tab.textContent = acc.name;
+      tab.onclick = () => {
+        currentTodayAccountId = acc.id;
+        renderTodayTabs(accounts);
+        renderTodayScreen(
+          window.appData.settings,
+          window.appData.fixedExpenses,
+          window.appData.transactions,
+        );
+      };
+      container.appendChild(tab);
+    });
+  }
+}
+
 export function renderStats(settings, fixedExpenses, transactions) {
   const topContainer = document.getElementById('stats-top');
   const bottomContainer = document.getElementById('stats-bottom');
   const canvas = document.getElementById('expense-chart');
   const emptyMsg = document.getElementById('stats-empty');
 
-  if (!topContainer || !bottomContainer || !canvas) {
-    console.error('❌ Контейнеры статистики не найдены');
-    return;
-  }
+  if (!topContainer || !bottomContainer || !canvas) return;
 
-  // Отрисовываем табы счетов (v2.4)
   renderStatsTabs(settings.accounts || []);
 
-  // 1. Определяем период
   const startDate = settings.currentPeriodStart
     ? new Date(settings.currentPeriodStart)
     : getCurrentPeriod(settings.pensionDay).startDate;
   const { endDate } = getCurrentPeriod(settings.pensionDay);
 
-  // 2. Считаем итоги
   let totalIncome = settings.currentPeriodStart ? settings.pensionAmount : 0;
   let totalNonFixed = 0;
   let totalFixed = 0;
-
   const nonFixedByCat = {};
   const fixedByCat = {};
 
   transactions.forEach((t) => {
-    // === НОВОЕ (v2.4): Пропускаем транзакции, если выбран конкретный счёт, а у транзакции другой ===
     if (
       currentStatsAccountId !== 'all' &&
       t.accountId !== currentStatsAccountId
-    ) {
+    )
       return;
-    }
     const tDate = new Date(t.date);
     if (tDate >= startDate && tDate <= endDate) {
       const sub = t.subcategory || 'Без подкатегории';
-
       if (isIncome(t)) {
         totalIncome += t.amount;
       } else if (isExpense(t)) {
@@ -595,45 +695,29 @@ export function renderStats(settings, fixedExpenses, transactions) {
   });
 
   const totalExpenses = totalNonFixed + totalFixed;
-
-    // 3. Верхняя часть
-  // === НОВОЕ (v2.4): Определяем название выбранного счёта для заголовка ===
-  const accountName = currentStatsAccountId === 'all' 
-    ? 'Все счета' 
-    : (settings.accounts?.find(a => a.id === currentStatsAccountId)?.name || 'Счёт');
-  // ========================================================================
+  const accountName =
+    currentStatsAccountId === 'all'
+      ? 'Все счета'
+      : settings.accounts?.find((a) => a.id === currentStatsAccountId)?.name ||
+        'Счёт';
 
   let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
     <div class="stats-summary-block">
-      <div class="stats-row income">
-        <span>Доходы:</span>
-        <span>+${formatMoney(totalIncome)}</span>
-      </div>
-      <div class="stats-row expense">
-        <span>Расходы:</span>
-        <span>-${formatMoney(totalExpenses)}</span>
-      </div>
+      <div class="stats-row income"><span>Доходы:</span><span>+${formatMoney(totalIncome)}</span></div>
+      <div class="stats-row expense"><span>Расходы:</span><span>-${formatMoney(totalExpenses)}</span></div>
       <div class="stats-divider"></div>
-      <div class="stats-row">
-        <span>Нефиксированные:</span>
-        <span>${formatMoney(totalNonFixed)}</span>
-      </div>
-      <div class="stats-row">
-        <span>Фиксированные:</span>
-        <span>${formatMoney(totalFixed)}</span>
-      </div>
+      <div class="stats-row"><span>Нефиксированные:</span><span>${formatMoney(totalNonFixed)}</span></div>
+      <div class="stats-row"><span>Фиксированные:</span><span>${formatMoney(totalFixed)}</span></div>
     </div>
   `;
   topContainer.innerHTML = topHtml;
 
-  // 4. Нижняя часть
   const renderSection = (categoriesObj) => {
     let sectionHtml = '';
     const cats = Object.keys(categoriesObj).sort(
       (a, b) => categoriesObj[b].total - categoriesObj[a].total,
     );
-
     cats.forEach((cat) => {
       const entry = categoriesObj[cat];
       const style = getCategoryStyle(cat);
@@ -641,24 +725,16 @@ export function renderStats(settings, fixedExpenses, transactions) {
         totalExpenses > 0
           ? ((entry.total / totalExpenses) * 100).toFixed(1)
           : '0.0';
-
       sectionHtml += `<div class="breakdown__card">`;
-      // === ВИШЕНКА: Цветная точка счёта (v2.4) ===
       let accountDotHtml = '';
       if (currentStatsAccountId !== 'all') {
         const acc = settings.accounts?.find(
           (a) => a.id === currentStatsAccountId,
         );
-        if (acc && acc.color) {
+        if (acc && acc.color)
           accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
-        }
       }
-      // ============================================
-
-      sectionHtml += `<div class="breakdown__header">`;
-      sectionHtml += `<span>${style.emoji} ${cat} ${accountDotHtml}</span>`;
-      sectionHtml += `<span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
-
+      sectionHtml += `<div class="breakdown__header"><span>${style.emoji} ${cat} ${accountDotHtml}</span><span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
       const subs = Object.keys(entry.subs).sort(
         (a, b) => entry.subs[b] - entry.subs[a],
       );
@@ -666,14 +742,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
         const sum = entry.subs[sub];
         const subPercent =
           entry.total > 0 ? ((sum / entry.total) * 100).toFixed(1) : '0.0';
-
-        sectionHtml += `<div class="breakdown__row">`;
-        sectionHtml += `<div class="breakdown__line">`;
-        sectionHtml += `<span>${sub}</span>`;
-        sectionHtml += `<span>${formatMoney(sum)} (${subPercent}%)</span></div>`;
-        sectionHtml += `<div class="breakdown__bar">`;
-        sectionHtml += `<div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div>`;
-        sectionHtml += `</div></div>`;
+        sectionHtml += `<div class="breakdown__row"><div class="breakdown__line"><span>${sub}</span><span>${formatMoney(sum)} (${subPercent}%)</span></div><div class="breakdown__bar"><div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div></div></div>`;
       });
       sectionHtml += `</div>`;
     });
@@ -688,14 +757,11 @@ export function renderStats(settings, fixedExpenses, transactions) {
     bottomHtml +=
       '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
   }
-
   bottomContainer.innerHTML = bottomHtml;
 
-  // 5. Диаграмма
   if (totalExpenses > 0 && Object.keys(nonFixedByCat).length > 0) {
     if (emptyMsg) emptyMsg.hidden = true;
     canvas.style.display = 'block';
-
     const labels = [],
       data = [],
       backgroundColors = [];
@@ -706,11 +772,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
       backgroundColors.push(style.color);
     });
 
-    if (window.expenseChartInstance) {
-      window.expenseChartInstance.destroy();
-    }
-
-    // Принудительно включаем анимацию для всех диаграмм (на мобильных может отключаться)
+    if (window.expenseChartInstance) window.expenseChartInstance.destroy();
     Chart.defaults.animation.duration = 2000;
     Chart.defaults.animation.easing = 'easeOutQuart';
 
@@ -733,7 +795,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
         animation: {
           animateRotate: true,
           animateScale: true,
-          duration: 2000, // Увеличили с 1000 до 2000 мс
+          duration: 2000,
           easing: 'easeOutQuart',
         },
         plugins: {
@@ -762,7 +824,6 @@ export function renderStats(settings, fixedExpenses, transactions) {
     if (window.expenseChartInstance) window.expenseChartInstance.destroy();
   }
 }
-// ========================================================================
 
 export function renderPensionPeriodInfo(settings) {
   const periodInfoEl = document.getElementById('period-info');
@@ -774,7 +835,6 @@ export function renderPensionPeriodInfo(settings) {
   if (appSettings.currentPeriodStart) {
     const startDate = new Date(appSettings.currentPeriodStart);
     const pensionDay = appSettings.pensionDay;
-
     const nextPensionDate = new Date(startDate);
     nextPensionDate.setMonth(nextPensionDate.getMonth() + 1);
     nextPensionDate.setDate(pensionDay);
@@ -784,26 +844,14 @@ export function renderPensionPeriodInfo(settings) {
     const diffTime = nextPensionDate - today;
     const daysLeft = Math.max(Math.floor(diffTime / (1000 * 60 * 60 * 24)), 0);
 
-    const formatDate = (date) => {
-      return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
-    };
+    const formatDate = (date) =>
+      `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
 
     periodInfoEl.innerHTML = `
-      <div class="period-info__row">
-        <span class="period-info__label">Начало периода:</span>
-        <span class="period-info__value">${formatDate(startDate)}</span>
-      </div>
-      <div class="period-info__row">
-        <span class="period-info__label">Следующая пенсия:</span>
-        <span class="period-info__value">${formatDate(nextPensionDate)}</span>
-      </div>
-      <div class="period-info__row">
-        <span class="period-info__label">Осталось дней:</span>
-        <span class="period-info__value">${daysLeft}</span>
-      </div>
-      <button class="btn-new-period" id="btn-new-period">
-        🔄 Изменить или сбросить период
-      </button>
+      <div class="period-info__row"><span class="period-info__label">Начало периода:</span><span class="period-info__value">${formatDate(startDate)}</span></div>
+      <div class="period-info__row"><span class="period-info__label">Следующая пенсия:</span><span class="period-info__value">${formatDate(nextPensionDate)}</span></div>
+      <div class="period-info__row"><span class="period-info__label">Осталось дней:</span><span class="period-info__value">${daysLeft}</span></div>
+      <button class="btn-new-period" id="btn-new-period">🔄 Изменить или сбросить период</button>
     `;
 
     const btnNewPeriod = document.getElementById('btn-new-period');
@@ -816,7 +864,6 @@ export function renderPensionPeriodInfo(settings) {
           window.appData && window.appData.settings.currentPeriodStart
             ? window.appData.settings.currentPeriodStart.split('T')[0]
             : '';
-
         const userChoice = prompt(
           'Введите новую дату начала периода (в формате ГГГГ-ММ-ДД, например 2026-09-23)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ПОЛНОСТЬЮ СБРОСИТЬ отметку.',
           currentDate,
@@ -854,7 +901,6 @@ export function renderPensionPeriodInfo(settings) {
               const oldStart = window.appData.settings.currentPeriodStart
                 ? new Date(window.appData.settings.currentPeriodStart)
                 : null;
-
               if (oldStart && newDate.getTime() > oldStart.getTime()) {
                 const oldBalance = calculateDailyLimit(
                   window.appData.settings,
@@ -863,13 +909,10 @@ export function renderPensionPeriodInfo(settings) {
                 );
                 const carryOver =
                   oldBalance.currentBalance - oldBalance.fixedTotal;
-
                 const userAgrees = confirm(
                   `Вы переносите период вперёд.\n\nНераспределённый остаток: ${carryOver.toFixed(2)} ₽\nОн будет перенесён как начальный баланс нового периода.\n\nПродолжить? (Нажмите "Отмена", чтобы изменить дату без переноса остатка)`,
                 );
-
                 if (!userAgrees) return;
-
                 window.appData.settings.initialBalance =
                   Math.round(carryOver * 100) / 100;
                 const initialInput = document.getElementById(
@@ -877,7 +920,6 @@ export function renderPensionPeriodInfo(settings) {
                 );
                 if (initialInput) initialInput.value = carryOver.toFixed(2);
               }
-
               window.appData.settings.currentPeriodStart =
                 newDate.toISOString();
               saveData(window.appData);
@@ -908,15 +950,11 @@ export function renderPensionPeriodInfo(settings) {
   }
 }
 
-// Инициализация красивых денежных полей (Format-on-blur)
 function initMoneyFields() {
   const moneyInputs = document.querySelectorAll('.money-field');
-
   moneyInputs.forEach((input) => {
     const rawValue = parseFloat(input.value);
-    if (!isNaN(rawValue)) {
-      input.value = formatMoney(rawValue);
-    }
+    if (!isNaN(rawValue)) input.value = formatMoney(rawValue);
 
     input.addEventListener('focus', function () {
       let raw = this.value
@@ -935,14 +973,12 @@ function initMoneyFields() {
         .replace(',', '.')
         .trim();
       let num = parseFloat(raw);
-
       if (!isNaN(num)) {
         const fieldName = this.dataset.field;
         if (fieldName && window.appData.settings) {
           window.appData.settings[fieldName] = num;
-          if (typeof window.saveData === 'function') {
+          if (typeof window.saveData === 'function')
             window.saveData(window.appData);
-          }
         }
         this.value = formatMoney(num);
       } else {
@@ -957,69 +993,46 @@ function initMoneyFields() {
   });
 }
 
-/**
- * Отрисовка списка счетов в настройках (v2.5 — с учётом переводов)
- * @param {Array} accounts - Массив счетов из settings
- * @param {Array} transactions - Все транзакции (для расчёта баланса)
- */
 export function renderAccountsList(accounts, transactions) {
   const container = document.getElementById('accounts-list');
   if (!container) return;
-
   container.innerHTML = '';
 
   if (!accounts || accounts.length === 0) {
-    container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Нет добавленных счетов</p>';
+    container.innerHTML =
+      '<p style="text-align: center; color: var(--text-secondary);">Нет добавленных счетов</p>';
     return;
   }
 
-  // Получаем настройки из глобального объекта appData
   const periodStartStr = window.appData?.settings?.currentPeriodStart;
   const initialBalance = window.appData?.settings?.initialBalance || 0;
   const defaultAccountId = window.appData?.settings?.defaultAccountId;
   const pensionAmount = window.appData?.settings?.pensionAmount || 0;
-
-  // Извлекаем только дату (YYYY-MM-DD) из periodStart, игнорируя время
   const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
 
-  accounts.forEach(account => {
-    // 1. Фильтруем транзакции, которые ВЛИЯЮТ на этот счёт
+  accounts.forEach((account) => {
     const accountTransactions = transactions.filter((t) => {
-      // Если есть ограничение по дате, проверяем его
       if (periodStartDate) {
         const txDate = t.date.split('T')[0];
         if (txDate < periodStartDate) return false;
       }
-
-      // Транзакция влияет на счёт, если:
-      // - это обычная операция на этом счёте (accountId)
-      // - это перевод С этого счёта (fromAccountId)
-      // - это перевод НА этот счёт (toAccountId)
-      return t.accountId === account.id || 
-             t.fromAccountId === account.id || 
-             t.toAccountId === account.id;
+      return (
+        t.accountId === account.id ||
+        t.fromAccountId === account.id ||
+        t.toAccountId === account.id
+      );
     });
 
-    // 2. Считаем баланс за период с учётом ВСЕХ типов транзакций
     let balance = accountTransactions.reduce((sum, t) => {
-      if (t.type === 'income') {
-        return sum + t.amount; // Доход прибавляем
-      } 
-      else if (t.type === 'expense') {
-        return sum - t.amount; // Расход вычитаем
-      } 
-      else if (t.type === 'transfer') {
-        if (t.fromAccountId === account.id) {
-          return sum - t.amount; // Деньги ушли с этого счёта
-        } 
-        else if (t.toAccountId === account.id) {
-          return sum + t.amount; // Деньги пришли на этот счёт
-        }
+      if (t.type === 'income') return sum + t.amount;
+      if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
+      if (t.type === 'transfer') {
+        if (t.fromAccountId === account.id) return sum - t.amount;
+        if (t.toAccountId === account.id) return sum + t.amount;
       }
       return sum;
     }, 0);
 
-    // 3. Если это счёт по умолчанию — добавляем начальный остаток и пенсию
     if (account.id === defaultAccountId) {
       balance += initialBalance;
       balance += pensionAmount;
@@ -1027,9 +1040,9 @@ export function renderAccountsList(accounts, transactions) {
 
     const item = document.createElement('div');
     item.className = 'account-item';
-    item.style.borderLeft = 'none'; 
-    item.style.paddingLeft = '16px'; 
-    
+    item.style.borderLeft = 'none';
+    item.style.paddingLeft = '16px';
+
     item.innerHTML = `
       <div class="account-item__info">
         <div class="account-item__name">${account.name}</div>
