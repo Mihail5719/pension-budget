@@ -410,8 +410,27 @@ window.confirmAllHypotheses = function () {
 };
 
 // ============================================================================
-// 5. ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ СОБЫТИЙ
+// 5. ИНИЦИАЛИЗАЦИЯ И ОБНОВЛЕНИЕ БАННЕРА (ЕДИНЫЙ БЛОК v2.7)
 // ============================================================================
+
+// Делаем функцию глобальной, чтобы её можно было вызвать из любого места
+window.updateReconcileBanner = function () {
+  const nameEl = document.getElementById('reconcile-account-name');
+  if (!nameEl) return;
+
+  const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+  const defaultAccount = appData.settings?.accounts?.find(
+    (acc) => acc.id === appData.settings.defaultAccountId,
+  );
+
+  if (defaultAccount && defaultAccount.name) {
+    nameEl.textContent = defaultAccount.name;
+    nameEl.style.color = defaultAccount.color || '#2c3e50';
+  } else {
+    nameEl.textContent = 'Счёт по умолчанию';
+    nameEl.style.color = '#2c3e50';
+  }
+};
 
 export function initReconcileListeners() {
   const uploadBtn = document.getElementById('reconcile-upload-btn');
@@ -438,22 +457,37 @@ export function initReconcileListeners() {
   const parseBtn = document.getElementById('reconcile-parse-btn');
   if (parseBtn) {
     parseBtn.addEventListener('click', () => {
-      const rawText = document
-        .getElementById('reconcile-raw-text')
-        .value.trim();
+      const rawText = document.getElementById('reconcile-raw-text').value.trim();
       if (!rawText) {
         alert('⚠️ Вставьте текст из PDF-выписки');
         return;
       }
       const bankTransactions = parseRawPDFText(rawText);
       if (bankTransactions.length === 0) {
-        alert(
-          '⚠️ Не удалось найти транзакции в тексте. Проверьте формат выписки.',
-        );
+        alert('⚠️ Не удалось найти транзакции в тексте. Проверьте формат выписки.');
         return;
       }
       alert(`✅ Найдено транзакций: ${bankTransactions.length}`);
       reconcileTransactions(bankTransactions);
     });
   }
+
+  // Вызываем обновление баннера при инициализации
+  window.updateReconcileBanner();
 }
+
+// Автоматическое обновление баннера при появлении экрана сверки
+const checkReconcileScreen = setInterval(() => {
+  const screen = document.getElementById('screen-reconcile');
+  if (screen && screen.style.display !== 'none' && screen.offsetParent !== null) {
+    window.updateReconcileBanner();
+    clearInterval(checkReconcileScreen); // Останавливаем проверку после первого успешного обновления
+  }
+}, 200); // Проверяем каждые 200мс
+
+// Вызываем обновление баннера через 1 секунду после загрузки страницы
+setTimeout(() => {
+  if (window.updateReconcileBanner) {
+    window.updateReconcileBanner();
+  }
+}, 1000);

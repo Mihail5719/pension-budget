@@ -1785,7 +1785,38 @@ input[type='tel'] {
   font-weight: 500;
 }
 
+/* Баннер цели сверки (v2.7) */
+.reconcile-target-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: #e8f4f8; /* Светло-голубой, спокойный, но заметный */
+    border-left: 4px solid #3498db;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
 
+.reconcile-target__icon {
+    font-size: 24px;
+}
+
+.reconcile-target__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.reconcile-account-name {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.reconcile-target__hint {
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
 
 
 /* ============================================================================

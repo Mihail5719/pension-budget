@@ -238,6 +238,16 @@
             <section class="screen screen--reconcile" id="screen-reconcile">
                 <h2 class="screen__title">Сверка с банком</h2>
 
+                <!-- БАННЕР: Явное указание счёта для сверки (Вариант А) -->
+                <div class="reconcile-target-banner">
+                    <span class="reconcile-target__icon">🏦</span>
+                    <div class="reconcile-target__text">
+                        <strong>Сверяем со счётом:</strong>
+                        <span id="reconcile-account-name" class="reconcile-account-name">Загрузка...</span>
+                        <div class="reconcile-target__hint">⚠️ Вставьте выписку или операции только от этого банка</div>
+                    </div>
+                </div>
+
                 <div class="reconcile-block">
                     <h3 class="reconcile-block__title">📋 Способ 1: Вставить текст из PDF</h3>
                     <p class="reconcile-block__hint">
