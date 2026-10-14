@@ -659,7 +659,12 @@ export function renderStats(settings, fixedExpenses, transactions) {
     : getCurrentPeriod(settings.pensionDay).startDate;
   const { endDate } = getCurrentPeriod(settings.pensionDay);
 
-  let totalIncome = settings.currentPeriodStart ? settings.pensionAmount : 0;
+  // Пенсия учитывается только для "Все счета" или счёта по умолчанию
+  const isDefaultOrAll =
+    currentStatsAccountId === 'all' ||
+    currentStatsAccountId === settings.defaultAccountId;
+  let totalIncome =
+    settings.currentPeriodStart && isDefaultOrAll ? settings.pensionAmount : 0;
   let totalNonFixed = 0;
   let totalFixed = 0;
   const nonFixedByCat = {};
