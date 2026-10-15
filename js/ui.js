@@ -150,38 +150,36 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     headerSubtitle.textContent = `Пенсия: ${settings.pensionDay} числа`;
   }
 
-  const btnMarkPension = document.getElementById('btn-mark-pension');
-  const pensionStatusText = document.getElementById('pension-status-text');
-  const pensionDateDisplay = document.getElementById('pension-date-display');
+    const btnMarkPension = document.getElementById('btn-mark-pension');
+    const pensionStatusText = document.getElementById('pension-status-text');
+    const pensionDateDisplay = document.getElementById('pension-date-display');
 
-  if (btnMarkPension && pensionStatusText && pensionDateDisplay) {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    if (btnMarkPension && pensionStatusText && pensionDateDisplay) {
+      // === ИСПРАВЛЕНИЕ НАБЛЮДЕНИЯ 25 ===
+      // Флаг привязан к наличию даты начала периода, а не к календарному месяцу.
+      // Пока currentPeriodStart установлен, пенсия за этот период считается полученной.
+      const isMarked = !!settings.currentPeriodStart;
+      // ================================
 
-    let isMarked = false;
-    if (settings.currentPeriodStart) {
-      const startDate = new Date(settings.currentPeriodStart);
-      if (startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear) {
-        isMarked = true;
-      }
-    }
-
-    if (isMarked) {
-      btnMarkPension.style.display = 'none';
-      pensionStatusText.style.display = 'flex';
-      const d = new Date(settings.currentPeriodStart);
-      const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
-      pensionDateDisplay.textContent = `✅ Пенсия получена: ${dateStr}`;
-    } else {
-      if (currentTodayAccountId === 'all' || currentTodayAccountId === settings.defaultAccountId) {
-        btnMarkPension.style.display = 'block';
-      } else {
+      if (isMarked) {
         btnMarkPension.style.display = 'none';
+        pensionStatusText.style.display = 'flex';
+        const d = new Date(settings.currentPeriodStart);
+        const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+        pensionDateDisplay.textContent = `✅ Пенсия получена: ${dateStr}`;
+      } else {
+        // Кнопка отметки пенсии видна только для "Все счета" или счёта по умолчанию
+        if (
+          currentTodayAccountId === 'all' ||
+          currentTodayAccountId === settings.defaultAccountId
+        ) {
+          btnMarkPension.style.display = 'block';
+        } else {
+          btnMarkPension.style.display = 'none';
+        }
+        pensionStatusText.style.display = 'none';
       }
-      pensionStatusText.style.display = 'none';
     }
-  }
 
   const noReserveWarning = document.getElementById('no-reserve-warning');
   if (noReserveWarning) {
