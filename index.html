@@ -219,6 +219,13 @@
                         <!-- Сюда будет подставляться информация из JS -->
                     </div>
                 </div>
+
+                <button id="btn-new-period" class="btn btn--secondary">📅 Новый период</button>
+                
+                <!-- НОВАЯ КНОПКА: Закрыть период с архивацией (v2.1) -->
+                <button id="btn-close-period" class="btn btn--danger" style="margin-top: 10px;">🔒 Закрыть период и создать
+                    архив</button>
+
                 <div class="delete-card">
                     <h3 class="delete-card__title">🗑 Удалить записи за период</h3>
                     <div class="delete-card__row">
@@ -232,6 +239,15 @@
                     <p id="delete-preview" class="delete-card__preview">Укажите обе даты</p>
                     <button id="delete-range-btn" class="btn btn--danger">Удалить записи</button>
                 </div>
+
+                <!-- === РАЗДЕЛ "АРХИВ ПЕРИОДОВ" (v2.1) === -->
+                <div id="archives-section" style="margin-top: 32px; display: none;">
+                    <h3 class="settings-subtitle">📚 Архив периодов</h3>
+                    <div id="archives-list">
+                        <!-- Сюда будут добавляться архивные периоды -->
+                    </div>
+                </div>
+                <!-- ======================================== -->
             </section>
 
             <!-- Экран 5: Сверка с банком -->
