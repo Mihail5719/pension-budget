@@ -415,8 +415,8 @@ window.confirmAllHypotheses = function () {
 
 // Делаем функцию глобальной, чтобы её можно было вызвать из любого места
 window.updateReconcileBanner = function () {
-  const nameEl = document.getElementById('reconcile-account-name');
-  if (!nameEl) return;
+  const accountNameEl = document.getElementById('reconcile-account-name');
+  if (!accountNameEl) return;
 
   const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
   const defaultAccount = appData.settings?.accounts?.find(
@@ -424,11 +424,12 @@ window.updateReconcileBanner = function () {
   );
 
   if (defaultAccount && defaultAccount.name) {
-    nameEl.textContent = defaultAccount.name;
-    nameEl.style.color = defaultAccount.color || '#2c3e50';
+    const emoji = defaultAccount.emoji || '🏦';
+    accountNameEl.textContent = `${emoji} ${defaultAccount.name}`;
+    accountNameEl.style.color = defaultAccount.color || '#2c3e50';
   } else {
-    nameEl.textContent = 'Счёт по умолчанию';
-    nameEl.style.color = '#2c3e50';
+    accountNameEl.textContent = '🏦 Счёт по умолчанию';
+    accountNameEl.style.color = '#2c3e50';
   }
 };
 
