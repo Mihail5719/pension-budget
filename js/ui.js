@@ -197,13 +197,29 @@ export function renderTransactionList(transactions, pensionDay) {
   const listEl = document.getElementById('transaction-list');
   listEl.innerHTML = '';
 
-  if (transactions.length === 0) {
-    listEl.innerHTML =
-      '<p style="text-align: center; color: var(--color-text-secondary); padding: 40px;">Пока нет операций</p>';
+  // === ФИЛЬТР ПО СЧЁТУ (Многоконточность) ===
+  console.log('🔄 Обновление истории. Выбранный счёт:', currentTodayAccountId);
+  
+  const filteredTransactions = currentTodayAccountId === 'all'
+    ? transactions
+    : transactions.filter(t =>
+        t.accountId === currentTodayAccountId ||
+        t.fromAccountId === currentTodayAccountId ||
+        t.toAccountId === currentTodayAccountId
+      );
+  // ==========================================
+
+  if (filteredTransactions.length === 0) {
+    const emptyMessage = currentTodayAccountId === 'all' 
+      ? 'Пока нет операций' 
+      : 'По этому счёту операций пока нет';
+      
+    listEl.innerHTML = `<p style="text-align: center; color: var(--color-text-secondary); padding: 40px;">${emptyMessage}</p>`;
     return;
   }
 
-  const sorted = [...transactions].sort(
+  // ВАЖНО: сортируем и группируем уже отфильтрованный массив!
+  const sorted = [...filteredTransactions].sort(
     (a, b) => new Date(b.date) - new Date(a.date),
   );
   const grouped = {};
@@ -623,6 +639,11 @@ function renderTodayTabs(accounts) {
       window.appData.fixedExpenses,
       window.appData.transactions,
     );
+    // === ДОБАВЛЕНО: Обновляем список транзакций при смене вкладки ===
+    renderTransactionList(
+      window.appData.transactions,
+      window.appData.settings.pensionDay,
+    );
   };
   container.appendChild(allTab);
 
@@ -638,6 +659,11 @@ function renderTodayTabs(accounts) {
           window.appData.settings,
           window.appData.fixedExpenses,
           window.appData.transactions,
+        );
+        // === ДОБАВЛЕНО: Обновляем список транзакций при смене вкладки ===
+        renderTransactionList(
+          window.appData.transactions,
+          window.appData.settings.pensionDay,
         );
       };
       container.appendChild(tab);
