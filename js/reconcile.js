@@ -418,7 +418,28 @@ window.updateReconcileBanner = function () {
   const accountNameEl = document.getElementById('reconcile-account-name');
   if (!accountNameEl) return;
 
-  const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+  // === ИСПРАВЛЕНО: Читаем из window.appData, а не из localStorage ===
+  const appData = window.appData;
+  if (!appData) {
+    // Если window.appData ещё не инициализирован, пробуем localStorage
+    const fallbackData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+    if (fallbackData.settings?.accounts?.length > 0) {
+      const defaultAccount = fallbackData.settings.accounts.find(
+        (acc) => acc.id === fallbackData.settings.defaultAccountId,
+      );
+      if (defaultAccount && defaultAccount.name) {
+        const emoji = defaultAccount.emoji || '';
+        accountNameEl.textContent = `${emoji} ${defaultAccount.name}`;
+        accountNameEl.style.color = defaultAccount.color || '#2c3e50';
+        return;
+      }
+    }
+    accountNameEl.textContent = '🏦 Счёт по умолчанию';
+    accountNameEl.style.color = '#2c3e50';
+    return;
+  }
+  // ==================================================================
+
   const defaultAccount = appData.settings?.accounts?.find(
     (acc) => acc.id === appData.settings.defaultAccountId,
   );

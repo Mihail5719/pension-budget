@@ -450,13 +450,17 @@ export function updateSyncIndicator(transactions, lastModifiedDate) {
 
   
 
-// Обновление всей страницы
 export function renderAll(data) {
   renderTodayScreen(data.settings, data.fixedExpenses, data.transactions);
   renderTransactionList(data.transactions, data.settings.pensionDay);
   renderStats(data.settings, data.fixedExpenses, data.transactions);
   renderSettings(data.settings, data.fixedExpenses);
-  // renderAccountsList вызывается явно в processImportedFile после миграции
+
+  // === ВОЗВРАЩАЕМ: Чтобы список счетов рисовался при обычной загрузке страницы ===
+  if (typeof renderAccountsList === 'function') {
+    renderAccountsList();
+  }
+  // ==============================================================================
 }
 
 function renderTodayPayments(payments) {

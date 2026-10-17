@@ -76,7 +76,7 @@ function init() {
   });
 
   if (renamedAny) {
-    saveData(appData); // saveData теперь сам обновит lastModified и индикатор
+    saveData(appData);
     console.log('🔄 Миграция: имена обновлены');
   }
 
@@ -85,19 +85,28 @@ function init() {
 
   // === НОВОЕ: Обновляем индикатор синхронизации при загрузке страницы ===
   if (typeof updateSyncIndicator === 'function') {
-    // Берем реальное время последнего изменения, или время экспорта, или текущее время
     const timeToShow =
       appData.lastModified ||
       appData.settings.lastExportDate ||
       new Date().toISOString();
     updateSyncIndicator(appData.transactions, timeToShow);
   }
-  // ======================================================================
+
+  // === НОВОЕ: Обновляем баннер сверки при загрузке страницы ===
+  if (typeof window.updateReconcileBanner === 'function') {
+    window.updateReconcileBanner();
+  }
+  // ================================================================
 
   // Навешиваем обработчики
   setupEventListeners();
   initDeleteRange();
   initReconcileListeners();
+
+  // === НОВОЕ: Обновляем баннер сверки при загрузке ===
+  if (typeof window.updateReconcileBanner === 'function') {
+    window.updateReconcileBanner();
+  }
 
   console.log('Приложение инициализировано', appData);
 }
@@ -554,10 +563,13 @@ function setupEventListeners() {
 
       if (typeof window.updateReconcileBanner === 'function') {
         window.updateReconcileBanner();
+        console.log('✅ Баннер сверки обновлён после сохранения счёта');
       }
+
       if (typeof renderAccountsList === 'function') {
-        renderAccountsList(appData.settings.accounts, appData.transactions);
+        renderAccountsList(); // ← ВАЖНО: вызываем БЕЗ аргументов!
       }
+
       if (typeof renderTodayScreen === 'function') {
         renderTodayScreen(
           appData.settings,
@@ -1761,6 +1773,12 @@ function processImportedFile(event) {
       if (typeof renderAccountsList === 'function') {
         renderAccountsList();
         console.log('✅ Баланс счетов пересчитан после импорта');
+      }
+
+      // === НОВОЕ: Обновляем баннер сверки после импорта ===
+      if (typeof window.updateReconcileBanner === 'function') {
+        window.updateReconcileBanner();
+        console.log('✅ Баннер сверки обновлён после импорта');
       }
 
       // 9. Перерисовываем остальные экраны
