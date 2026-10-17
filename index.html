@@ -68,15 +68,15 @@
                     <!-- Горизонтальные табы счетов на экране "Сегодня" (v2.6) -->
                     <div id="today-tabs-container" class="stats-tabs"></div>
                     <div class="today-card">
-                    <div class="today-card__label">Осталось до пенсии</div>
+                    <span id="remaining-label">Осталось до следующего поступления</span>
                     <div class="today-card__amount" id="remaining-amount">0 ₽</div>
                     <div class="today-card__indicator" id="indicator"></div>
                     <div class="today-card__label today-card__label--small">Безопасный дневной лимит</div>
                     <div class="today-card__amount today-card__amount--secondary" id="daily-limit">0 ₽</div>
-                    <div class="today-card__hint">чтобы хватило до пенсии</div>
+                    <span id="daily-limit-hint">чтобы хватило до следующего поступления</span>
                     <!-- Кнопка отметки пенсии (показывается, если пенсия еще не отмечена) -->
                     <button id="btn-mark-pension" class="btn-mark-pension" style="display: none;">
-                        🟢 Отметить поступление пенсии
+                        🟢 Отметить поступление дохода
                     </button>
                     <!-- Текст статуса (показывается, когда пенсия уже отмечена) -->
                     <div id="pension-status-text" class="pension-status-text" style="display: none;">
@@ -118,7 +118,7 @@
 
                 <div class="quick-stats">
                     <div class="stat">
-                        <span class="stat__label">Дней осталось</span>
+                        <span class="stat__label">Дней до поступления</span>
                         <span class="stat__value" id="days-left">0</span>
                     </div>
                     <div class="stat">
@@ -157,24 +157,57 @@
                 <div class="settings-group">
                     <label class="settings-label">
                         <span class="settings-label__text">💰 Начальный остаток</span>
-                        <input type="text" class="settings-input money-field" id="input-initial-balance"
-                            data-field="initialBalance" placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-initial-balance" data-field="initialBalance"
+                            placeholder="0,00 ₽" inputmode="decimal">
                     </label>
+                
+                    <!-- === НОВОЕ ПОЛЕ: Источник дохода (v2.1, Идея 1) === -->
                     <label class="settings-label">
-                        <span class="settings-label__text">Размер пенсии</span>
-                        <input type="text" class="settings-input money-field" id="input-pension"
-                            data-field="pensionAmount" placeholder="0,00 ₽" inputmode="decimal">
+                        <span class="settings-label__text">Источник дохода</span>
+                        <select class="settings-input" id="select-income-type" data-field="incomeName">
+                            <optgroup label="Регулярные поступления (жизненный цикл)">
+                                <option value="Стипендия">🎓 Стипендия</option>
+                                <option value="Зарплата">💼 Зарплата</option>
+                                <option value="Аванс">💵 Аванс</option>
+                                <option value="Пенсия">🏦 Пенсия</option>
+                            </optgroup>
+                            <optgroup label="Нерегулярные поступления">
+                                <option value="Фриланс">💻 Фриланс / Подработка</option>
+                                <option value="Сдача в аренду">🏠 Сдача в аренду</option>
+                                <option value="Больничный"> Больничный</option>
+                                <option value="Премия">🏆 Премия</option>
+                                <option value="Дивиденды">📈 Дивиденды</option>
+                                <option value="Алименты">‍👧 Алименты</option>
+                            </optgroup>
+                            <optgroup label="Другое">
+                                <option value="custom">️ Свой вариант...</option>
+                            </optgroup>
+                        </select>
                     </label>
-
+                
+                    <!-- Поле для своего варианта (скрыто по умолчанию) -->
+                    <label class="settings-label" id="custom-income-label" style="display: none;">
+                        <span class="settings-label__text">Укажите свой вариант</span>
+                        <input type="text" class="settings-input" id="input-custom-income" placeholder="Например: Дивиденды"
+                            maxlength="30">
+                    </label>
+                    <!-- ============================================ -->
+                
+                    <label class="settings-label">
+                        <span class="settings-label__text" id="income-amount-label">Размер пенсии</span>
+                        <input type="text" class="settings-input money-field" id="input-pension" data-field="pensionAmount"
+                            placeholder="0,00 ₽" inputmode="decimal">
+                    </label>
+                
                     <label class="settings-label">
                         <span class="settings-label__text">День получения</span>
                         <input type="number" class="settings-input" id="input-pension-day" min="1" max="31">
                     </label>
-
+                
                     <label class="settings-label">
                         <span class="settings-label__text">Неприкосновенный запас</span>
-                        <input type="text" class="settings-input money-field" id="input-reserve"
-                            data-field="reserveAmount" placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-reserve" data-field="reserveAmount"
+                            placeholder="0,00 ₽" inputmode="decimal">
                     </label>
                 </div>
 
@@ -214,7 +247,7 @@
                 </div>
                 <!-- ✅ БЛОК ТЕКУЩЕГО ПЕРИОДА ПЕНСИИ  -->
                 <div class="pension-period-block">
-                    <h3>📅 Текущий период пенсии</h3>
+                    <h3 id="current-period-label">📅 Текущий период пенсии</h3>
                     <div id="period-info" class="period-info">
                         <!-- Сюда будет подставляться информация из JS -->
                     </div>

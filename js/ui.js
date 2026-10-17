@@ -9,6 +9,10 @@ import {
 // Текущий выбранный счёт на экране "Сегодня" ('all' или ID счёта)
 let currentTodayAccountId = 'all';
 
+// Список регулярных доходов (с фиксированной датой поступления)
+// Аванс убран, так как он просто увеличивает остаток при поступлении
+const REGULAR_INCOME_TYPES = ['Стипендия', 'Зарплата', 'Пенсия'];
+
 // === Глобальная переменная для табов статистики (v2.4) ===
 let currentStatsAccountId = 'all';
 // ========================================================
@@ -22,8 +26,37 @@ const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
 
 // Обновление экрана "Сегодня"
 export function renderTodayScreen(settings, fixedExpenses, transactions) {
-  // 1. Отрисовка табов счетов (v2.6)
+  console.log('🚨 ФУНКЦИЯ renderTodayScreen ЗАПУЩЕНА!');
+
+  // 1. Отрисовка табов счетов
   renderTodayTabs(settings.accounts || []);
+
+  // === 2. ЕДИНЫЙ РАСЧЁТ ДНЕЙ (Исправлено для точного подсчёта) ===
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Начало сегодняшнего дня
+
+  let endDate;
+  if (settings.currentPeriodStart) {
+    endDate = new Date(settings.currentPeriodStart);
+    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setDate(settings.pensionDay);
+  } else {
+    endDate = new Date(today.getFullYear(), today.getMonth(), settings.pensionDay);
+    if (endDate <= today) {
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
+  }
+  
+  // Считаем до НАЧАЛА дня поступления (00:00:00), чтобы 16-е -> 23-е было ровно 7 дней
+  endDate.setHours(0, 0, 0, 0);
+
+  const diffTime = endDate.getTime() - today.getTime();
+  const daysLeft = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1);
+
+  console.log('📅 Сегодня:', today.toLocaleString('ru-RU'));
+  console.log('📅 День поступления:', endDate.toLocaleString('ru-RU'));
+  console.log('✅ Итоговых дней осталось:', daysLeft);
+  // ================================================================
 
   let result;
 
@@ -31,36 +64,26 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     // === "ВСЕ СЧЕТА": стандартный глобальный расчёт ===
     result = calculateDailyLimit(settings, fixedExpenses, transactions);
     
+    // ПЕРЕЗАПИСЫВАЕМ дни и лимит на наши правильные значения
+    result.daysLeft = daysLeft;
+    result.dailyLimit = result.remaining / daysLeft;
+    
   } else {
     // === КОНКРЕТНЫЙ СЧЁТ ===
     const isDefault = currentTodayAccountId === settings.defaultAccountId;
-    
-    // 1. Фильтруем транзакции только этого счёта
-    const accTx = transactions.filter((t) =>
-      t.accountId === currentTodayAccountId ||
-      t.fromAccountId === currentTodayAccountId ||
-      t.toAccountId === currentTodayAccountId
+    const accTx = transactions.filter(
+      (t) => t.accountId === currentTodayAccountId || t.fromAccountId === currentTodayAccountId || t.toAccountId === currentTodayAccountId
     );
 
-    // 2. Для счёта по умолчанию считаем только транзакции ТЕКУЩЕГО ПЕРИОДА
-    // (старые транзакции уже учтены в initialBalance)
     const periodStartStr = settings.currentPeriodStart;
     const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
-    
     let balance = 0;
-    
+
     if (isDefault) {
-      // Для Сбера: начальный остаток + пенсия (если отмечена) + транзакции текущего периода
       balance += settings.initialBalance || 0;
-      if (settings.currentPeriodStart) {
-        balance += settings.pensionAmount || 0;
-      }
-      
-      // Считаем только транзакции текущего периода
-      const periodTx = periodStartDate 
-        ? accTx.filter(t => t.date.split('T')[0] >= periodStartDate)
-        : accTx;
-      
+      if (settings.currentPeriodStart) balance += settings.pensionAmount || 0;
+
+      const periodTx = periodStartDate ? accTx.filter((t) => t.date.split('T')[0] >= periodStartDate) : accTx;
       balance += periodTx.reduce((sum, t) => {
         if (t.type === 'income') return sum + t.amount;
         if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
@@ -70,17 +93,12 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
         }
         return sum;
       }, 0);
-      
-      // Вычитаем НЗ и фиксированные платежи
+
       balance -= settings.reserveAmount || 0;
       const paidIds = new Set(periodTx.filter((t) => t.paymentId).map((t) => t.paymentId));
-      const fixedTotal = fixedExpenses
-        .filter((p) => !paidIds.has(p.id))
-        .reduce((sum, p) => sum + p.amount, 0);
+      const fixedTotal = fixedExpenses.filter((p) => !paidIds.has(p.id)).reduce((sum, p) => sum + p.amount, 0);
       balance -= fixedTotal;
-      
     } else {
-      // Для других счетов: только баланс из всех их транзакций
       balance = accTx.reduce((sum, t) => {
         if (t.type === 'income') return sum + t.amount;
         if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
@@ -92,31 +110,10 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
       }, 0);
     }
 
-    // 3. Считаем потраченное в текущем периоде
     const periodSpent = accTx
-      .filter((t) => {
-        if (!periodStartDate) return t.type === 'expense' || t.type === 'committed';
-        return (t.type === 'expense' || t.type === 'committed') && t.date.split('T')[0] >= periodStartDate;
-      })
+      .filter((t) => (!periodStartDate ? (t.type === 'expense' || t.type === 'committed') : (t.type === 'expense' || t.type === 'committed') && t.date.split('T')[0] >= periodStartDate))
       .reduce((sum, t) => sum + t.amount, 0);
 
-    // 4. Считаем дни до пенсии
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    let endDate;
-    if (settings.currentPeriodStart) {
-      endDate = new Date(settings.currentPeriodStart);
-      endDate.setMonth(endDate.getMonth() + 1);
-      endDate.setDate(settings.pensionDay);
-      endDate.setHours(23, 59, 59, 999);
-    } else {
-      endDate = new Date(today.getFullYear(), today.getMonth(), settings.pensionDay);
-      if (endDate <= today) endDate.setMonth(endDate.getMonth() + 1);
-    }
-    const diffTime = endDate.getTime() - today.getTime();
-    const daysLeft = Math.max(Math.floor(diffTime / (1000 * 60 * 60 * 24)), 1);
-
-    // 5. Формируем результат
     result = {
       dailyLimit: balance / daysLeft,
       remaining: balance,
@@ -127,69 +124,52 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     };
   }
 
-  // === ДАЛЕЕ СТАНДАРТНАЯ ОТРИСОВКА ===
+  // === 3. ОТРИСОВКА НА ЭКРАНЕ ===
   const indicatorState = getIndicatorState(result.dailyLimit, result.freeBudget);
-  const todayPayments = getTodayPayments(fixedExpenses);
-  renderTodayPayments(todayPayments);
+  renderTodayPayments(getTodayPayments(fixedExpenses));
 
-  const remainingEl = document.getElementById('remaining-amount');
-  remainingEl.textContent = formatMoney(result.remaining);
-
+  document.getElementById('remaining-amount').textContent = formatMoney(result.remaining);
+  
   const indicatorEl = document.getElementById('indicator');
-  indicatorEl.className = 'today-card__indicator';
-  indicatorEl.classList.add(`indicator--${indicatorState}`);
-
-  const dailyLimitEl = document.getElementById('daily-limit');
-  dailyLimitEl.textContent = formatMoney(result.dailyLimit);
-
+  indicatorEl.className = 'today-card__indicator indicator--' + indicatorState;
+  
+  document.getElementById('daily-limit').textContent = formatMoney(result.dailyLimit);
   document.getElementById('spent-total').textContent = formatMoney(result.spent);
   document.getElementById('days-left').textContent = result.daysLeft;
 
   const headerSubtitle = document.querySelector('.header__subtitle');
   if (headerSubtitle) {
-    headerSubtitle.textContent = `Пенсия: ${settings.pensionDay} числа`;
+    headerSubtitle.textContent = `${settings.incomeName || 'Пенсия'}: ${settings.pensionDay} числа`;
   }
 
-    const btnMarkPension = document.getElementById('btn-mark-pension');
-    const pensionStatusText = document.getElementById('pension-status-text');
-    const pensionDateDisplay = document.getElementById('pension-date-display');
+  const btnMarkPension = document.getElementById('btn-mark-pension');
+  const pensionStatusText = document.getElementById('pension-status-text');
+  const pensionDateDisplay = document.getElementById('pension-date-display');
 
-    if (btnMarkPension && pensionStatusText && pensionDateDisplay) {
-      // === ИСПРАВЛЕНИЕ НАБЛЮДЕНИЯ 25 ===
-      // Флаг привязан к наличию даты начала периода, а не к календарному месяцу.
-      // Пока currentPeriodStart установлен, пенсия за этот период считается полученной.
-      const isMarked = !!settings.currentPeriodStart;
-      // ================================
+  if (btnMarkPension && pensionStatusText && pensionDateDisplay) {
+    const isMarked = !!settings.currentPeriodStart;
+    const incomeName = settings.incomeName || 'Пенсия';
 
-      if (isMarked) {
-        btnMarkPension.style.display = 'none';
-        pensionStatusText.style.display = 'flex';
-        const d = new Date(settings.currentPeriodStart);
-        const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
-        pensionDateDisplay.textContent = `✅ Пенсия получена: ${dateStr}`;
-      } else {
-        // Кнопка отметки пенсии видна только для "Все счета" или счёта по умолчанию
-        if (
-          currentTodayAccountId === 'all' ||
-          currentTodayAccountId === settings.defaultAccountId
-        ) {
-          btnMarkPension.style.display = 'block';
-        } else {
-          btnMarkPension.style.display = 'none';
-        }
-        pensionStatusText.style.display = 'none';
-      }
+    document.getElementById('remaining-label').textContent = 'Осталось до следующего поступления';
+    document.getElementById('daily-limit-hint').textContent = 'чтобы хватило до следующего поступления';
+
+    if (isMarked) {
+      btnMarkPension.style.display = 'none';
+      pensionStatusText.style.display = 'flex';
+      const d = new Date(settings.currentPeriodStart);
+      const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+      pensionDateDisplay.textContent = `✅ Поступление: ${incomeName} (${dateStr})`;
+    } else {
+      btnMarkPension.style.display = (currentTodayAccountId === 'all' || currentTodayAccountId === settings.defaultAccountId) ? 'block' : 'none';
+      pensionStatusText.style.display = 'none';
     }
+  }
 
   const noReserveWarning = document.getElementById('no-reserve-warning');
-  if (noReserveWarning) {
-    noReserveWarning.style.display = settings.reserveAmount <= 0 ? 'flex' : 'none';
-  }
+  if (noReserveWarning) noReserveWarning.style.display = settings.reserveAmount <= 0 ? 'flex' : 'none';
 
   const btnUseReserve = document.getElementById('btn-use-reserve');
-  if (btnUseReserve) {
-    btnUseReserve.style.display = settings.reserveAmount > 0 ? 'block' : 'none';
-  }
+  if (btnUseReserve) btnUseReserve.style.display = settings.reserveAmount > 0 ? 'block' : 'none';
 }
 
 // Отрисовка списка транзакций с группировкой по дням и раздельными итогами
@@ -367,6 +347,33 @@ export function renderTransactionList(transactions, pensionDay) {
 export function renderSettings(settings, fixedExpenses) {
   document.getElementById('input-initial-balance').value =
     settings.initialBalance || 0;
+
+  // === НОВОЕ: Восстанавливаем выбранный источник дохода ===
+  const incomeSelect = document.getElementById('select-income-type');
+  if (incomeSelect) {
+    const incomeName = settings.incomeName || 'Пенсия';
+    // Если значение есть в списке — выбираем его, иначе "Свой вариант"
+    const optionExists = Array.from(incomeSelect.options).some(
+      (opt) => opt.value === incomeName,
+    );
+    if (optionExists) {
+      incomeSelect.value = incomeName;
+      document.getElementById('custom-income-label').style.display = 'none';
+    } else {
+      incomeSelect.value = 'custom';
+      document.getElementById('custom-income-label').style.display = 'block';
+      document.getElementById('input-custom-income').value = incomeName;
+    }
+  }
+  // ==========================================
+
+  // Динамически меняем метку "Размер пенсии" → "Размер [дохода]"
+  const incomeAmountLabel = document.getElementById('income-amount-label');
+  if (incomeAmountLabel) {
+    const displayName = settings.incomeName || 'Пенсия';
+    incomeAmountLabel.textContent = `Сумма поступления`;
+  }
+
   document.getElementById('input-pension').value = settings.pensionAmount || 0;
   document.getElementById('input-pension-day').value = settings.pensionDay;
   document.getElementById('input-reserve').value = settings.reserveAmount || 0;
@@ -396,22 +403,38 @@ export function renderSettings(settings, fixedExpenses) {
   initMoneyFields();
   renderPensionPeriodInfo(settings);
 
-  const allTransactions = window.appData ? window.appData.transactions : [];
-  updateSyncIndicator(allTransactions, settings.lastExportDate);
-
   // Отображаем архивные периоды
   renderArchivesList();
+
+  // === ДИНАМИЧЕСКАЯ НАДПИСЬ "Текущий период" (v2.1, Идея 1) ===
+  const currentPeriodLabel = document.getElementById('current-period-label');
+  if (currentPeriodLabel) {
+    const incomeName = settings.incomeName || 'Пенсия';
+    currentPeriodLabel.textContent = `📅 Текущий период: ${incomeName}`;
+  }
+  // ============================================================
+
+  // === Восстанавливаем видимость поля "День получения" при загрузке (v2.1) ===
+  const pensionDayLabel = document
+    .getElementById('input-pension-day')
+    .closest('.settings-label');
+  if (pensionDayLabel) {
+    const currentIncomeName = settings.incomeName || 'Пенсия';
+    const isRegular = REGULAR_INCOME_TYPES.includes(currentIncomeName);
+    pensionDayLabel.style.display = isRegular ? 'block' : 'none';
+  }
+  // ==========================================================================
 }
 
-export function updateSyncIndicator(transactions, lastExportDate) {
+export function updateSyncIndicator(transactions, lastModifiedDate) {
   const indicatorText = document.getElementById('sync-indicator-text');
   if (!indicatorText) return;
 
   const count = transactions ? transactions.length : 0;
-  let dateStr = 'не экспортировалось';
+  let dateStr = 'не сохранялось'; // Более честная начальная фраза
 
-  if (lastExportDate) {
-    const date = new Date(lastExportDate);
+  if (lastModifiedDate) {
+    const date = new Date(lastModifiedDate);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
@@ -421,8 +444,11 @@ export function updateSyncIndicator(transactions, lastExportDate) {
     dateStr = `${day}.${month}.${year}, ${hours}:${minutes}`;
   }
 
-  indicatorText.textContent = `Записей: ${count} | Обновлено: ${dateStr}`;
+  // Меняем слово "Обновлено" на "Сохранено"
+  indicatorText.textContent = `Записей: ${count} | Сохранено: ${dateStr}`;
 }
+
+  
 
 // Обновление всей страницы
 export function renderAll(data) {
@@ -864,6 +890,10 @@ export function renderPensionPeriodInfo(settings) {
   const currentAppData = window.appData || { settings: settings };
   const appSettings = currentAppData.settings;
 
+  // === ДИНАМИЧЕСКОЕ НАЗВАНИЕ ДОХОДА (v2.1) ===
+  const incomeName = appSettings.incomeName || 'Пенсия';
+  // ============================================
+
   if (appSettings.currentPeriodStart) {
     const startDate = new Date(appSettings.currentPeriodStart);
     const pensionDay = appSettings.pensionDay;
@@ -881,13 +911,35 @@ export function renderPensionPeriodInfo(settings) {
 
     periodInfoEl.innerHTML = `
       <div class="period-info__row"><span class="period-info__label">Начало периода:</span><span class="period-info__value">${formatDate(startDate)}</span></div>
-      <div class="period-info__row"><span class="period-info__label">Следующая пенсия:</span><span class="period-info__value">${formatDate(nextPensionDate)}</span></div>
+      <div class="period-info__row"><span class="period-info__label">Конец периода:</span><span class="period-info__value">${formatDate(nextPensionDate)}</span></div>
       <div class="period-info__row"><span class="period-info__label">Осталось дней:</span><span class="period-info__value">${daysLeft}</span></div>
       <button class="btn-new-period" id="btn-new-period">🔄 Изменить или сбросить период</button>
     `;
   } else {
-    periodInfoEl.innerHTML =
-      '<em>Период ещё не начат. Отметьте поступление пенсии на главном экране.</em>';
+    // === НОВОЕ: Показываем ожидаемые даты вместо "Период ещё не начат" ===
+    const pensionDay = appSettings.pensionDay || 23;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Ожидаемая дата начала = сегодня (или ближайший день получения)
+    const expectedStart = new Date(today);
+    const expectedEnd = new Date(today);
+    expectedEnd.setMonth(expectedEnd.getMonth() + 1);
+    expectedEnd.setDate(pensionDay);
+
+    const formatDate = (date) =>
+      `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+
+    periodInfoEl.innerHTML = `
+      <div class="period-info__row">
+        <span class="period-info__label">Ожидаемый период:</span>
+        <span class="period-info__value">${formatDate(expectedStart)} — ${formatDate(expectedEnd)}</span>
+      </div>
+      <div class="period-info__row">
+        <em>Период ещё не начат. Отметьте поступление ${incomeName.toLowerCase()} на главном экране.</em>
+      </div>
+    `;
+    // ============================================
   }
 }
     
@@ -949,7 +1001,7 @@ if (btnNewPeriod) {
 }
 
 // ==========================================
-// 2. КНОПКА "ЗАКРЫТЬ ПЕРИОД И СОЗДАТЬ АРХИВ" (Новая логика v2.1)
+// 2. КNOПКА "ЗАКРЫТЬ ПЕРИОД И СОЗДАТЬ АРХИВ" (Исправлено v2.1)
 // ==========================================
 const btnClosePeriod = document.getElementById('btn-close-period');
 if (btnClosePeriod) {
@@ -957,7 +1009,7 @@ if (btnClosePeriod) {
     const appData = window.appData;
     if (!appData || !appData.settings.currentPeriodStart) {
       alert(
-        '⚠️ Нет активного периода для закрытия. Сначала отметьте получение пенсии.',
+        '⚠️ Нет активного периода для закрытия. Сначала отметьте получение дохода.',
       );
       return;
     }
@@ -966,6 +1018,8 @@ if (btnClosePeriod) {
     const periodTransactions = appData.transactions.filter((tx) => {
       return new Date(tx.date) >= periodStart;
     });
+
+    const incomeName = appData.settings.incomeName || 'Пенсия';
 
     const confirmMsg = `
 🔒 ЗАКРЫТИЕ ПЕРИОДА
@@ -982,39 +1036,51 @@ if (btnClosePeriod) {
     `.trim();
 
     if (confirm(confirmMsg)) {
-      // === ИСПРАВЛЕНИЕ: передаём рассчитанный баланс ===
       const calculatedBalance = calculateDailyLimit(
         appData.settings,
         appData.fixedExpenses,
         appData.transactions,
       );
       const archive = archiveCurrentPeriod(appData, calculatedBalance);
-      // ================================================
 
       if (archive) {
         alert(
           `✅ Период ${archive.periodId} успешно архивирован!\nОстаток ${archive.finalBalance.toFixed(2)} ₽ перенесён.`,
         );
 
-        // Обновляем весь интерфейс
-        if (typeof renderPensionPeriodInfo === 'function')
+        // === ПОЛНОЕ ОБНОВЛЕНИЕ ИНТЕРФЕЙСА БЕЗ ПЕРЕЗАГРУЗКИ (v2.1) ===
+        if (typeof renderPensionPeriodInfo === 'function') {
           renderPensionPeriodInfo(appData.settings);
-        if (typeof renderTodayScreen === 'function')
+        }
+        if (typeof renderTodayScreen === 'function') {
           renderTodayScreen(
             appData.settings,
             appData.fixedExpenses,
             appData.transactions,
           );
-        if (typeof renderStats === 'function')
+        }
+        if (typeof renderStats === 'function') {
           renderStats(
             appData.settings,
             appData.fixedExpenses,
             appData.transactions,
           );
+        }
+        // ✅ ДОБАВЛЕНО: Обновляем настройки (это обновит фиолетовый блок и поля!)
+        if (typeof renderSettings === 'function') {
+          renderSettings(appData.settings, appData.fixedExpenses);
+        }
+        // ✅ ДОБАВЛЕНО: Обновляем историю (чтобы список транзакций очистился/обновился)
+        if (typeof renderTransactionList === 'function') {
+          renderTransactionList(appData.transactions, appData.settings.pensionDay);
+        }
+        // ============================================================
 
-        // Обновляем поле initialBalance в настройках
+        // Синхронизируем поле initialBalance визуально (на всякий случай)
         const initialInput = document.getElementById('input-initial-balance');
-        if (initialInput) initialInput.value = archive.finalBalance.toFixed(2);
+        if (initialInput) {
+          initialInput.value = archive.finalBalance.toFixed(2).replace('.', ',');
+        }
       }
     }
   });
@@ -1287,3 +1353,126 @@ function viewArchiveDetails(archive) {
 
   document.body.appendChild(modal);
 }
+
+// === Обработчик изменения источника дохода (v2.1, Идея 1) ===
+document.addEventListener('DOMContentLoaded', () => {
+  const incomeSelect = document.getElementById('select-income-type');
+  const customLabel = document.getElementById('custom-income-label');
+  const customInput = document.getElementById('input-custom-income');
+
+    if (incomeSelect) {
+      incomeSelect.addEventListener('change', (e) => {
+        const selectedValue = e.target.value;
+
+        // 1. Показываем/скрываем поле "Свой вариант"
+        if (selectedValue === 'custom') {
+          customLabel.style.display = 'block';
+          customInput.focus();
+        } else {
+          customLabel.style.display = 'none';
+          customInput.value = '';
+        }
+
+        // 2. Определяем итоговое имя дохода
+        const finalIncomeName =
+          selectedValue === 'custom'
+            ? customInput.value.trim() || 'Пенсия'
+            : selectedValue;
+
+        // 3. === НОВОЕ: Проверяем, регулярный ли это доход ===
+        const isRegular = REGULAR_INCOME_TYPES.includes(finalIncomeName);
+        const pensionDayLabel = document
+          .getElementById('input-pension-day')
+          .closest('.settings-label');
+
+        if (pensionDayLabel) {
+          if (isRegular) {
+            pensionDayLabel.style.display = 'block'; // Показываем поле "День получения"
+          } else {
+            pensionDayLabel.style.display = 'none'; // Скрываем поле "День получения"
+            document.getElementById('input-pension-day').value = ''; // Очищаем его
+          }
+        }
+        // ==========================================
+
+        // 4. Сохраняем в localStorage и window.appData
+        const appData = JSON.parse(
+          localStorage.getItem('pensionBudget') || '{}',
+        );
+        appData.settings = appData.settings || {};
+        appData.settings.incomeName = finalIncomeName;
+
+        // Если доход нерегулярный, обнуляем день получения в данных
+        if (!isRegular) {
+          appData.settings.pensionDay = null;
+        }
+
+        localStorage.setItem('pensionBudget', JSON.stringify(appData));
+
+        if (window.appData) {
+          window.appData.settings.incomeName = finalIncomeName;
+          if (!isRegular) {
+            window.appData.settings.pensionDay = null;
+          }
+        }
+
+        // 5. Мгновенное обновление интерфейса
+        const incomeAmountLabel = document.getElementById(
+          'income-amount-label',
+        );
+        if (incomeAmountLabel) {
+          incomeAmountLabel.textContent = 'Сумма поступления';
+        }
+
+        const currentPeriodLabel = document.getElementById(
+          'current-period-label',
+        );
+        if (currentPeriodLabel) {
+          currentPeriodLabel.textContent = `📅 Текущий период: ${finalIncomeName}`;
+        }
+
+        if (typeof renderTodayScreen === 'function' && window.appData) {
+          renderTodayScreen(
+            window.appData.settings,
+            window.appData.fixedExpenses,
+            window.appData.transactions,
+          );
+        }
+
+        console.log(
+          '✅ Источник дохода:',
+          finalIncomeName,
+          isRegular ? '(регулярный)' : '(нерегулярный)',
+        );
+      });
+    }
+
+  // Обработчик для поля "Свой вариант" (чтобы обновлялось при вводе текста)
+  if (customInput) {
+    customInput.addEventListener('input', (e) => {
+      const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+      appData.settings = appData.settings || {};
+      appData.settings.incomeName = e.target.value.trim() || 'Пенсия';
+      localStorage.setItem('pensionBudget', JSON.stringify(appData));
+      
+      if (window.appData) {
+        window.appData.settings.incomeName = appData.settings.incomeName;
+      }
+
+      // Мгновенно обновляем фиолетовый блок и главный экран
+      const currentPeriodLabel = document.getElementById('current-period-label');
+      if (currentPeriodLabel) {
+        currentPeriodLabel.textContent = `📅 Текущий период: ${appData.settings.incomeName}`;
+      }
+
+      if (typeof renderTodayScreen === 'function' && window.appData) {
+        renderTodayScreen(
+          window.appData.settings,
+          window.appData.fixedExpenses,
+          window.appData.transactions
+        );
+      }
+    });
+  }
+});
+// ============================================================

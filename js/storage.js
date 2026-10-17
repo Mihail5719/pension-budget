@@ -81,7 +81,17 @@ export function loadData() {
 
 export function saveData(data) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // === НОВОЕ: Записываем текущее время как момент последнего изменения ===
+    data.lastModified = new Date().toISOString();
+    // =====================================================================
+
+    localStorage.setItem('pensionBudget', JSON.stringify(data)); // Убедитесь, что ключ 'pensionBudget' совпадает с вашим
+
+    // === НОВОЕ: Сразу обновляем индикатор после сохранения ===
+    if (typeof updateSyncIndicator === 'function') {
+      updateSyncIndicator(data.transactions, data.lastModified);
+    }
+    // =========================================================
   } catch (e) {
     console.error('Ошибка сохранения данных:', e);
   }

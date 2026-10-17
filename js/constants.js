@@ -126,13 +126,24 @@ export const SUBCATEGORIES = {
   ],
 };
 
-// ─── Список категорий доходов (v2.0) ───
+// ─── Список категорий доходов (v2.1, расширенный) ───
 export const INCOME_CATEGORIES = [
+  // === Новые методологически важные категории ===
+  { id: 'advance', name: 'Аванс', emoji: '💵' },
+  { id: 'bonus', name: 'Премия', emoji: '🏆' },
+  { id: 'freelance', name: 'Фриланс', emoji: '💻' },
+  { id: 'rental', name: 'Сдача в аренду', emoji: '🏠' },
+  { id: 'sick_leave', name: 'Больничный', emoji: '🤒' },
+  { id: 'alimony', name: 'Алименты', emoji: '👨‍👧' },
+  { id: 'dividends', name: 'Дивиденды', emoji: '📈' },
+  
+  // === Существующие категории (id сохранены для совместимости старых данных) ===
+  { id: 'work', name: 'Подработка', emoji: '💼' },
   { id: 'gift', name: 'Подарки', emoji: '🎁' },
   { id: 'help', name: 'Помощь от детей/родственников', emoji: '👪' },
-  { id: 'work', name: 'Подработка', emoji: '💼' },
-  { id: 'debt', name: 'Возврат долга', emoji: '' },
-  { id: 'refund', name: 'Возврат переплаты', emoji: '💸' }, // Новое
-  { id: 'interest', name: 'Проценты по счёту', emoji: '📈' }, // Новое
-  { id: 'other', name: 'Разное', emoji: '' }, // Глобальное переименование
+  { id: 'debt', name: 'Возврат долга', emoji: '💰' },
+  { id: 'refund', name: 'Возврат переплаты', emoji: '💸' },
+  { id: 'interest', name: 'Проценты по счёту', emoji: '🏦' },
+  { id: 'other', name: 'Разное', emoji: '📦' },
 ];
+// ─── конец списка категорий доходов ───

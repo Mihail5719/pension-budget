@@ -1818,6 +1818,25 @@ input[type='tel'] {
     color: #7f8c8d;
 }
 
+/* Стилизация select как input в настройках (v2.1) */
+.settings-input[type="text"],
+.settings-input[type="number"],
+select.settings-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+  background: white;
+  cursor: pointer;
+  appearance: auto; /* показывает стрелочку выпадающего списка */
+}
+
+select.settings-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)

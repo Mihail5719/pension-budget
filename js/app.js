@@ -49,10 +49,6 @@ function init() {
       window.location.hash = '#screen-today';
     }
   }
-  // Если хэш не задан — показываем главный экран
-  if (!window.location.hash || window.location.hash === '#') {
-    window.location.hash = '#screen-today';
-  }
 
   // Загружаем данные
   appData = loadData();
@@ -78,13 +74,25 @@ function init() {
       renamedAny = true;
     }
   });
+
   if (renamedAny) {
-    saveData(appData);
+    saveData(appData); // saveData теперь сам обновит lastModified и индикатор
     console.log('🔄 Миграция: имена обновлены');
   }
 
   // Отрисовываем всё
   renderAll(appData);
+
+  // === НОВОЕ: Обновляем индикатор синхронизации при загрузке страницы ===
+  if (typeof updateSyncIndicator === 'function') {
+    // Берем реальное время последнего изменения, или время экспорта, или текущее время
+    const timeToShow =
+      appData.lastModified ||
+      appData.settings.lastExportDate ||
+      new Date().toISOString();
+    updateSyncIndicator(appData.transactions, timeToShow);
+  }
+  // ======================================================================
 
   // Навешиваем обработчики
   setupEventListeners();
@@ -668,7 +676,7 @@ if (btnCancelTransfer) {
   btnCancelTransfer.addEventListener('click', closeTransferModal);
 }
 
-// Сохранение дохода (v2.3)
+// Сохранение дохода (v2.3 + исправление индикатора)
 function saveIncome() {
   const categoryId = incomeCategorySelect.value;
   const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
@@ -676,11 +684,10 @@ function saveIncome() {
   // Получаем выбранный счёт
   const accountId = document.getElementById('income-account').value;
 
-  // === НОВОЕ: Получаем предмет и источник ===
-  const itemValue = document.getElementById('edit-item').value.trim();
-  const storeValue = document.getElementById('edit-store').value.trim();
-  const noteValue = document.getElementById('edit-note').value.trim(); // НОВОЕ
-  // ============================================
+  // === ИСПРАВЛЕНО: Получаем предмет и источник из правильных полей модалки дохода ===
+  const itemValue = document.getElementById('income-item')?.value.trim() || '';
+  const storeValue = document.getElementById('income-store')?.value.trim() || '';
+  // ==================================================================================
 
   // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
@@ -689,7 +696,7 @@ function saveIncome() {
     return;
   }
 
-  // 2. Создаём и сохраняем транзакцию (передаем все новые поля!)
+  // 2. Создаём и сохраняем транзакцию
   createIncome(appData, {
     categoryId,
     amount,
@@ -698,10 +705,17 @@ function saveIncome() {
     accountId,
   });
 
+  // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
+  saveData(appData);
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ============================================================
+
   // 3. UI-реакция: очищаем поля, закрываем модалку и перерисовываем экраны
   incomeAmountInput.value = '';
-  document.getElementById('income-item').value = ''; // ← НОВОЕ
-  document.getElementById('income-store').value = ''; // ← НОВОЕ
+  document.getElementById('income-item').value = ''; 
+  document.getElementById('income-store').value = ''; 
 
   closeIncomeModal();
 
@@ -874,10 +888,27 @@ function saveExpense() {
       accountId,
     });
 
+    // 2. Создаём и сохраняем через модуль (передаем accountId!)
+  createExpense(appData, {
+    categoryId,
+    amount,
+    subId,
+    item: itemValue,
+    store: storeValue,
+    accountId,
+  });
+
+  // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
+  saveData(appData);
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ============================================================
+
   // 3. UI-реакция
-    document.getElementById('expense-item').value = ''; // Очищаем поле
-    document.getElementById('expense-store').value = ''; // ← НОВОЕ
-    closeExpenseModal();
+  document.getElementById('expense-item').value = ''; // Очищаем поле
+  document.getElementById('expense-store').value = ''; // ← НОВОЕ
+  closeExpenseModal();
 
   renderTodayScreen(
     appData.settings,
@@ -887,6 +918,7 @@ function saveExpense() {
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
   console.log('✅ Добавлен расход, категория:', categoryId, 'сумма:', amount, 'счёт:', accountId);
+
 }
 
 
@@ -1030,6 +1062,21 @@ function handleSettingsChange() {
   // Сохраняем
   saveData(appData);
 
+    // Обновляем данные
+  appData.settings.initialBalance = initialBalance; // ← НОВАЯ СТРОКА
+  appData.settings.pensionAmount = pensionAmount;
+  appData.settings.pensionDay = pensionDay;
+  appData.settings.reserveAmount = reserveAmount;
+
+  // Сохраняем
+  saveData(appData);
+
+  // === НОВОЕ: Обновляем индикатор после изменения настроек ===
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ============================================================
+
   // Перерисовываем
   renderTodayScreen(
     appData.settings,
@@ -1038,6 +1085,7 @@ function handleSettingsChange() {
   );
 
   console.log('Настройки обновлены', appData.settings);
+
 }
 
 // Обработчик добавления платежа
@@ -1082,55 +1130,64 @@ function handleAddPayment() {
   );
 }
 
-// Обработчик клика по кнопкам удаления
+// Обработчик клика по кнопкам удаления и редактирования
 function handleDeleteClick(event) {
   const target = event.target;
 
-  // Редактирование транзакции
+  // 1. Редактирование транзакции
   if (target.dataset.action === 'edit-transaction') {
     const transactionId = parseInt(target.dataset.id);
     openEditModal(transactionId);
     return; // Выходим, чтобы не срабатывали другие обработчики
   }
 
-  // Удаление транзакции (расхода)
+  // 2. Удаление транзакции (расхода)
   if (target.dataset.action === 'delete-transaction') {
     const transactionId = parseInt(target.dataset.id);
-    // Находим транзакцию ДО удаления, чтобы узнать её тип и сумму
-    const transaction = appData.transactions.find(
-      (t) => t.id === transactionId,
-    );
-
     if (confirm('Удалить эту запись о расходе?')) {
       deleteTransaction(appData, transactionId);
+      
+      // === НОВОЕ: Сохраняем и обновляем индикатор после удаления ===
+      saveData(appData);
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      // ============================================================
+      
       renderAll(appData);
       console.log('Транзакция удалена:', transactionId);
     }
   }
 
-  // Удаление дохода
+  // 3. Удаление дохода
   if (target.dataset.action === 'delete-income') {
     const transactionId = parseInt(target.dataset.id);
     if (confirm('Удалить эту запись о доходе?')) {
       appData.transactions = appData.transactions.filter(
         (t) => t.id !== transactionId,
       );
+      
+      // === НОВОЕ: Явно сохраняем и обновляем индикатор ===
       saveData(appData);
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      // ==================================================
+      
       renderAll(appData);
       console.log('Доход удалён:', transactionId);
     }
   }
 
-  // Редактирование платежа
+  // 4. Редактирование платежа
   if (target.dataset.action === 'edit-payment') {
     const paymentId = parseInt(target.dataset.id);
     const payment = appData.fixedExpenses.find((p) => p.id === paymentId);
 
     if (payment) {
       const newName = prompt('Название платежа:', payment.name);
-      if (newName === null) return; // Отмена
+      if (newName === null) return;
 
-      // 1. Показываем уже отформатированную сумму для удобства
       const currentAmountFormatted = formatMoney(payment.amount);
       const newAmountStr = prompt(
         `Сумма (текущая: ${currentAmountFormatted}):`,
@@ -1138,7 +1195,6 @@ function handleDeleteClick(event) {
       );
       if (newAmountStr === null) return;
 
-      // 2. Умная очистка: убираем пробелы, знак ₽ и заменяем запятую на точку
       const cleanAmountStr = newAmountStr
         .replace(/\s/g, '')
         .replace('₽', '')
@@ -1160,24 +1216,35 @@ function handleDeleteClick(event) {
         return;
       }
 
-      // Обновляем данные
       payment.name = newName.trim();
       payment.amount = newAmount;
       payment.day = newDay;
 
-      saveData(appData);
+      saveData(appData); // saveData уже обновит индикатор, но для надёжности:
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      
       renderAll(appData);
       console.log('Платёж обновлён:', payment);
     }
   }
-  // Удаление платежа
+
+  // 5. Удаление платежа
   if (target.dataset.action === 'delete-payment') {
     const paymentId = parseInt(target.dataset.id);
     if (confirm('Удалить этот обязательный платёж?')) {
       appData.fixedExpenses = appData.fixedExpenses.filter(
         (p) => p.id !== paymentId,
       );
+      
+      // === НОВОЕ: Сохраняем и обновляем индикатор ===
       saveData(appData);
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      // ================================================
+      
       renderAll(appData);
       console.log('Платёж удалён:', paymentId);
     }
@@ -1385,10 +1452,12 @@ function saveEditTransaction() {
 
   // 1. Получаем базовые значения
   const categoryId = document.getElementById('edit-category').value;
-  const amount = parseFloat(document.getElementById('edit-amount').value.replace(',', '.'));
+  const amount = parseFloat(
+    document.getElementById('edit-amount').value.replace(',', '.'),
+  );
   const dateStr = document.getElementById('edit-date').value;
   const accountId = document.getElementById('edit-account').value;
-  
+
   // === НОВОЕ: Читаем комментарий (работает и для расходов, и для переводов) ===
   const noteValue = document.getElementById('edit-note')?.value.trim() || '';
   // ===========================================================================
@@ -1412,7 +1481,9 @@ function saveEditTransaction() {
   }
 
   // 4. Находим транзакцию
-  const transactionIndex = appData.transactions.findIndex((t) => t.id === editingTransactionId);
+  const transactionIndex = appData.transactions.findIndex(
+    (t) => t.id === editingTransactionId,
+  );
   if (transactionIndex === -1) {
     alert('Транзакция не найдена');
     return;
@@ -1455,7 +1526,11 @@ function saveEditTransaction() {
   // 6. Создаём новую дату (сохраняем оригинальное время)
   const originalDate = new Date(originalTransaction.date);
   const newDate = new Date(dateStr);
-  newDate.setHours(originalDate.getHours(), originalDate.getMinutes(), originalDate.getSeconds());
+  newDate.setHours(
+    originalDate.getHours(),
+    originalDate.getMinutes(),
+    originalDate.getSeconds(),
+  );
 
   // 7. Обновляем транзакцию
   const updatedTransaction = {
@@ -1467,23 +1542,40 @@ function saveEditTransaction() {
     item: itemValue,
     store: storeValue,
     note: noteValue, // === НОВОЕ: Сохраняем комментарий ===
-    accountId: accountId || originalTransaction.accountId || appData.settings.defaultAccountId,
+    accountId:
+      accountId ||
+      originalTransaction.accountId ||
+      appData.settings.defaultAccountId,
   };
 
   // Если это перевод — обновляем счета "Откуда" и "Куда"
   if (originalTransaction.type === 'transfer') {
-    updatedTransaction.fromAccountId = document.getElementById('edit-transfer-from')?.value || originalTransaction.fromAccountId;
-    updatedTransaction.toAccountId = document.getElementById('edit-transfer-to')?.value || originalTransaction.toAccountId;
+    updatedTransaction.fromAccountId =
+      document.getElementById('edit-transfer-from')?.value ||
+      originalTransaction.fromAccountId;
+    updatedTransaction.toAccountId =
+      document.getElementById('edit-transfer-to')?.value ||
+      originalTransaction.toAccountId;
   }
 
   appData.transactions[transactionIndex] = updatedTransaction;
 
   // 8. Сохраняем данные и перерисовываем интерфейс
   saveData(appData);
+
+  // === НОВОЕ: Гарантируем обновление индикатора после редактирования ===
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ====================================================================
+
   closeEditModal();
   renderAll(appData);
 
-  console.log('✅ Транзакция обновлена:', appData.transactions[transactionIndex]);
+  console.log(
+    '✅ Транзакция обновлена:',
+    appData.transactions[transactionIndex],
+  );
 }
 
 // === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===
@@ -1507,7 +1599,7 @@ function handleExport() {
   saveData(appData);
 
   // ✅ Обновляем индикатор на экране
-  updateSyncIndicator(appData.transactions, appData.settings.lastExportDate);
+  updateSyncIndicator(appData.transactions, appData.lastModified);
 
   alert('✅ Данные успешно сохранены в файл!');
 }
@@ -1548,14 +1640,13 @@ function processImportedFile(event) {
 
       // 3. Заменяем данные
       appData = importedData;
-      window.appData = appData; // Синхронизируем с глобальной областью видимости
+      window.appData = appData;
 
-      // 4. === СТРАХОВКА: Гарантируем наличие новых структур (обратная совместимость, v2.5) ===
+      // 4. === СТРАХОВКА: Гарантируем наличие новых структур (v2.5) ===
       if (
         !appData.settings.accounts ||
         appData.settings.accounts.length === 0
       ) {
-        // Если импортирован старый файл без счетов, создаём дефолтный
         appData.settings.accounts = [
           {
             id: 'account_default_' + Date.now(),
@@ -1564,15 +1655,17 @@ function processImportedFile(event) {
           },
         ];
         appData.settings.defaultAccountId = appData.settings.accounts[0].id;
-        console.log(
-          '⚠️ При импорте создан счёт по умолчанию для совместимости',
-        );
+        console.log('️ При импорте создан счёт по умолчанию для совместимости');
       }
 
       if (!appData.settings.lastExportDate) {
         appData.settings.lastExportDate = new Date().toISOString();
       }
-      // ================================================================================
+
+      // === НОВОЕ: Всегда обновляем lastModified на время импорта ===
+      appData.lastModified = new Date().toISOString();
+      console.log('🕐 Время импорта:', appData.lastModified);
+      // ============================================================
 
       // 5. Сохраняем и перерисовываем
       saveData(appData);
@@ -1580,9 +1673,10 @@ function processImportedFile(event) {
 
       // 6. Принудительно обновляем индикатор синхронизации
       if (typeof updateSyncIndicator === 'function') {
+        // ИСПРАВЛЕНО: передаём lastModified вместо lastExportDate
         updateSyncIndicator(
           appData.transactions,
-          appData.settings.lastExportDate,
+          appData.lastModified, // ← Было: appData.settings.lastExportDate
         );
       }
 
@@ -1594,8 +1688,6 @@ function processImportedFile(event) {
   };
 
   reader.readAsText(file);
-
-  // Сбрасываем input, чтобы можно было импортировать тот же файл повторно
   event.target.value = '';
 }
 
