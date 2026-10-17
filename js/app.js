@@ -1707,7 +1707,7 @@ function processImportedFile(event) {
       appData = importedData;
       window.appData = appData;
 
-      // 4. === СТРАХОВКА: Гарантируем наличие новых структур (v2.5) ===
+      // 4. Страховка совместимости (v2.5)
       if (
         !appData.settings.accounts ||
         appData.settings.accounts.length === 0
@@ -1716,34 +1716,66 @@ function processImportedFile(event) {
           {
             id: 'account_default_' + Date.now(),
             name: 'Основной счёт',
+            emoji: '💼',
             color: '#3498db',
           },
         ];
         appData.settings.defaultAccountId = appData.settings.accounts[0].id;
-        console.log('️ При импорте создан счёт по умолчанию для совместимости');
       }
 
       if (!appData.settings.lastExportDate) {
         appData.settings.lastExportDate = new Date().toISOString();
       }
 
-      // === НОВОЕ: Всегда обновляем lastModified на время импорта ===
-      appData.lastModified = new Date().toISOString();
-      console.log('🕐 Время импорта:', appData.lastModified);
-      // ============================================================
+      // === КРИТИЧЕСКИ ВАЖНО: Миграция транзакций без accountId (v2.1) ===
+      const defaultAccountId =
+        appData.settings.defaultAccountId || appData.settings.accounts[0].id;
+      let migratedCount = 0;
 
-      // 5. Сохраняем и перерисовываем
-      saveData(appData);
-      renderAll(appData);
+      appData.transactions.forEach((t) => {
+        if (!t.accountId) {
+          t.accountId = defaultAccountId;
+          migratedCount++;
+        }
+      });
 
-      // 6. Принудительно обновляем индикатор синхронизации
-      if (typeof updateSyncIndicator === 'function') {
-        // ИСПРАВЛЕНО: передаём lastModified вместо lastExportDate
-        updateSyncIndicator(
-          appData.transactions,
-          appData.lastModified, // ← Было: appData.settings.lastExportDate
+      if (migratedCount > 0) {
+        console.log(
+          `🔄 Миграция: присвоен accountId для ${migratedCount} транзакций`,
         );
       }
+      // ====================================================================
+
+      // 5. Всегда обновляем lastModified на время импорта
+      appData.lastModified = new Date().toISOString();
+
+      // 6. Сохраняем данные
+      saveData(appData);
+
+      // 7. Обновляем индикатор синхронизации
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+
+      // 8. Явный пересчет баланса счетов ПОСЛЕ миграции
+      if (typeof renderAccountsList === 'function') {
+        renderAccountsList();
+        console.log('✅ Баланс счетов пересчитан после импорта');
+      }
+
+      // 9. Перерисовываем остальные экраны
+      renderTodayScreen(
+        appData.settings,
+        appData.fixedExpenses,
+        appData.transactions,
+      );
+      renderTransactionList(appData.transactions, appData.settings.pensionDay);
+      renderStats(
+        appData.settings,
+        appData.fixedExpenses,
+        appData.transactions,
+      );
+      renderSettings(appData.settings, appData.fixedExpenses);
 
       alert('✅ Данные успешно восстановлены!');
     } catch (error) {

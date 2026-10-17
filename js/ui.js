@@ -456,7 +456,7 @@ export function renderAll(data) {
   renderTransactionList(data.transactions, data.settings.pensionDay);
   renderStats(data.settings, data.fixedExpenses, data.transactions);
   renderSettings(data.settings, data.fixedExpenses);
-  renderAccountsList(data.settings.accounts, data.transactions);
+  // renderAccountsList вызывается явно в processImportedFile после миграции
 }
 
 function renderTodayPayments(payments) {
@@ -1129,21 +1129,29 @@ function initMoneyFields() {
   });
 }
 
-export function renderAccountsList(accounts, transactions) {
+export function renderAccountsList() {
   const container = document.getElementById('accounts-list');
   if (!container) return;
   container.innerHTML = '';
 
-  if (!accounts || accounts.length === 0) {
+  const appData = window.appData;
+  if (
+    !appData ||
+    !appData.settings ||
+    !appData.settings.accounts ||
+    appData.settings.accounts.length === 0
+  ) {
     container.innerHTML =
       '<p style="text-align: center; color: var(--text-secondary);">Нет добавленных счетов</p>';
     return;
   }
 
-  const periodStartStr = window.appData?.settings?.currentPeriodStart;
-  const initialBalance = window.appData?.settings?.initialBalance || 0;
-  const defaultAccountId = window.appData?.settings?.defaultAccountId;
-  const pensionAmount = window.appData?.settings?.pensionAmount || 0;
+  const accounts = appData.settings.accounts;
+  const transactions = appData.transactions || [];
+  const periodStartStr = appData.settings.currentPeriodStart;
+  const initialBalance = appData.settings.initialBalance || 0;
+  const defaultAccountId = appData.settings.defaultAccountId;
+  const pensionAmount = appData.settings.pensionAmount || 0;
   const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
 
   accounts.forEach((account) => {
@@ -1171,7 +1179,10 @@ export function renderAccountsList(accounts, transactions) {
 
     if (account.id === defaultAccountId) {
       balance += initialBalance;
-      balance += pensionAmount;
+      // Добавляем пенсию, так как она поступает в начале периода
+      if (periodStartDate) {
+        balance += pensionAmount;
+      }
     }
 
     const item = document.createElement('div');
@@ -1191,6 +1202,27 @@ export function renderAccountsList(accounts, transactions) {
     `;
     container.appendChild(item);
   });
+
+  // === ДИАГНОСТИКА ===
+  console.log('📊 [renderAccountsList] Отрисовка счетов:');
+  console.log('  periodStartDate:', periodStartDate);
+  console.log('  initialBalance:', initialBalance);
+  console.log('  pensionAmount:', pensionAmount);
+  console.log('  Всего транзакций в appData:', transactions.length);
+
+  // Считаем, сколько транзакций попало в каждый счёт
+  accounts.forEach((account) => {
+    const txsForAccount = transactions.filter(
+      (t) =>
+        t.accountId === account.id ||
+        t.fromAccountId === account.id ||
+        t.toAccountId === account.id,
+    );
+    console.log(
+      `  Счёт "${account.name}": всего транзакций ${txsForAccount.length}`,
+    );
+  });
+  // =================
 }
 
 /**
