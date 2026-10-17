@@ -127,7 +127,7 @@ function setupEventListeners() {
   expenseSaveBtn = document.getElementById('btn-save-expense');
   expenseCancelBtn = document.getElementById('btn-cancel-expense');
 
-    // Инициализация элементов модального окна доходов
+  // Инициализация элементов модального окна доходов
   incomeModal = document.getElementById('income-modal');
   incomeCategorySelect = document.getElementById('income-category');
   incomeAmountInput = document.getElementById('income-amount');
@@ -197,13 +197,14 @@ function setupEventListeners() {
   expenseSaveBtn.addEventListener('click', saveExpense);
   expenseCancelBtn.addEventListener('click', closeExpenseModal);
 
-    // Кнопки в модальном окне доходов
+  // Кнопки в модальном окне доходов
   incomeSaveBtn.addEventListener('click', saveIncome);
   incomeCancelBtn.addEventListener('click', closeIncomeModal);
 
   // === Кнопки в модальном окне переводов (v2.5) ===
   if (transferSaveBtn) transferSaveBtn.addEventListener('click', saveTransfer);
-  if (transferCancelBtn) transferCancelBtn.addEventListener('click', closeTransferModal);
+  if (transferCancelBtn)
+    transferCancelBtn.addEventListener('click', closeTransferModal);
   // ================================================
 
   // Закрытие по клику на оверлей (расходы)
@@ -213,7 +214,7 @@ function setupEventListeners() {
     }
   });
 
-    // Закрытие по клику на оверлей (доходы)
+  // Закрытие по клику на оверлей (доходы)
   incomeModal.addEventListener('click', (e) => {
     if (e.target === incomeModal.querySelector('.modal__overlay')) {
       closeIncomeModal();
@@ -230,19 +231,21 @@ function setupEventListeners() {
   }
   // ==================================================
 
-    // Закрытие по Escape и сохранение по Enter
+  // Закрытие по Escape и сохранение по Enter
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (expenseModal.classList.contains('is-open')) closeExpenseModal();
       if (incomeModal.classList.contains('is-open')) closeIncomeModal();
       // <-- НОВОЕ (v2.5)
-      if (transferModal && transferModal.classList.contains('is-open')) closeTransferModal(); 
+      if (transferModal && transferModal.classList.contains('is-open'))
+        closeTransferModal();
     }
     if (e.key === 'Enter') {
       if (expenseModal.classList.contains('is-open')) saveExpense();
       if (incomeModal.classList.contains('is-open')) saveIncome();
       // <-- НОВОЕ (v2.5)
-      if (transferModal && transferModal.classList.contains('is-open')) saveTransfer(); 
+      if (transferModal && transferModal.classList.contains('is-open'))
+        saveTransfer();
     }
   });
 
@@ -478,32 +481,94 @@ function setupEventListeners() {
       }
 
       if (editingAccountId) {
-        // Редактирование существующего счёта
+        // === 1. РЕДАКТИРОВАНИЕ существующего счёта ===
         const account = appData.settings.accounts.find(
           (a) => a.id === editingAccountId,
         );
         if (account) {
           account.name = name;
-          // Эмодзи и цвет больше не меняем — оставляем как есть (или можно установить пустые значения)
-          // account.emoji = '';
-          // account.color = '';
+
+          // Умное определение эмодзи и цвета
+          const lowerName = name.toLowerCase();
+          if (lowerName.includes('сбер')) {
+            account.emoji = '🏦';
+            account.color = '#27ae60';
+          } else if (
+            lowerName.includes('тинькофф') ||
+            lowerName.includes('т-банк') ||
+            lowerName.includes('т банк')
+          ) {
+            account.emoji = '🏦';
+            account.color = '#ffdd2d';
+          } else if (lowerName.includes('втб')) {
+            account.emoji = '🏦';
+            account.color = '#002882';
+          } else {
+            account.emoji = account.emoji || '💼';
+            account.color = account.color || '#3498db';
+          }
           console.log('✅ Счёт обновлён:', account);
         }
       } else {
-        // Добавление нового счёта
+        // === 2. ДОБАВЛЕНИЕ нового счёта ===
         const newAccount = {
           id: 'account_' + Date.now(),
           name: name,
-          emoji: '', // Пустой эмодзи
-          color: '#3498db', // Дефолтный синий цвет (на всякий случай)
+          emoji: '💼',
+          color: '#3498db',
         };
+
+        // Применяем умные цвета и к новому счёту тоже!
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes('сбер')) {
+          newAccount.emoji = '🏦';
+          newAccount.color = '#27ae60';
+        } else if (
+          lowerName.includes('тинькофф') ||
+          lowerName.includes('т-банк') ||
+          lowerName.includes('т банк')
+        ) {
+          newAccount.emoji = '🏦';
+          newAccount.color = '#ffdd2d';
+        } else if (lowerName.includes('втб')) {
+          newAccount.emoji = '🏦';
+          newAccount.color = '#002882';
+        }
+
         appData.settings.accounts.push(newAccount);
+
+        // === ВАЖНО: Если это первый счёт или defaultAccountId потерян, делаем его дефолтным ===
+        if (
+          !appData.settings.defaultAccountId ||
+          appData.settings.accounts.length === 1
+        ) {
+          appData.settings.defaultAccountId = newAccount.id;
+          console.log('🏆 Счёт назначен счетом по умолчанию:', newAccount.id);
+        }
+
         console.log('✅ Счёт добавлен:', newAccount);
       }
 
+      // === 3. ЕДИНОЕ сохранение и обновление интерфейса ===
       saveData(appData);
-      renderAccountsList(appData.settings.accounts, appData.transactions);
+
+      if (typeof window.updateReconcileBanner === 'function') {
+        window.updateReconcileBanner();
+      }
+      if (typeof renderAccountsList === 'function') {
+        renderAccountsList(appData.settings.accounts, appData.transactions);
+      }
+      if (typeof renderTodayScreen === 'function') {
+        renderTodayScreen(
+          appData.settings,
+          appData.fixedExpenses,
+          appData.transactions,
+        );
+      }
+
+      // Закрываем модалку и сбрасываем ID редактирования
       document.getElementById('account-modal').classList.remove('is-open');
+      editingAccountId = null;
     });
   }
 
