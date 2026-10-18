@@ -7,127 +7,30 @@ import {
   renderStats,
   renderPensionPeriodInfo,
   updateSyncIndicator,
+  renderAccountsList,
 } from './ui.js';
-import { formatDateKey, getCurrentPeriod, formatMoney } from './utils.js';
-import { calculateDailyLimit } from './budget.js';
-
-// ─── Предикаты типов операций (v2.0, коммит 2) ───
-const isIncome = (t) => t.type === 'income';
-const isExpense = (t) => t.type === 'expense';
-const isCommitted = (t) => t.type === 'committed';
-// деньги, покинувшие кошелёк: влияют на баланс,
-// но в круг жизни попадает только isExpense
-const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
-// ─── конец блока предикатов ───
-
-// Список категорий расходов (v2.0)
-const EXPENSE_CATEGORIES = [
-  { id: 'products', name: 'Продукты', emoji: '🛒' },
-  { id: 'pharmacy', name: 'Аптека', emoji: '💊' },
-  { id: 'transport', name: 'Транспорт', emoji: '🚗' },
-  { id: 'utilities', name: 'ЖКХ', emoji: '🏠' },
-  { id: 'communication', name: 'Связь', emoji: '📱' },
-  { id: 'health', name: 'Здоровье', emoji: '🩺' },
-  { id: 'gifts', name: 'Подарки', emoji: '🎁' },
-  { id: 'home', name: 'Для дома', emoji: '🏡' },
-  { id: 'clothes', name: 'Одежда', emoji: '👕' },
-  { id: 'other', name: 'Разное', emoji: '📦' }, // Глобальное переименование
-  { id: 'study', name: 'Учёба', emoji: '🎓' },
-  { id: 'savings', name: 'Накопления', emoji: '🏦' },
-];
-
-// Подкатегории для категорий расходов (v2.0)
-const SUBCATEGORIES = {
-  products: [
-    { id: 'meat', name: 'Мясо' },       // Разделено
-    { id: 'fish', name: 'Рыба' },        // Разделено
-    { id: 'veg', name: 'Овощи и фрукты' },
-    { id: 'dairy', name: 'Молочное' },
-    { id: 'bread', name: 'Хлеб и бакалея' },
-    { id: 'other', name: 'Разное' },
-  ],
-  pharmacy: [
-    { id: 'medicines', name: 'Лекарства' },
-    { id: 'vitamins', name: 'Витамины и БАДы' },
-    { id: 'medical_devices', name: 'Медицинские изделия' },
-    { id: 'hygiene', name: 'Уход и гигиена' },
-    { id: 'other', name: 'Разное' }, // Резерв
-  ],
-  transport: [
-    { id: 'fuel', name: 'Бензин' },
-    { id: 'parts', name: 'Запчасти' },
-    { id: 'maintenance', name: 'ТО' },
-    { id: 'parking', name: 'Парковка' },
-    { id: 'car_wash', name: 'Мойка' },
-    { id: 'insurance', name: 'Страховка' },
-    { id: 'fines', name: 'Штрафы ГИБДД' },
-    { id: 'other', name: 'Разное' },
-  ],
-  utilities: [
-    { id: 'communal', name: 'Коммуналка' }, // Вода + Отопление + Содержание
-    { id: 'elec', name: 'Электричество' },
-    { id: 'gas', name: 'Газ' },
-    { id: 'trash', name: 'Вывоз мусора' },
-    { id: 'fkr', name: 'ФКР' },
-    { id: 'intercom', name: 'Домофон' },
-    { id: 'other', name: 'Разное' },
-  ],
-  communication: [
-    { id: 'mobile', name: 'Мобильный' },
-    { id: 'internet_tv', name: 'Интернет и ТВ' },
-    { id: 'other', name: 'Прочее' }, // Специфично для Связи по спеке
-  ],
-  health: [
-    { id: 'consult', name: 'Консультации' },
-    { id: 'tests', name: 'Анализы' },
-    { id: 'procedures', name: 'Процедуры' },
-    { id: 'other', name: 'Разное' },
-  ],
-  gifts: [
-    { id: 'birthday', name: 'Дни рождения' },
-    { id: 'holiday', name: 'Праздники' },
-    { id: 'grandkids', name: 'Внукам' },
-    { id: 'other', name: 'Разное' },
-  ],
-  home: [
-    { id: 'furniture', name: 'Мебель' },
-    { id: 'repair', name: 'Ремонт' },
-    { id: 'chem', name: 'Бытовая химия' },
-    { id: 'other', name: 'Разное' },
-  ],
-  clothes: [
-    { id: 'daily', name: 'Повседневная' },
-    { id: 'season', name: 'Сезонная' },
-    { id: 'shoes', name: 'Обувь' },
-    { id: 'other', name: 'Разное' },
-  ],
-  study: [
-    { id: 'courses', name: 'Курсы' },
-    { id: 'books', name: 'Книги' },
-    { id: 'other', name: 'Разное' },
-  ],
-  savings: [
-    { id: 'bank', name: 'На счёт в банке' },
-    { id: 'cash', name: 'Наличные' },
-    { id: 'other', name: 'Разное' },
-  ],
-  other: [
-    { id: 'unexpected', name: 'Непредвиденное' },
-    { id: 'hobby', name: 'Хобби' },
-    { id: 'other_sub', name: 'Прочее' },
-  ],
-};
-
-// Список категорий доходов (v2.0)
-const INCOME_CATEGORIES = [
-  { id: 'gift', name: 'Подарки', emoji: '🎁' },
-  { id: 'help', name: 'Помощь от детей/родственников', emoji: '👪' },
-  { id: 'work', name: 'Подработка', emoji: '💼' },
-  { id: 'debt', name: 'Возврат долга', emoji: '💰' },
-  { id: 'refund', name: 'Возврат переплаты', emoji: '💸' }, // Новое
-  { id: 'interest', name: 'Проценты по счёту', emoji: '📈' }, // Новое
-  { id: 'other', name: 'Разное', emoji: '📦' }, // Глобальное переименование
-];
+import { formatDateKey, getCurrentPeriod, formatMoney, } from './utils.js';
+import { calculateDailyLimit,} from './budget.js';
+import {
+  isIncome,
+  isExpense,
+  isCommitted,
+  isMoneyOut,
+  EXPENSE_CATEGORIES,
+  SUBCATEGORIES,
+  INCOME_CATEGORIES,
+} from './constants.js';
+import {
+  createExpense,
+  createIncome,
+  createTransfer, 
+  updateTransaction,
+  deleteTransaction,
+  deleteTransactionsByRange,
+  isValidAmount,
+  getCategoriesByType,
+} from './transactions.js';
+import { initReconcileListeners } from './reconcile.js'; // ← ДОБАВЬТЕ ЭТУ СТРОКУ!
 
 let appData; // Глобальное состояние приложения
 
@@ -145,10 +48,6 @@ function init() {
     if (!window.location.hash || window.location.hash === '#') {
       window.location.hash = '#screen-today';
     }
-  }
-  // Если хэш не задан — показываем главный экран
-  if (!window.location.hash || window.location.hash === '#') {
-    window.location.hash = '#screen-today';
   }
 
   // Загружаем данные
@@ -175,6 +74,7 @@ function init() {
       renamedAny = true;
     }
   });
+
   if (renamedAny) {
     saveData(appData);
     console.log('🔄 Миграция: имена обновлены');
@@ -183,9 +83,30 @@ function init() {
   // Отрисовываем всё
   renderAll(appData);
 
+  // === НОВОЕ: Обновляем индикатор синхронизации при загрузке страницы ===
+  if (typeof updateSyncIndicator === 'function') {
+    const timeToShow =
+      appData.lastModified ||
+      appData.settings.lastExportDate ||
+      new Date().toISOString();
+    updateSyncIndicator(appData.transactions, timeToShow);
+  }
+
+  // === НОВОЕ: Обновляем баннер сверки при загрузке страницы ===
+  if (typeof window.updateReconcileBanner === 'function') {
+    window.updateReconcileBanner();
+  }
+  // ================================================================
+
   // Навешиваем обработчики
   setupEventListeners();
-    initDeleteRange();
+  initDeleteRange();
+  initReconcileListeners();
+
+  // === НОВОЕ: Обновляем баннер сверки при загрузке ===
+  if (typeof window.updateReconcileBanner === 'function') {
+    window.updateReconcileBanner();
+  }
 
   console.log('Приложение инициализировано', appData);
 }
@@ -193,9 +114,13 @@ function init() {
 // Регистрация Service Worker для PWA (офлайн-режим)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker
+      .register('./sw.js')
       .then((registration) => {
-        console.log('[PWA] Service Worker зарегистрирован:', registration.scope);
+        console.log(
+          '[PWA] Service Worker зарегистрирован:',
+          registration.scope,
+        );
       })
       .catch((error) => {
         console.log('[PWA] Ошибка регистрации Service Worker:', error);
@@ -218,6 +143,15 @@ function setupEventListeners() {
   incomeSaveBtn = document.getElementById('btn-save-income');
   incomeCancelBtn = document.getElementById('btn-cancel-income');
 
+  // === Инициализация элементов модального окна переводов (v2.5) ===
+  const transferModal = document.getElementById('transfer-modal');
+  const transferFromSelect = document.getElementById('transfer-from-account');
+  const transferToSelect = document.getElementById('transfer-to-account');
+  const transferAmountInput = document.getElementById('transfer-amount');
+  const transferSaveBtn = document.getElementById('btn-save-transfer');
+  const transferCancelBtn = document.getElementById('btn-cancel-transfer');
+  // =================================================================
+
   // Заполняем выпадающий список категориями доходов
   INCOME_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
@@ -234,6 +168,12 @@ function setupEventListeners() {
   const btnAddIncome = document.getElementById('btn-add-income');
   btnAddIncome.addEventListener('click', openIncomeModal);
 
+  // Обработчик кнопки "Перевод между счетами" (v2.5)
+  const btnAddTransfer = document.getElementById('btn-add-transfer');
+  if (btnAddTransfer) {
+    btnAddTransfer.addEventListener('click', openTransferModal);
+  }
+
   // === Кнопка "Использовать НЗ" ===
   const btnUseReserve = document.getElementById('btn-use-reserve');
   if (btnUseReserve) {
@@ -243,6 +183,17 @@ function setupEventListeners() {
   expenseCategorySelect.addEventListener('change', () => {
     fillSubcategories(expenseCategorySelect.value);
   });
+
+  // === НОВОЕ: Обновляем цветной кружок при выборе подкатегории в модалке ===
+  const expenseSubcategorySelect = document.getElementById(
+    'expense-subcategory',
+  );
+  if (expenseSubcategorySelect) {
+    expenseSubcategorySelect.addEventListener('change', () => {
+      updateSubcategoryColorIndicator(expenseSubcategorySelect);
+    });
+  }
+  // ===========================================================================
 
   // При смене категории в модалке редактирования — пересоздаём подкатегории
   const editCategorySelect = document.getElementById('edit-category');
@@ -261,7 +212,22 @@ function setupEventListeners() {
       option.textContent = sub.name;
       subSelect.appendChild(option);
     });
+
+    // === НОВОЕ: Обновляем цветной кружок сразу после пересоздания списка ===
+    updateSubcategoryColorIndicator(subSelect);
+    // =======================================================================
   });
+
+  // === НОВОЕ: Обновляем цветной кружок при выборе подкатегории в модалке редактирования ===
+  const editSubcategorySelect = document.getElementById('edit-subcategory');
+  if (editSubcategorySelect) {
+    editSubcategorySelect.addEventListener('change', () => {
+      updateSubcategoryColorIndicator(editSubcategorySelect);
+    });
+  }
+  // ===========================================================================
+
+  expenseSaveBtn.addEventListener('click', saveExpense);
 
   expenseSaveBtn.addEventListener('click', saveExpense);
   expenseCancelBtn.addEventListener('click', closeExpenseModal);
@@ -269,6 +235,12 @@ function setupEventListeners() {
   // Кнопки в модальном окне доходов
   incomeSaveBtn.addEventListener('click', saveIncome);
   incomeCancelBtn.addEventListener('click', closeIncomeModal);
+
+  // === Кнопки в модальном окне переводов (v2.5) ===
+  if (transferSaveBtn) transferSaveBtn.addEventListener('click', saveTransfer);
+  if (transferCancelBtn)
+    transferCancelBtn.addEventListener('click', closeTransferModal);
+  // ================================================
 
   // Закрытие по клику на оверлей (расходы)
   expenseModal.addEventListener('click', (e) => {
@@ -284,24 +256,31 @@ function setupEventListeners() {
     }
   });
 
-  // Закрытие по Escape
+  // === Закрытие по клику на оверлей (переводы, v2.5) ===
+  if (transferModal) {
+    transferModal.addEventListener('click', (e) => {
+      if (e.target === transferModal.querySelector('.modal__overlay')) {
+        closeTransferModal();
+      }
+    });
+  }
+  // ==================================================
+
+  // Закрытие по Escape и сохранение по Enter
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (expenseModal.classList.contains('is-open')) {
-        closeExpenseModal();
-      }
-      if (incomeModal.classList.contains('is-open')) {
-        closeIncomeModal();
-      }
+      if (expenseModal.classList.contains('is-open')) closeExpenseModal();
+      if (incomeModal.classList.contains('is-open')) closeIncomeModal();
+      // <-- НОВОЕ (v2.5)
+      if (transferModal && transferModal.classList.contains('is-open'))
+        closeTransferModal();
     }
-    // Сохранение по Enter
     if (e.key === 'Enter') {
-      if (expenseModal.classList.contains('is-open')) {
-        saveExpense();
-      }
-      if (incomeModal.classList.contains('is-open')) {
-        saveIncome();
-      }
+      if (expenseModal.classList.contains('is-open')) saveExpense();
+      if (incomeModal.classList.contains('is-open')) saveIncome();
+      // <-- НОВОЕ (v2.5)
+      if (transferModal && transferModal.classList.contains('is-open'))
+        saveTransfer();
     }
   });
 
@@ -406,8 +385,6 @@ function setupEventListeners() {
     });
   }
 
-
-
   // ======================================================
   // === Обработчик изменения/сброса даты пенсии на главном экране ===
   const btnEditPensionDate = document.getElementById('btn-edit-pension-date');
@@ -443,9 +420,6 @@ function setupEventListeners() {
               appData.transactions,
             );
         }
-
-
-
       } else {
         const newDate = new Date(userChoice);
         if (!isNaN(newDate.getTime())) {
@@ -504,21 +478,242 @@ function setupEventListeners() {
     });
   }
   // ================================================================
+  // === ОБРАБОТЧИКИ ДЛЯ УПРАВЛЕНИЯ СЧЕТАМИ (v2.1) ===
+
+  // Переменная для хранения ID редактируемого счёта (null если добавляем новый)
+  let editingAccountId = null;
+
+  // Кнопка "Добавить счёт"
+  const btnAddAccount = document.getElementById('btn-add-account');
+  if (btnAddAccount) {
+    btnAddAccount.addEventListener('click', () => {
+      editingAccountId = null;
+      document.getElementById('account-modal-title').textContent =
+        'Добавить счёт';
+      document.getElementById('account-name').value = '';
+      // Убрали поля эмодзи и цвета — они больше не нужны
+      document.getElementById('account-modal').classList.add('is-open');
+    });
+  }
+
+  // Кнопка "Отмена" в модалке счёта
+  const btnCancelAccount = document.getElementById('btn-cancel-account');
+  if (btnCancelAccount) {
+    btnCancelAccount.addEventListener('click', () => {
+      document.getElementById('account-modal').classList.remove('is-open');
+    });
+  }
+
+  // Кнопка "Сохранить" в модалке счёта
+  const btnSaveAccount = document.getElementById('btn-save-account');
+  if (btnSaveAccount) {
+    btnSaveAccount.addEventListener('click', () => {
+      const name = document.getElementById('account-name').value.trim();
+
+      if (!name) {
+        alert('Пожалуйста, введите название счёта');
+        return;
+      }
+
+      if (editingAccountId) {
+        // === 1. РЕДАКТИРОВАНИЕ существующего счёта ===
+        const account = appData.settings.accounts.find(
+          (a) => a.id === editingAccountId,
+        );
+        if (account) {
+          account.name = name;
+
+          // Умное определение эмодзи и цвета
+          const lowerName = name.toLowerCase();
+          if (lowerName.includes('сбер')) {
+            account.emoji = '🏦';
+            account.color = '#27ae60';
+          } else if (
+            lowerName.includes('тинькофф') ||
+            lowerName.includes('т-банк') ||
+            lowerName.includes('т банк')
+          ) {
+            account.emoji = '🏦';
+            account.color = '#ffdd2d';
+          } else if (lowerName.includes('втб')) {
+            account.emoji = '🏦';
+            account.color = '#002882';
+          } else {
+            account.emoji = account.emoji || '💼';
+            account.color = account.color || '#3498db';
+          }
+          console.log('✅ Счёт обновлён:', account);
+        }
+      } else {
+        // === 2. ДОБАВЛЕНИЕ нового счёта ===
+        const newAccount = {
+          id: 'account_' + Date.now(),
+          name: name,
+          emoji: '💼',
+          color: '#3498db',
+        };
+
+        // Применяем умные цвета и к новому счёту тоже!
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes('сбер')) {
+          newAccount.emoji = '🏦';
+          newAccount.color = '#27ae60';
+        } else if (
+          lowerName.includes('тинькофф') ||
+          lowerName.includes('т-банк') ||
+          lowerName.includes('т банк')
+        ) {
+          newAccount.emoji = '🏦';
+          newAccount.color = '#ffdd2d';
+        } else if (lowerName.includes('втб')) {
+          newAccount.emoji = '🏦';
+          newAccount.color = '#002882';
+        }
+
+        appData.settings.accounts.push(newAccount);
+
+        // === ВАЖНО: Если это первый счёт или defaultAccountId потерян, делаем его дефолтным ===
+        if (
+          !appData.settings.defaultAccountId ||
+          appData.settings.accounts.length === 1
+        ) {
+          appData.settings.defaultAccountId = newAccount.id;
+          console.log('🏆 Счёт назначен счетом по умолчанию:', newAccount.id);
+        }
+
+        console.log('✅ Счёт добавлен:', newAccount);
+      }
+
+      // === 3. ЕДИНОЕ сохранение и обновление интерфейса ===
+      saveData(appData);
+
+      if (typeof window.updateReconcileBanner === 'function') {
+        window.updateReconcileBanner();
+        console.log('✅ Баннер сверки обновлён после сохранения счёта');
+      }
+
+      if (typeof renderAccountsList === 'function') {
+        renderAccountsList(); // ← ВАЖНО: вызываем БЕЗ аргументов!
+      }
+
+      if (typeof renderTodayScreen === 'function') {
+        renderTodayScreen(
+          appData.settings,
+          appData.fixedExpenses,
+          appData.transactions,
+        );
+      }
+
+      // Закрываем модалку и сбрасываем ID редактирования
+      document.getElementById('account-modal').classList.remove('is-open');
+      editingAccountId = null;
+    });
+  }
+
+  // Делегирование событий для кнопок редактирования и удаления счетов
+  document.addEventListener('click', (e) => {
+    // Кнопка редактирования счёта
+    if (e.target.closest('.btn-edit-account')) {
+      const accountId = e.target.closest('.btn-edit-account').dataset.accountId;
+      const account = appData.settings.accounts.find((a) => a.id === accountId);
+      if (account) {
+        editingAccountId = accountId;
+        document.getElementById('account-modal-title').textContent =
+          'Редактировать счёт';
+        document.getElementById('account-name').value = account.name;
+        // Убрали поля эмодзи и цвета — они больше не нужны
+        document.getElementById('account-modal').classList.add('is-open');
+      }
+    }
+
+    // Кнопка удаления счёта
+    if (e.target.closest('.btn-delete-account')) {
+      const accountId = e.target.closest('.btn-delete-account').dataset
+        .accountId;
+      const account = appData.settings.accounts.find((a) => a.id === accountId);
+
+      if (account) {
+        // Проверяем, есть ли транзакции на этом счёте
+        const transactionsCount = appData.transactions.filter(
+          (t) => t.accountId === accountId,
+        ).length;
+
+        if (transactionsCount > 0) {
+          const confirmDelete = confirm(
+            `На счёте "${account.name}" есть ${transactionsCount} транзакций.\n\n` +
+              `Если вы удалите счёт, все транзакции будут перенесены на счёт по умолчанию.\n\n` +
+              `Продолжить?`,
+          );
+
+          if (!confirmDelete) return;
+
+          // Переносим транзакции на счёт по умолчанию
+          const defaultAccountId =
+            appData.settings.defaultAccountId ||
+            appData.settings.accounts[0].id;
+          appData.transactions.forEach((t) => {
+            if (t.accountId === accountId) {
+              t.accountId = defaultAccountId;
+            }
+          });
+          console.log(`🔄 Транзакции перенесены на счёт "${defaultAccountId}"`);
+        } else {
+          const confirmDelete = confirm(`Удалить счёт "${account.name}"?`);
+          if (!confirmDelete) return;
+        }
+
+        // Удаляем счёт
+        appData.settings.accounts = appData.settings.accounts.filter(
+          (a) => a.id !== accountId,
+        );
+
+        // Если удалили счёт по умолчанию, устанавливаем новый
+        if (
+          appData.settings.defaultAccountId === accountId &&
+          appData.settings.accounts.length > 0
+        ) {
+          appData.settings.defaultAccountId = appData.settings.accounts[0].id;
+        }
+
+        saveData(appData);
+        renderAccountsList();
+        console.log('✅ Счёт удалён:', account.name);
+      }
+    }
+  });
 }
 
 // Открытие модального окна доходов
 function openIncomeModal() {
-  // Очищаем список
+  // Очищаем список категорий
   incomeCategorySelect.innerHTML = '';
 
   // Заполняем список категориями с эмодзи
   INCOME_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
-    option.value = category.id; // <-- ВАЖНО: сохраняем ID ('work'), а не имя!
-    option.textContent = `${category.emoji} ${category.name}`.trim(); // <-- Собираем: эмодзи + чистое имя
+    option.value = category.id;
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim();
     incomeCategorySelect.appendChild(option);
   });
 
+  // === ВСТАВЛЯЕМ ЗДЕСЬ: Заполняем список счетов (v2.1) ===
+  const accountSelect = document.getElementById('income-account');
+  if (accountSelect) {
+    accountSelect.innerHTML = '';
+    appData.settings.accounts.forEach((account) => {
+      const option = document.createElement('option');
+      option.value = account.id;
+      option.textContent = `${account.emoji || ''} ${account.name}`.trim();
+      // Выбираем счёт по умолчанию
+      if (account.id === appData.settings.defaultAccountId) {
+        option.selected = true;
+      }
+      accountSelect.appendChild(option);
+    });
+  }
+  // ========================================================
+
+  // Открываем модальное окно и фокусируемся на категории
   incomeModal.classList.add('is-open');
   incomeCategorySelect.focus();
 }
@@ -530,38 +725,103 @@ function closeIncomeModal() {
   incomeAmountInput.value = '';
 }
 
-// Сохранение дохода
+/**
+ * Открыть модальное окно перевода (v2.5)
+ */
+function openTransferModal() {
+  const fromSelect = document.getElementById('transfer-from-account');
+  const toSelect = document.getElementById('transfer-to-account');
+  
+  if (!fromSelect || !toSelect) return;
+
+  // Очищаем списки
+  fromSelect.innerHTML = '';
+  toSelect.innerHTML = '';
+
+  // Заполняем счетами
+  const accounts = appData.settings.accounts || [];
+  const defaultAccountId = appData.settings.defaultAccountId || 'sber';
+
+  accounts.forEach(acc => {
+    // Для "Откуда"
+    const optionFrom = document.createElement('option');
+    optionFrom.value = acc.id;
+    optionFrom.textContent = acc.name;
+    if (acc.id === defaultAccountId) optionFrom.selected = true;
+    fromSelect.appendChild(optionFrom);
+
+    // Для "Куда"
+    const optionTo = document.createElement('option');
+    optionTo.value = acc.id;
+    optionTo.textContent = acc.name;
+    toSelect.appendChild(optionTo);
+  });
+
+  // Очищаем поля
+  document.getElementById('transfer-amount').value = '';
+  document.getElementById('transfer-note').value = '';
+
+  // Открываем модалку
+  document.getElementById('transfer-modal').classList.add('is-open');
+  document.getElementById('transfer-amount').focus();
+}
+
+/**
+ * Закрыть модальное окно перевода (v2.5)
+ */
+function closeTransferModal() {
+  document.getElementById('transfer-modal').classList.remove('is-open');
+}
+
+// Обработчик кнопки "Отмена" в модалке перевода (v2.5)
+const btnCancelTransfer = document.getElementById('btn-cancel-transfer');
+if (btnCancelTransfer) {
+  btnCancelTransfer.addEventListener('click', closeTransferModal);
+}
+
+// Сохранение дохода (v2.3 + исправление индикатора)
 function saveIncome() {
   const categoryId = incomeCategorySelect.value;
   const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
 
+  // Получаем выбранный счёт
+  const accountId = document.getElementById('income-account').value;
+
+  // === ИСПРАВЛЕНО: Получаем предмет и источник из правильных полей модалки дохода ===
+  const itemValue = document.getElementById('income-item')?.value.trim() || '';
+  const storeValue = document.getElementById('income-store')?.value.trim() || '';
+  // ==================================================================================
+
+  // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     incomeAmountInput.focus();
     return;
   }
 
-  // Находим название категории
-  const category = INCOME_CATEGORIES.find((c) => c.id === categoryId);
-  const categoryName = category ? category.name : categoryId;
+  // 2. Создаём и сохраняем транзакцию
+  createIncome(appData, {
+    categoryId,
+    amount,
+    item: itemValue,
+    store: storeValue,
+    accountId,
+  });
 
-  // Создаём транзакцию с типом "income"
-  const transaction = {
-    id: Date.now(),
-    date: new Date().toISOString(),
-    category: categoryName,
-    amount: amount,
-    type: 'income', // Важно! Отличает доход от расхода
-  };
-
-  // Добавляем в данные
-  appData.transactions.push(transaction);
-
-  // Сохраняем
+  // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
   saveData(appData);
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ============================================================
 
-  // Закрываем модалку и перерисовываем
+  // 3. UI-реакция: очищаем поля, закрываем модалку и перерисовываем экраны
+  incomeAmountInput.value = '';
+  document.getElementById('income-item').value = ''; 
+  document.getElementById('income-store').value = ''; 
+
   closeIncomeModal();
+
   renderTodayScreen(
     appData.settings,
     appData.fixedExpenses,
@@ -569,8 +829,56 @@ function saveIncome() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  console.log('Добавлен доход:', transaction);
+  console.log(
+    '✅ Добавлен доход, категория:',
+    categoryId,
+    'сумма:',
+    amount,
+    'счёт:',
+    accountId,
+  );
 }
+
+// ... конец функции saveIncome() ...
+
+
+// === НОВОЕ: Сохранение перевода между счетами (v2.5) ===
+function saveTransfer() {
+  const fromAccountId = document.getElementById('transfer-from-account').value;
+  const toAccountId = document.getElementById('transfer-to-account').value;
+  const amount = parseFloat(document.getElementById('transfer-amount').value.replace(',', '.'));
+  const noteValue = document.getElementById('transfer-note').value.trim();
+
+  if (fromAccountId === toAccountId) {
+    alert('❌ Выберите разные счета для перевода');
+    return;
+  }
+
+  if (isNaN(amount) || amount <= 0) {
+    alert('Пожалуйста, введите корректную сумму');
+    document.getElementById('transfer-amount').focus();
+    return;
+  }
+
+  try {
+    createTransfer(appData, {
+      fromAccountId,
+      toAccountId,
+      amount,
+      note: noteValue,
+    });
+
+    document.getElementById('transfer-amount').value = '';
+    document.getElementById('transfer-note').value = '';
+    closeTransferModal();
+    renderAll(appData);
+
+    console.log('✅ Перевод выполнен:', amount, '₽');
+  } catch (error) {
+    alert('❌ Ошибка: ' + error.message);
+  }
+}
+// ======================================================
 
 // Элементы модального окна расходов
 let expenseModal,
@@ -586,14 +894,53 @@ let incomeModal,
   incomeSaveBtn,
   incomeCancelBtn;
 
+// Генератор стабильного цвета для подкатегории по её названию
+function getSubcategoryColor(name) {
+  if (!name) return '#95a5a6'; // Серый по умолчанию
+
+  // === ЯРКИЕ ЦВЕТА ДЛЯ КЛЮЧЕВЫХ ПОДКАТЕГОРИЙ ===
+    const brightColors = {
+      Мясо: '#e74c3c', // Ярко-красный
+      Рыба: '#2196F3', // Ярко-синий (как вода)
+      'Овощи и фрукты': '#2ecc71', // Ярко-зелёный
+      Молочное: '#3498db', // Ярко-синий
+      'Хлеб и бакалея': '#FF9800', // Ярко-оранжевый
+      Бензин: '#9b59b6', // Фиолетовый
+      Коммуналка: '#1abc9c', // Бирюзовый
+      Лекарства: '#e91e63', // Розовый
+      Мобильный: '#00bcd4', // Голубой
+      Разное: '#95a5a6', // Серый (нейтральный)
+    };
+  // ===============================================
+
+  // Если есть явный цвет — используем его
+  if (brightColors[name]) {
+    return brightColors[name];
+  }
+
+  // Иначе генерируем на основе хэша
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 75%, 50%)`; // Увеличили насыщенность и контраст
+}
+window.getSubcategoryColor = getSubcategoryColor;
+
+window.getSubcategoryColor = getSubcategoryColor;
+
 // Заполняем селект подкатегорий по выбранной категории
 function fillSubcategories(categoryId) {
   const select = document.getElementById('expense-subcategory');
+  if (!select) return; // Защита от ошибок, если элемента нет на странице
+  
   select.innerHTML = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.textContent = '-- выберите --';
   select.appendChild(placeholder);
+  
   const subs = SUBCATEGORIES[categoryId] || [];
   subs.forEach((sub) => {
     const option = document.createElement('option');
@@ -601,6 +948,35 @@ function fillSubcategories(categoryId) {
     option.textContent = sub.name;
     select.appendChild(option);
   });
+
+  // Сразу обновляем цветной индикатор после заполнения списка
+  updateSubcategoryColorIndicator(select);
+}
+
+window.fillSubcategories = fillSubcategories;
+
+// Вспомогательная функция: рисует цветной кружок рядом с выпадающим списком
+function updateSubcategoryColorIndicator(selectElement) {
+  // Ищем существующий индикатор или создаем новый
+  let indicator = selectElement.parentNode.querySelector('.subcategory-color-indicator');
+  if (!indicator) {
+    indicator = document.createElement('span');
+    indicator.className = 'subcategory-color-indicator';
+        indicator.style.cssText = indicator.style.cssText =
+          'position: absolute; right: 20px; top: 68%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%; transition: background-color 0.2s ease; pointer-events: none;';
+        selectElement.parentNode.style.position = 'relative';
+    selectElement.parentNode.insertBefore(indicator, selectElement.nextSibling);
+  }
+
+  // Определяем цвет на основе текста выбранной опции
+  const selectedOption = selectElement.options[selectElement.selectedIndex];
+  if (selectedOption && selectedOption.value !== '') {
+    indicator.style.backgroundColor = getSubcategoryColor(selectedOption.textContent);
+    indicator.style.opacity = '1';
+  } else {
+    indicator.style.backgroundColor = '#cbd5e1'; // Бледно-серый, если ничего не выбрано
+    indicator.style.opacity = '0.5';
+  }
 }
 
 // Открытие модального окна расходов с гарантированным заполнением категорий
@@ -608,13 +984,30 @@ function openExpenseModal() {
   // 1. Очищаем список (на случай, если он уже был заполнен)
   expenseCategorySelect.innerHTML = '';
 
-  // // 2. Заполняем список категориями с эмодзи из нашего исправленного массива
+  // 2. Заполняем список категориями с эмодзи
   EXPENSE_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
-    option.value = category.id; // Сохраняем чистое имя (без эмодзи)
-    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Показываем с эмодзи
+    option.value = category.id;
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim();
     expenseCategorySelect.appendChild(option);
   });
+
+  // 2.5. === ВСТАВЛЯЕМ ЗДЕСЬ: Заполняем список счетов (v2.1) ===
+  const accountSelect = document.getElementById('expense-account');
+  if (accountSelect) {
+    accountSelect.innerHTML = '';
+    appData.settings.accounts.forEach((account) => {
+      const option = document.createElement('option');
+      option.value = account.id;
+      option.textContent = `${account.emoji || ''} ${account.name}`.trim();
+      // Выбираем счёт по умолчанию
+      if (account.id === appData.settings.defaultAccountId) {
+        option.selected = true;
+      }
+      accountSelect.appendChild(option);
+    });
+  }
+  // ========================================================
 
   // 3. Открываем окно и ставим фокус на список
   expenseModal.classList.add('is-open');
@@ -638,44 +1031,56 @@ function handleAddExpense() {
 function saveExpense() {
   const categoryId = expenseCategorySelect.value;
   const amount = parseFloat(expenseAmountInput.value.replace(',', '.'));
+  const itemValue = document.getElementById('expense-item').value.trim();
+  const storeValue = document.getElementById('expense-store').value.trim(); // ← НОВОЕ
+  const subId = document.getElementById('expense-subcategory').value;
+  const accountId = document.getElementById('expense-account').value;
 
+  // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     expenseAmountInput.focus();
     return;
   }
 
-  const itemInput = document.getElementById('expense-item');
-  const itemValue = itemInput.value.trim();
-
-  const subSelect = document.getElementById('expense-subcategory');
-  const subId = subSelect.value;
   if (!subId) {
     alert('Пожалуйста, выберите подкатегорию');
-    subSelect.focus();
+    document.getElementById('expense-subcategory').focus();
     return;
   }
-  const subs = SUBCATEGORIES[categoryId] || [];
-  const sub = subs.find((s) => s.id === subId);
-  const subName = sub ? sub.name : subId;
 
-  const category = EXPENSE_CATEGORIES.find((c) => c.id === categoryId);
-  const categoryName = category ? category.name : categoryId;
+  // 2. Создаём и сохраняем через модуль (передаем accountId!)
+    createExpense(appData, {
+      categoryId,
+      amount,
+      subId,
+      item: itemValue,
+      store: storeValue,
+      accountId,
+    });
 
-  const transaction = {
-    id: Date.now(),
-    date: new Date().toISOString(),
-    category: categoryName,
-    subcategory: subName,
-    amount: amount,
-    type: 'expense',
+    // 2. Создаём и сохраняем через модуль (передаем accountId!)
+  createExpense(appData, {
+    categoryId,
+    amount,
+    subId,
     item: itemValue,
-  };
+    store: storeValue,
+    accountId,
+  });
 
-  appData.transactions.push(transaction);
+  // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
   saveData(appData);
-  itemInput.value = '';
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ============================================================
+
+  // 3. UI-реакция
+  document.getElementById('expense-item').value = ''; // Очищаем поле
+  document.getElementById('expense-store').value = ''; // ← НОВОЕ
   closeExpenseModal();
+
   renderTodayScreen(
     appData.settings,
     appData.fixedExpenses,
@@ -683,8 +1088,11 @@ function saveExpense() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  console.log('Добавлен расход:', transaction);
+  console.log('✅ Добавлен расход, категория:', categoryId, 'сумма:', amount, 'счёт:', accountId);
+
 }
+
+
 
 // === Использование Неприкосновенного запаса ===
 function useReserve() {
@@ -825,6 +1233,21 @@ function handleSettingsChange() {
   // Сохраняем
   saveData(appData);
 
+    // Обновляем данные
+  appData.settings.initialBalance = initialBalance; // ← НОВАЯ СТРОКА
+  appData.settings.pensionAmount = pensionAmount;
+  appData.settings.pensionDay = pensionDay;
+  appData.settings.reserveAmount = reserveAmount;
+
+  // Сохраняем
+  saveData(appData);
+
+  // === НОВОЕ: Обновляем индикатор после изменения настроек ===
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ============================================================
+
   // Перерисовываем
   renderTodayScreen(
     appData.settings,
@@ -833,6 +1256,7 @@ function handleSettingsChange() {
   );
 
   console.log('Настройки обновлены', appData.settings);
+
 }
 
 // Обработчик добавления платежа
@@ -877,72 +1301,64 @@ function handleAddPayment() {
   );
 }
 
-// Обработчик клика по кнопкам удаления
+// Обработчик клика по кнопкам удаления и редактирования
 function handleDeleteClick(event) {
   const target = event.target;
 
-  // Редактирование транзакции
+  // 1. Редактирование транзакции
   if (target.dataset.action === 'edit-transaction') {
     const transactionId = parseInt(target.dataset.id);
     openEditModal(transactionId);
     return; // Выходим, чтобы не срабатывали другие обработчики
   }
 
-  // Удаление транзакции (расхода)
+  // 2. Удаление транзакции (расхода)
   if (target.dataset.action === 'delete-transaction') {
     const transactionId = parseInt(target.dataset.id);
-    // Находим транзакцию ДО удаления, чтобы узнать её тип и сумму
-    const transaction = appData.transactions.find(
-      (t) => t.id === transactionId,
-    );
-
     if (confirm('Удалить эту запись о расходе?')) {
-      appData.transactions = appData.transactions.filter(
-        (t) => t.id !== transactionId,
-      );
-
-      // === ВОССТАНОВЛЕНИЕ НЗ при удалении записи о снятии ===
-      if (transaction && transaction.type === 'reserve') {
-        appData.settings.reserveAmount += transaction.amount;
-        const reserveInput =
-          document.getElementById('input-reserve') ||
-          document.getElementById('input-reserve-amount');
-        if (reserveInput) {
-          reserveInput.value = appData.settings.reserveAmount;
-        }
-        console.log('🔓 НЗ восстановлен:', appData.settings.reserveAmount);
-      }
-      // =====================================================
-
+      deleteTransaction(appData, transactionId);
+      
+      // === НОВОЕ: Сохраняем и обновляем индикатор после удаления ===
       saveData(appData);
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      // ============================================================
+      
       renderAll(appData);
       console.log('Транзакция удалена:', transactionId);
     }
   }
 
-  // Удаление дохода
+  // 3. Удаление дохода
   if (target.dataset.action === 'delete-income') {
     const transactionId = parseInt(target.dataset.id);
     if (confirm('Удалить эту запись о доходе?')) {
       appData.transactions = appData.transactions.filter(
         (t) => t.id !== transactionId,
       );
+      
+      // === НОВОЕ: Явно сохраняем и обновляем индикатор ===
       saveData(appData);
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      // ==================================================
+      
       renderAll(appData);
       console.log('Доход удалён:', transactionId);
     }
   }
 
-  // Редактирование платежа
+  // 4. Редактирование платежа
   if (target.dataset.action === 'edit-payment') {
     const paymentId = parseInt(target.dataset.id);
     const payment = appData.fixedExpenses.find((p) => p.id === paymentId);
 
     if (payment) {
       const newName = prompt('Название платежа:', payment.name);
-      if (newName === null) return; // Отмена
+      if (newName === null) return;
 
-      // 1. Показываем уже отформатированную сумму для удобства
       const currentAmountFormatted = formatMoney(payment.amount);
       const newAmountStr = prompt(
         `Сумма (текущая: ${currentAmountFormatted}):`,
@@ -950,7 +1366,6 @@ function handleDeleteClick(event) {
       );
       if (newAmountStr === null) return;
 
-      // 2. Умная очистка: убираем пробелы, знак ₽ и заменяем запятую на точку
       const cleanAmountStr = newAmountStr
         .replace(/\s/g, '')
         .replace('₽', '')
@@ -972,24 +1387,35 @@ function handleDeleteClick(event) {
         return;
       }
 
-      // Обновляем данные
       payment.name = newName.trim();
       payment.amount = newAmount;
       payment.day = newDay;
 
-      saveData(appData);
+      saveData(appData); // saveData уже обновит индикатор, но для надёжности:
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      
       renderAll(appData);
       console.log('Платёж обновлён:', payment);
     }
   }
-  // Удаление платежа
+
+  // 5. Удаление платежа
   if (target.dataset.action === 'delete-payment') {
     const paymentId = parseInt(target.dataset.id);
     if (confirm('Удалить этот обязательный платёж?')) {
       appData.fixedExpenses = appData.fixedExpenses.filter(
         (p) => p.id !== paymentId,
       );
+      
+      // === НОВОЕ: Сохраняем и обновляем индикатор ===
       saveData(appData);
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+      // ================================================
+      
       renderAll(appData);
       console.log('Платёж удалён:', paymentId);
     }
@@ -1018,7 +1444,7 @@ function openEditModal(transactionId) {
   editingTransactionId = transactionId;
 
   // Определяем тип транзакции (расход или доход)
-  const incomeFlag = isIncome(transaction);
+  const incomeFlag = isIncome(transaction); // ← ИСПРАВЛЕНО: была просто isIncome
   const categories = incomeFlag ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   // Заполняем выпадающий список категориями
@@ -1027,8 +1453,8 @@ function openEditModal(transactionId) {
   categories.forEach((category) => {
     const option = document.createElement('option');
     option.value = category.id;
-    option.textContent = `${category.emoji || ''} ${category.name}`.trim(); // Добавили эмодзи
-    // Выбираем текущую категорию транзакции
+    // ← ИСПРАВЛЕНО: возвращаем название категории (возможно, с эмодзи, как было изначально)
+    option.textContent = `${category.emoji || ''} ${category.name}`.trim();
     if (category.name === transaction.category) {
       option.selected = true;
     }
@@ -1038,7 +1464,8 @@ function openEditModal(transactionId) {
   // Заполняем подкатегории (только для расходов)
   const subcategoryLabel = document.getElementById('edit-subcategory-label');
   const subcategorySelect = document.getElementById('edit-subcategory');
-  if (isIncome) {
+  if (incomeFlag) {
+    // ← ИСПРАВЛЕНО: была просто isIncome
     subcategoryLabel.style.display = 'none';
   } else {
     subcategoryLabel.style.display = 'block';
@@ -1047,17 +1474,20 @@ function openEditModal(transactionId) {
     placeholder.value = '';
     placeholder.textContent = '-- выберите --';
     subcategorySelect.appendChild(placeholder);
+
     const currentCategory = EXPENSE_CATEGORIES.find(
       (c) => c.name === transaction.category,
     );
     const currentCategoryId = currentCategory ? currentCategory.id : '';
     const subs = SUBCATEGORIES[currentCategoryId] || [];
+
     subs.forEach((sub) => {
       const option = document.createElement('option');
       option.value = sub.id;
       option.textContent = sub.name;
       subcategorySelect.appendChild(option);
     });
+
     if (transaction.subcategory) {
       const currentSub = subs.find((s) => s.name === transaction.subcategory);
       if (currentSub) {
@@ -1069,6 +1499,34 @@ function openEditModal(transactionId) {
   // Заполняем сумму
   document.getElementById('edit-amount').value = transaction.amount;
 
+  // Заполняем предмет покупки
+  document.getElementById('edit-item').value = transaction.item || '';
+
+  // Заполняем место покупки (НОВОЕ)
+  document.getElementById('edit-store').value = transaction.store || '';
+
+  // Заполняем комментарий (НОВОЕ)
+  document.getElementById('edit-note').value = transaction.note || '';
+
+  // === НОВОЕ: Заполняем выбор счёта ===
+  const accountSelect = document.getElementById('edit-account');
+  accountSelect.innerHTML = '';
+  const accounts = window.appData?.settings?.accounts || [];
+  const defaultAccountId = window.appData?.settings?.defaultAccountId || 'sber';
+
+  accounts.forEach((acc) => {
+    const option = document.createElement('option');
+    option.value = acc.id;
+    option.textContent = acc.name;
+
+    // Выбираем текущий счёт транзакции (или дефолтный, если его нет у старых записей)
+    if (acc.id === (transaction.accountId || defaultAccountId)) {
+      option.selected = true;
+    }
+    accountSelect.appendChild(option);
+  });
+  // ======================================
+
   // Заполняем дату (формат YYYY-MM-DD для input type="date")
   const transactionDate = new Date(transaction.date);
   const dateStr = transactionDate.toISOString().split('T')[0];
@@ -1077,6 +1535,76 @@ function openEditModal(transactionId) {
   // Открываем модальное окно
   document.getElementById('edit-modal').classList.add('is-open');
   document.getElementById('edit-amount').focus();
+
+  // === НОВОЕ: Умное отображение полей в зависимости от типа транзакции (v2.5) ===
+  const isTransfer = transaction.type === 'transfer'; // ИСПРАВЛЕНО: используем transaction, а не originalTransaction
+
+  // Получаем ссылки на лейблы (используем уже объявленные переменные, чтобы не было дублирования const)
+  const categoryLabel = categorySelect.closest('.modal__label');
+  // subcategoryLabel и subcategorySelect уже объявлены выше в функции, используем их!
+  const itemLabel = document
+    .getElementById('edit-item')
+    ?.closest('.modal__label');
+  const storeLabel = document
+    .getElementById('edit-store')
+    ?.closest('.modal__label');
+  const accountLabel = accountSelect.closest('.modal__label');
+
+  const fromLabel = document.getElementById('edit-transfer-from-label');
+  const toLabel = document.getElementById('edit-transfer-to-label');
+  const fromSelect = document.getElementById('edit-transfer-from');
+  const toSelect = document.getElementById('edit-transfer-to');
+
+  if (isTransfer) {
+    // Для переводов: скрываем категорию, подкатегорию, предмет, магазин, обычный счёт
+    if (categoryLabel) categoryLabel.style.display = 'none';
+    if (subcategoryLabel) subcategoryLabel.style.display = 'none';
+    if (itemLabel) itemLabel.style.display = 'none';
+    if (storeLabel) storeLabel.style.display = 'none';
+    if (accountLabel) accountLabel.style.display = 'none';
+
+    // === СКРЫВАЕМ поле "Счёт" (прямое скрытие) ===
+    const editAccountSelect = document.getElementById('edit-account');
+    if (editAccountSelect) {
+      editAccountSelect.parentElement.style.display = 'none'; // Скрываем родительский label
+    }
+
+    // Показываем поля "Откуда" и "Куда"
+    if (fromLabel) fromLabel.style.display = 'block';
+    if (toLabel) toLabel.style.display = 'block';
+
+    // Заполняем списки счетов для перевода
+    if (fromSelect && toSelect) {
+      fromSelect.innerHTML = '';
+      toSelect.innerHTML = '';
+      const accounts = appData.settings.accounts || [];
+      accounts.forEach((acc) => {
+        const optFrom = document.createElement('option');
+        optFrom.value = acc.id;
+        optFrom.textContent = acc.name;
+        if (acc.id === transaction.fromAccountId) optFrom.selected = true; // ИСПРАВЛЕНО
+        fromSelect.appendChild(optFrom);
+
+        const optTo = document.createElement('option');
+        optTo.value = acc.id;
+        optTo.textContent = acc.name;
+        if (acc.id === transaction.toAccountId) optTo.selected = true; // ИСПРАВЛЕНО
+        toSelect.appendChild(optTo);
+      });
+    }
+  } else {
+    // Для обычных транзакций: показываем все стандартные поля
+    if (categoryLabel) categoryLabel.style.display = 'block';
+    if (subcategoryLabel) subcategoryLabel.style.display = 'block';
+    if (itemLabel) itemLabel.style.display = 'block';
+    if (storeLabel) storeLabel.style.display = 'block';
+    if (accountLabel) accountLabel.style.display = 'block';
+
+    // Скрываем поля "Откуда" и "Куда"
+    if (fromLabel) fromLabel.style.display = 'none';
+    if (toLabel) toLabel.style.display = 'none';
+  }
+  // ===========================================================================
 }
 
 /**
@@ -1088,32 +1616,42 @@ function closeEditModal() {
 }
 
 /**
- * Сохранить изменения транзакции
+ * Сохранить изменения транзакции (v2.5 — с поддержкой переводов и комментария)
  */
 function saveEditTransaction() {
   if (!editingTransactionId) return;
 
-  // Получаем новые значения
+  // 1. Получаем базовые значения
   const categoryId = document.getElementById('edit-category').value;
   const amount = parseFloat(
     document.getElementById('edit-amount').value.replace(',', '.'),
   );
   const dateStr = document.getElementById('edit-date').value;
+  const accountId = document.getElementById('edit-account').value;
 
-  // Валидация суммы
+  // === НОВОЕ: Читаем комментарий (работает и для расходов, и для переводов) ===
+  const noteValue = document.getElementById('edit-note')?.value.trim() || '';
+  // ===========================================================================
+
+  // Объявляем переменные для предмета, магазина и подкатегории (заполним их ниже)
+  let itemValue = '';
+  let storeValue = '';
+  let subName = '';
+
+  // 2. Валидация суммы
   if (isNaN(amount) || amount <= 0) {
     alert('Пожалуйста, введите корректную сумму');
     document.getElementById('edit-amount').focus();
     return;
   }
 
-  // Валидация даты
+  // 3. Валидация даты
   if (!dateStr) {
     alert('Пожалуйста, выберите дату');
     return;
   }
 
-  // Находим транзакцию
+  // 4. Находим транзакцию
   const transactionIndex = appData.transactions.findIndex(
     (t) => t.id === editingTransactionId,
   );
@@ -1122,32 +1660,41 @@ function saveEditTransaction() {
     return;
   }
 
-  // Определяем тип транзакции (сохраняем оригинальный тип)
   const originalTransaction = appData.transactions[transactionIndex];
   const incomeFlag = isIncome(originalTransaction);
   const categories = incomeFlag ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-
-  // Находим название категории
   const category = categories.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
 
-  // Определяем подкатегорию (только для расходов)
-  let subName = originalTransaction.subcategory || '';
-  if (!isIncome) {
-    const subSelect = document.getElementById('edit-subcategory');
-    const subId = subSelect.value;
-    if (!subId) {
-      alert('Пожалуйста, выберите подкатегорию');
-      subSelect.focus();
-      return;
+  // 5. === Умная обработка полей в зависимости от типа транзакции (v2.5) ===
+  if (originalTransaction.type === 'transfer') {
+    // Для переводов: подкатегории, предмета и магазина не существует.
+    subName = '';
+    itemValue = '';
+    storeValue = '';
+  } else {
+    // Стандартная логика только для расходов и доходов
+    if (!incomeFlag) {
+      const subSelect = document.getElementById('edit-subcategory');
+      const subId = subSelect.value;
+      if (!subId) {
+        alert('Пожалуйста, выберите подкатегорию');
+        subSelect.focus();
+        return;
+      }
+      const currentCategoryId = category ? category.id : categoryId;
+      const subs = SUBCATEGORIES[currentCategoryId] || [];
+      const sub = subs.find((s) => s.id === subId);
+      subName = sub ? sub.name : subId;
     }
-    const currentCategoryId = category ? category.id : categoryId;
-    const subs = SUBCATEGORIES[currentCategoryId] || [];
-    const sub = subs.find((s) => s.id === subId);
-    subName = sub ? sub.name : subId;
-  }
 
-  // Создаём новую дату (сохраняем оригинальное время)
+    // Читаем предмет и место покупки из полей ввода (только для обычных транзакций)
+    itemValue = document.getElementById('edit-item')?.value.trim() || '';
+    storeValue = document.getElementById('edit-store')?.value.trim() || '';
+  }
+  // ===========================================================================
+
+  // 6. Создаём новую дату (сохраняем оригинальное время)
   const originalDate = new Date(originalTransaction.date);
   const newDate = new Date(dateStr);
   newDate.setHours(
@@ -1156,23 +1703,50 @@ function saveEditTransaction() {
     originalDate.getSeconds(),
   );
 
-  // Обновляем транзакцию
-  appData.transactions[transactionIndex] = {
-    ...originalTransaction, // Сохраняем id и type
+  // 7. Обновляем транзакцию
+  const updatedTransaction = {
+    ...originalTransaction, // Сохраняем id, type и т.д.
     category: categoryName,
     subcategory: subName,
     amount: amount,
     date: newDate.toISOString(),
+    item: itemValue,
+    store: storeValue,
+    note: noteValue, // === НОВОЕ: Сохраняем комментарий ===
+    accountId:
+      accountId ||
+      originalTransaction.accountId ||
+      appData.settings.defaultAccountId,
   };
 
-  // Сохраняем данные
+  // Если это перевод — обновляем счета "Откуда" и "Куда"
+  if (originalTransaction.type === 'transfer') {
+    updatedTransaction.fromAccountId =
+      document.getElementById('edit-transfer-from')?.value ||
+      originalTransaction.fromAccountId;
+    updatedTransaction.toAccountId =
+      document.getElementById('edit-transfer-to')?.value ||
+      originalTransaction.toAccountId;
+  }
+
+  appData.transactions[transactionIndex] = updatedTransaction;
+
+  // 8. Сохраняем данные и перерисовываем интерфейс
   saveData(appData);
 
-  // Закрываем модалку и перерисовываем интерфейс
+  // === НОВОЕ: Гарантируем обновление индикатора после редактирования ===
+  if (typeof updateSyncIndicator === 'function') {
+    updateSyncIndicator(appData.transactions, appData.lastModified);
+  }
+  // ====================================================================
+
   closeEditModal();
   renderAll(appData);
 
-  console.log('Транзакция обновлена:', appData.transactions[transactionIndex]);
+  console.log(
+    '✅ Транзакция обновлена:',
+    appData.transactions[transactionIndex],
+  );
 }
 
 // === ЭКСПОРТ/ИМПОРТ ДАННЫХ ===
@@ -1196,7 +1770,7 @@ function handleExport() {
   saveData(appData);
 
   // ✅ Обновляем индикатор на экране
-  updateSyncIndicator(appData.transactions, appData.settings.lastExportDate);
+  updateSyncIndicator(appData.transactions, appData.lastModified);
 
   alert('✅ Данные успешно сохранены в файл!');
 }
@@ -1215,36 +1789,114 @@ function processImportedFile(event) {
     try {
       const importedData = JSON.parse(e.target.result);
 
-      // Проверяем структуру данных
+      // 1. Проверяем базовую структуру данных
       if (
         !importedData.settings ||
         !importedData.fixedExpenses ||
         !importedData.transactions
       ) {
-        throw new Error('Неверный формат файла');
+        throw new Error(
+          'Неверный формат файла: отсутствуют основные разделы данных',
+        );
       }
 
-      // Подтверждение
-      if (!confirm('⚠️ Это заменит все текущие данные. Продолжить?')) {
+      // 2. Подтверждение
+      if (
+        !confirm(
+          '⚠️ Это заменит все текущие данные на данные из файла. Продолжить?',
+        )
+      ) {
         return;
       }
 
-      // Заменяем данные
+      // 3. Заменяем данные
       appData = importedData;
-      window.appData = appData; // Синхронизируем с глобальной
+      window.appData = appData;
+
+      // 4. Страховка совместимости (v2.5)
+      if (
+        !appData.settings.accounts ||
+        appData.settings.accounts.length === 0
+      ) {
+        appData.settings.accounts = [
+          {
+            id: 'account_default_' + Date.now(),
+            name: 'Основной счёт',
+            emoji: '💼',
+            color: '#3498db',
+          },
+        ];
+        appData.settings.defaultAccountId = appData.settings.accounts[0].id;
+      }
+
+      if (!appData.settings.lastExportDate) {
+        appData.settings.lastExportDate = new Date().toISOString();
+      }
+
+      // === КРИТИЧЕСКИ ВАЖНО: Миграция транзакций без accountId (v2.1) ===
+      const defaultAccountId =
+        appData.settings.defaultAccountId || appData.settings.accounts[0].id;
+      let migratedCount = 0;
+
+      appData.transactions.forEach((t) => {
+        if (!t.accountId) {
+          t.accountId = defaultAccountId;
+          migratedCount++;
+        }
+      });
+
+      if (migratedCount > 0) {
+        console.log(
+          `🔄 Миграция: присвоен accountId для ${migratedCount} транзакций`,
+        );
+      }
+      // ====================================================================
+
+      // 5. Всегда обновляем lastModified на время импорта
+      appData.lastModified = new Date().toISOString();
+
+      // 6. Сохраняем данные
       saveData(appData);
 
-      // Перерисовываем всё
-      renderAll(appData);
+      // 7. Обновляем индикатор синхронизации
+      if (typeof updateSyncIndicator === 'function') {
+        updateSyncIndicator(appData.transactions, appData.lastModified);
+      }
+
+      // 8. Явный пересчет баланса счетов ПОСЛЕ миграции
+      if (typeof renderAccountsList === 'function') {
+        renderAccountsList();
+        console.log('✅ Баланс счетов пересчитан после импорта');
+      }
+
+      // === НОВОЕ: Обновляем баннер сверки после импорта ===
+      if (typeof window.updateReconcileBanner === 'function') {
+        window.updateReconcileBanner();
+        console.log('✅ Баннер сверки обновлён после импорта');
+      }
+
+      // 9. Перерисовываем остальные экраны
+      renderTodayScreen(
+        appData.settings,
+        appData.fixedExpenses,
+        appData.transactions,
+      );
+      renderTransactionList(appData.transactions, appData.settings.pensionDay);
+      renderStats(
+        appData.settings,
+        appData.fixedExpenses,
+        appData.transactions,
+      );
+      renderSettings(appData.settings, appData.fixedExpenses);
 
       alert('✅ Данные успешно восстановлены!');
     } catch (error) {
+      console.error('Ошибка импорта:', error);
       alert('❌ Ошибка при импорте: ' + error.message);
     }
   };
-  reader.readAsText(file);
 
-  // Сбрасываем input, чтобы можно было импортировать тот же файл повторно
+  reader.readAsText(file);
   event.target.value = '';
 }
 
@@ -1445,26 +2097,24 @@ function initDeleteRange() {
   toInput.value = toInputDate(new Date(periodStart.getTime() - 86400000));
   fromInput.addEventListener('change', updateDeletePreview);
   toInput.addEventListener('change', updateDeletePreview);
-    document
-      .getElementById('delete-range-btn')
-      .addEventListener('click', () => {
-        const dateFrom = fromInput.value;
-        const dateTo = toInput.value;
+  document.getElementById('delete-range-btn').addEventListener('click', () => {
+    const dateFrom = fromInput.value;
+    const dateTo = toInput.value;
 
-        if (!dateFrom || !dateTo) {
-          alert('⚠️ Пожалуйста, укажите обе даты: "От" и "До"');
-          return;
-        }
+    if (!dateFrom || !dateTo) {
+      alert('⚠️ Пожалуйста, укажите обе даты: "От" и "До"');
+      return;
+    }
 
-        const confirmed = confirm(
-          `Вы уверены, что хотите удалить все записи с ${dateFrom} по ${dateTo}?\n\n` +
-            `Это действие нельзя отменить!`,
-        );
+    const confirmed = confirm(
+      `Вы уверены, что хотите удалить все записи с ${dateFrom} по ${dateTo}?\n\n` +
+        `Это действие нельзя отменить!`,
+    );
 
-        if (confirmed) {
-          handleDeleteRange();
-        }
-      });
+    if (confirmed) {
+      handleDeleteRange();
+    }
+  });
   updateDeletePreview();
 }
 
@@ -1490,626 +2140,12 @@ function handleDeleteRange() {
     `Расходы на сумму: ${formatMoney(expenseSum)}\n\n` +
     'Рекомендуем сначала сделать Экспорт!\nПродолжить?';
   if (!confirm(message)) return;
-  appData.transactions = appData.transactions.filter(
-    (t) => !isInDeleteRange(t, from, to),
-  );
+  const count = deleteTransactionsByRange(appData, from, to);
   saveData(appData);
   renderAll(appData);
   updateDeletePreview();
   alert(`Готово! Удалено записей: ${victims.length}`);
 }
-
-// === СВЕРКА С БАНКОМ ===
-
-// Обработчик кнопки загрузки файла
-document.getElementById('reconcile-upload-btn').addEventListener('click', () => {
-  document.getElementById('reconcile-file').click();
-});
-
-document.getElementById('reconcile-file').addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const csvText = e.target.result;
-    const bankTransactions = parseCSV(csvText);
-    reconcileTransactions(bankTransactions);
-  };
-  reader.readAsText(file, 'UTF-8');
-});
-
-// Умный парсер CSV — сам определяет кодировку
-function parseCSV(csvText) {
-  const lines = csvText.trim().split(/\r?\n/);
-  const transactions = [];
-
-  // Пропускаем первую строку (заголовок)
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line || line === ';') continue; // Пропускаем пустые строки
-
-    const parts = line.split(';');
-    if (parts.length < 3) continue;
-
-    const date = parts[0].trim();
-    // Заменяем запятую на точку в сумме (на случай разных форматов)
-    const amountStr = parts[1].trim().replace(',', '.');
-    const amount = parseFloat(amountStr);
-    const description = parts[2].trim();
-
-    if (date && !isNaN(amount) && description) {
-      transactions.push({ date, amount, description });
-    }
-  }
-
-  return transactions;
-}
-
-// Умное сравнение транзакций с допуском по дате ±1 день
-function reconcileTransactions(bankTransactions) {
-  const appTransactions = appData.transactions || [];
-  
-  const matches = [];
-  const groupMatches = [];
-  const mismatches = [];
-  const missingInApp = [];
-  const missingInBank = [];
-
-  const pendingHypotheses = {};  // Гипотезы по датам
-
-  // Группируем транзакции приложения по дате
-  const appByDate = {};
-  appTransactions.forEach((tx, index) => {
-    const date = normalizeDate(tx.date);
-    if (!appByDate[date]) appByDate[date] = [];
-    appByDate[date].push({ tx, index });
-  });
-
-  const appUsed = new Array(appTransactions.length).fill(false);
-
-  bankTransactions.forEach((bankTx) => {
-    const bankDate = normalizeDate(bankTx.date);
-    const bankAmount = bankTx.amount; // ✅ Со знаком!
-    let found = false;
-
-    // Ищем совпадения в диапазоне ±1 день
-    const datesToCheck = [
-      bankDate,
-      getAdjacentDate(bankDate, -1),
-      getAdjacentDate(bankDate, 1),
-    ];
-
-    for (const checkDate of datesToCheck) {
-      if (found) break;
-
-      if (appByDate[checkDate]) {
-        // 1. Точное совпадение 1 к 1 (по модулю суммы)
-        for (const { tx: appTx, index } of appByDate[checkDate]) {
-          if (appUsed[index]) continue;
-          const bankAmountAbs = Math.abs(bankAmount);
-          const appAmountAbs = Math.abs(appTx.amount);
-
-          if (Math.abs(bankAmountAbs - appAmountAbs) < 0.01) {
-            matches.push({ bank: bankTx, app: appTx });
-            appUsed[index] = true;
-            found = true;
-            break;
-          }
-        }
-
-        // 2. Групповое совпадение (алгебраическая сумма)
-        if (!found) {
-          const dayTransactions = appByDate[checkDate].filter(
-            ({ index }) => !appUsed[index],
-          );
-          const combinations = findCombinations(
-            dayTransactions.map(({ tx, index }) => ({ tx, index })),
-            bankAmount,
-          );
-
-          if (combinations.found) {
-            groupMatches.push({
-              bank: bankTx,
-              app: combinations.items.map(({ tx }) => tx),
-            });
-            combinations.items.forEach(({ index }) => {
-              appUsed[index] = true;
-            });
-            found = true;
-          }
-        }
-
-        // 3. Поиск гипотез (если не нашли точное или групповое)
-        if (!found) {
-          const dayTransactions = appByDate[checkDate].filter(
-            ({ index }) => !appUsed[index],
-          );
-          const bankAmountAbs = Math.abs(bankAmount);
-
-          // Пробуем найти комбинацию по алгебраической сумме (для случаев с возвратом)
-          let hypotheses = findCombinations(
-            dayTransactions.map(({ tx, index }) => ({ tx, index })),
-            bankAmount,
-            5,
-          );
-
-          // Если не нашли, пробуем по сумме модулей (для случаев с несколькими расходами)
-          if (!hypotheses.found) {
-            hypotheses = findCombinationsByAbsoluteSum(
-              dayTransactions.map(({ tx, index }) => ({ tx, index })),
-              bankAmountAbs,
-              5,
-            );
-          }
-
-          if (hypotheses.found) {
-            // Сохраняем как гипотезу, не помечаем как использованные
-            if (!pendingHypotheses[bankDate]) pendingHypotheses[bankDate] = [];
-
-            // Вычисляем разницу
-            const appSum = hypotheses.items.reduce(
-              (sum, { tx }) => sum + tx.amount,
-              0,
-            );
-            const appAbsSum = hypotheses.items.reduce(
-              (sum, { tx }) => sum + Math.abs(tx.amount),
-              0,
-            );
-            const difference = Math.abs(bankAmountAbs - appAbsSum);
-
-            pendingHypotheses[bankDate].push({
-              bank: bankTx,
-              app: hypotheses.items.map(({ tx }) => tx),
-              difference: difference,
-            });
-            found = true;
-          }
-        }
-      }
-    }
-
-    
-
-    if (!found) {
-      missingInApp.push(bankTx);
-    }
-  });
-
-  appTransactions.forEach((appTx, i) => {
-    if (!appUsed[i]) {
-      missingInBank.push(appTx);
-    }
-  });
-
-    displayReconcileResults(matches, groupMatches, mismatches, missingInApp, missingInBank, pendingHypotheses);
-}
-
-// Вспомогательная функция: получить соседнюю дату
-function getAdjacentDate(dateStr, daysOffset) {
-  const date = new Date(dateStr);
-  date.setDate(date.getDate() + daysOffset);
-  return date.toISOString().split('T')[0];
-}
-
-// Вспомогательная функция для поиска комбинаций сумм (алгебраическая сумма)
-function findCombinations(items, targetSum, tolerance = 2) {
-  const result = { found: false, items: [] };
-  
-  function algebraicSum(items) {
-    return items.reduce((sum, { tx }) => sum + tx.amount, 0);
-  }
-  
-  function findSubset(items, target, current = [], startIndex = 0) {
-    if (result.found) return;
-    
-    const currentSum = algebraicSum(current);
-    
-    if (Math.abs(target - currentSum) <= tolerance) {
-      result.found = true;
-      result.items = [...current];
-      return;
-    }
-    
-    for (let i = startIndex; i < items.length; i++) {
-      current.push(items[i]);
-      findSubset(items, target, current, i + 1);
-      if (result.found) return;
-      current.pop();
-    }
-  }
-  
-  findSubset(items, targetSum);
-  return result;
-}
-
-// Поиск комбинаций по сумме модулей (для гипотез)
-function findCombinationsByAbsoluteSum(items, targetSum, tolerance = 5) {
-  const result = { found: false, items: [] };
-  
-  function absoluteSum(items) {
-    return items.reduce((sum, { tx }) => sum + Math.abs(tx.amount), 0);
-  }
-  
-  function findSubset(items, target, current = [], startIndex = 0) {
-    if (result.found) return;
-    
-    const currentSum = absoluteSum(current);
-    
-    if (Math.abs(target - currentSum) <= tolerance) {
-      result.found = true;
-      result.items = [...current];
-      return;
-    }
-    
-    if (currentSum > target + tolerance) return;
-    
-    for (let i = startIndex; i < items.length; i++) {
-      current.push(items[i]);
-      findSubset(items, target, current, i + 1);
-      if (result.found) return;
-      current.pop();
-    }
-  }
-  
-  findSubset(items, targetSum);
-  return result;
-}
-
-// Нормализация даты — приводит к формату YYYY-MM-DD
-function normalizeDate(dateStr) {
-  if (!dateStr) return '';
-  
-  // Если это ISO-формат (2026-08-22T06:13:13.000Z)
-  if (dateStr.includes('T')) {
-    return dateStr.split('T')[0]; // Берём только дату: 2026-08-22
-  }
-  
-  // Если это формат DD.MM.YYYY (14.09.2026)
-  if (dateStr.includes('.')) {
-    const parts = dateStr.split('.');
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`; // 2026-09-14
-    }
-  }
-  
-  // Если уже в формате YYYY-MM-DD
-  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return dateStr;
-  }
-  
-  return dateStr;
-}
-
-// Отображение результатов сверки
-function displayReconcileResults(matches, groupMatches, mismatches, missingInApp, missingInBank, pendingHypotheses = {}) {
-  const resultsDiv = document.getElementById('reconcile-results');
-  resultsDiv.style.display = 'flex';
-
-  // ✅ Добавили подсчёт общих совпадений (точные + групповые)
-  const totalMatches = matches.length + groupMatches.length;
-  
-  // Пересчитали общее количество, чтобы цифры сходились
-  const totalBank = totalMatches + mismatches.length + missingInApp.length;
-  const totalApp = totalMatches + mismatches.length + missingInBank.length;
-
-  resultsDiv.innerHTML = `
-    <div class="reconcile-summary">
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value">${totalBank}</span>
-        <span class="reconcile-summary__label">В банке</span>
-      </div>
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value">${totalApp}</span>
-        <span class="reconcile-summary__label">В приложении</span>
-      </div>
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value" style="color: #27ae60;">${totalMatches}</span>
-        <span class="reconcile-summary__label">Совпадений</span>
-      </div>
-      <div class="reconcile-summary__item">
-        <span class="reconcile-summary__value" style="color: #f39c12;">${mismatches.length}</span>
-        <span class="reconcile-summary__label">Расхождений</span>
-      </div>
-    </div>
-
-    ${renderReconcileGroup(
-      '✅ Точные совпадения (1 к 1)',
-      'match',
-      matches,
-      (item) => `
-      <div class="reconcile-item__date">${item.bank.date}</div>
-      <div class="reconcile-item__description">${item.bank.description}</div>
-      <div class="reconcile-item__amount">${formatMoney(item.bank.amount)}</div>
-    `
-    )}
-
-    ${renderReconcileGroup(
-      '✅ Групповые совпадения (1 операция в банке = несколько в приложении)',
-      'match',
-      groupMatches,
-      (item) => `
-      <div class="reconcile-item__info" style="width: 100%;">
-        <div class="reconcile-item__date">${item.bank.date}</div>
-        <div class="reconcile-item__description" style="font-weight: 600;">${item.bank.description}</div>
-        <div style="font-size: 0.9em; color: #27ae60; margin-top: 6px; font-weight: 600;">
-          Банк: ${formatMoney(item.bank.amount)} | В приложении: ${item.app.length} операций на ${formatMoney(item.app.reduce((sum, tx) => sum + Math.abs(tx.amount), 0))}
-        </div>
-        <div style="font-size: 0.85em; color: #555; margin-top: 4px; line-height: 1.4;">
-          ${item.app.map(tx => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
-        </div>
-      </div>
-    `
-    )}
-
-    ${renderReconcileGroup(
-      '⚠️ Расхождения (суммы отличаются)',
-      'mismatch',
-      mismatches,
-      (item) => `
-      <div class="reconcile-item__info">
-        <div class="reconcile-item__date">${item.bank.date}</div>
-        <div class="reconcile-item__description">${item.bank.description}</div>
-        <div style="font-size: 0.85em; color: #f39c12;">
-          Банк: ${formatMoney(item.bank.amount)} | Приложение: ${formatMoney(item.app.amount)}
-        </div>
-      </div>
-    `
-    )}
-
-    ${renderReconcileGroup(
-      '🔴 Не учтено в приложении',
-      'missing',
-      missingInApp,
-      (item) => `
-      <div class="reconcile-item__info">
-        <div class="reconcile-item__date">${item.date}</div>
-        <div class="reconcile-item__description">${item.description}</div>
-      </div>
-      <div class="reconcile-item__amount">${formatMoney(item.amount)}</div>
-      <button class="reconcile-item__action" onclick="addTransactionFromBank('${item.date}', ${item.amount}, '${item.description.replace(/'/g, "\\'")}')">
-        Добавить
-      </button>
-    `
-    )}
-
-        ${renderReconcileGroup(
-      '📝 Не отражено в банке',
-      'extra',
-      missingInBank,
-      (item) => `
-      <div class="reconcile-item__info">
-        <div class="reconcile-item__date">${item.date.includes('T') ? item.date.split('T')[0] : item.date}</div>
-        <div class="reconcile-item__description">${item.description || item.category}</div>
-      </div>
-      <div class="reconcile-item__amount">${formatMoney(item.amount)}</div>
-    `
-    )}
-
-    ${renderHypotheses(pendingHypotheses)}
-  `;
-}
-
-
-
-// Вспомогательная функция для рендеринга группы
-function renderReconcileGroup(title, type, items, renderFn) {
-  if (items.length === 0) return '';
-
-  const itemsHtml = items.map((item) => `
-    <div class="reconcile-item">
-      ${renderFn(item)}
-    </div>
-  `).join('');
-
-  return `
-    <div class="reconcile-group reconcile-group--${type}">
-      <div class="reconcile-group__title">${title} (${items.length})</div>
-      ${itemsHtml}
-    </div>
-  `;
-}
-
-// Добавление транзакции из банка в приложение
-window.addTransactionFromBank = function(date, amount, description) {
-  const newTransaction = {
-    id: Date.now().toString(),
-    date: date,
-    amount: amount,
-    category: amount < 0 ? 'Продукты' : 'Доходы',
-    subcategory: 'Разное',
-    description: description,
-    type: amount < 0 ? 'expense' : 'income'
-  };
-
-  appData.transactions.push(newTransaction);
-  saveData(appData);
-  renderAll(appData);
-
-  alert(`✅ Транзакция добавлена: ${description} (${formatMoney(amount)})`);
-};
-
-// === ПАРСЕР СЫРОГО ТЕКСТА ИЗ PDF ===
-
-// Обработчик кнопки "Разобрать текст"
-document.getElementById('reconcile-parse-btn').addEventListener('click', () => {
-  const rawText = document.getElementById('reconcile-raw-text').value.trim();
-  if (!rawText) {
-    alert('️ Вставьте текст из PDF-выписки');
-    return;
-  }
-
-  const bankTransactions = parseRawPDFText(rawText);
-  
-  if (bankTransactions.length === 0) {
-    alert('⚠️ Не удалось найти транзакции в тексте. Проверьте формат выписки.');
-    return;
-  }
-
-  alert(`✅ Найдено транзакций: ${bankTransactions.length}`);
-  reconcileTransactions(bankTransactions);
-});
-
-// Парсер "сырого" текста из PDF Сбербанка
-function parseRawPDFText(text) {
-  const transactions = [];
-  
-  // Регулярное выражение для поиска транзакций
-  const regex = /(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2})\s+([А-Яа-яA-Za-z][А-Яа-яA-Za-z\s]*?)\s+([\d\s]+,\d{2})\s+([\d\s]+,\d{2})\s+(\d{2}\.\d{2}\.\d{4})\s+(\d+)\s+(.+?)(?=\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2}|$)/gs;
-  
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    const date = match[1];
-    const amountStr = match[4].replace(/\s/g, '').replace(',', '.');
-    const description = match[8].trim();
-    
-    // Определяем тип: если в описании есть "+" или "Перевод", "Зачисление" — это доход
-    const isIncome = description.includes('+') || 
-                     description.toLowerCase().includes('перевод') ||
-                     description.toLowerCase().includes('зачислен');
-    
-    const amount = isIncome ? parseFloat(amountStr) : -parseFloat(amountStr);
-    
-    if (date && !isNaN(amount) && description) {
-      transactions.push({ date, amount, description });
-    }
-  }
-
-  return transactions;
-}
-
-// Отображение гипотез
-function renderHypotheses(pendingHypotheses) {
-  const rawHypotheses = Object.values(pendingHypotheses).flat();
-  const confirmedHypotheses = appData.confirmedHypotheses || [];
-
-  const activeHypotheses = rawHypotheses.filter(hypothesis => {
-    const hypothesisKey = `${hypothesis.bank.date}_${Math.abs(hypothesis.bank.amount)}_${hypothesis.app.map(tx => tx.id).join(',')}`;
-    return !confirmedHypotheses.includes(hypothesisKey);
-  });
-
-  if (activeHypotheses.length === 0) return '';
-
-  // Кнопка "Подтвердить все" (показываем, если гипотез больше 1)
-  const confirmAllBtn = activeHypotheses.length > 1 
-    ? `<button class="reconcile-group__action-all" onclick="confirmAllHypotheses()" style="margin: 12px 0; padding: 10px 16px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95em; font-weight: 600; width: 100%; transition: background 0.2s;">
-         ✅ Подтвердить все (${activeHypotheses.length})
-       </button>` 
-    : '';
-
-  const itemsHtml = activeHypotheses.map((hypothesis) => {
-    const hypothesisKey = `${hypothesis.bank.date}_${Math.abs(hypothesis.bank.amount)}_${hypothesis.app.map(tx => tx.id).join(',')}`;
-
-    return `
-      <div class="reconcile-item" data-key="${hypothesisKey}" style="margin-bottom: 12px;">
-        <div class="reconcile-item__info" style="width: 100%;">
-          <div class="reconcile-item__date">${hypothesis.bank.date}</div>
-          <div class="reconcile-item__description" style="font-weight: 600;">${hypothesis.bank.description}</div>
-          <div style="font-size: 0.9em; color: #f39c12; margin-top: 6px;">
-            Банк: ${formatMoney(hypothesis.bank.amount)} | Возможно в приложении:
-          </div>
-          <div style="font-size: 0.85em; color: #555; margin-top: 4px; line-height: 1.4;">
-            ${hypothesis.app.map(tx => `• ${tx.category || tx.description}: ${formatMoney(tx.amount)}`).join('<br>')}
-          </div>
-          <div style="font-size: 0.8em; color: #777; margin-top: 4px;">
-            Разница: ${formatMoney(hypothesis.difference)}
-          </div>
-          <button class="reconcile-item__action" onclick="confirmHypothesis('${hypothesisKey}', this)" style="margin-top: 8px; background: #3498db;">
-            ✅ Подтвердить
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <div class="reconcile-group reconcile-group--mismatch" id="hypotheses-group">
-      <div class="reconcile-group__title">⚠️ Требует проверки (${activeHypotheses.length})</div>
-      ${confirmAllBtn}
-      ${itemsHtml}
-    </div>
-  `;
-}
-
-// Подтверждение гипотезы (без перезагрузки)
-window.confirmHypothesis = function(hypothesisKey, btnElement) {
-  // 1. Сохраняем в память
-  if (!appData.confirmedHypotheses) {
-    appData.confirmedHypotheses = [];
-  }
-  appData.confirmedHypotheses.push(hypothesisKey);
-  saveData(appData);
-  
-  // 2. Мгновенно скрываем элемент из интерфейса
-  const item = btnElement.closest('.reconcile-item');
-  if (item) {
-    item.style.transition = 'opacity 0.3s ease';
-    item.style.opacity = '0';
-    setTimeout(() => {
-      item.style.display = 'none';
-    }, 300);
-  }
-  
-  // 3. Обновляем счётчик в заголовке
-  const group = btnElement.closest('.reconcile-group');
-  const title = group.querySelector('.reconcile-group__title');
-  const match = title.textContent.match(/\d+/);
-  
-  if (match) {
-    const currentCount = parseInt(match[0]);
-    const newCount = currentCount - 1;
-    title.textContent = `⚠️ Требует проверки (${newCount})`;
-    
-    // 3.1. Обновляем текст большой кнопки "Подтвердить все"
-    const confirmAllBtn = group.querySelector('.reconcile-group__action-all');
-    if (confirmAllBtn) {
-      confirmAllBtn.textContent = `✅ Подтвердить все (${newCount})`;
-    }
-    
-    // 4. Если гипотез больше не осталось, скрываем весь блок
-    if (newCount === 0) {
-      group.style.transition = 'opacity 0.3s ease';
-      group.style.opacity = '0';
-      setTimeout(() => {
-        group.style.display = 'none';
-      }, 300);
-    }
-  }
-}; // <-- Вот правильный конец: одна } закрывает функцию, одна ; завершает присваивание.
-
-// Подтверждение ВСЕХ гипотез сразу
-window.confirmAllHypotheses = function() {
-  if (!confirm('Подтвердить все предложенные гипотезы? Они будут сохранены и не появятся при следующей сверке.')) {
-    return;
-  }
-
-  if (!appData.confirmedHypotheses) {
-    appData.confirmedHypotheses = [];
-  }
-
-  // Собираем ключи всех видимых гипотез из DOM
-  const items = document.querySelectorAll('#hypotheses-group .reconcile-item');
-  items.forEach(item => {
-    const key = item.getAttribute('data-key');
-    if (key && !appData.confirmedHypotheses.includes(key)) {
-      appData.confirmedHypotheses.push(key);
-    }
-  });
-
-  // Сохраняем в localStorage
-  saveData(appData);
-
-  // Красиво скрываем весь блок целиком
-  const group = document.getElementById('hypotheses-group');
-  if (group) {
-    group.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-    group.style.opacity = '0';
-    group.style.transform = 'translateY(-10px)';
-    setTimeout(() => {
-      group.style.display = 'none';
-    }, 300);
-  }
-};
 
 // ========================================================================
 // 📱 СВАЙП-НАВИГАЦИЯ (ВРЕМЕННО ОТКЛЮЧЕНО)
@@ -2123,16 +2159,16 @@ if (false) {
     if (hammerInstance) {
       hammerInstance.destroy();
     }
-    
+
     if (typeof Hammer !== 'undefined') {
       hammerInstance = new Hammer(document.body, {
-        touchAction: 'pan-y'
+        touchAction: 'pan-y',
       });
-      
-      hammerInstance.get('swipe').set({ 
+
+      hammerInstance.get('swipe').set({
         direction: Hammer.DIRECTION_HORIZONTAL,
         threshold: 50,
-        velocity: 0.3
+        velocity: 0.3,
       });
 
       hammerInstance.on('swipeleft', () => {
@@ -2146,11 +2182,17 @@ if (false) {
   }
 
   function navigateScreens(direction) {
-    const screens = ['screen-today', 'screen-history', 'screen-stats', 'screen-reconcile', 'screen-settings'];
+    const screens = [
+      'screen-today',
+      'screen-history',
+      'screen-stats',
+      'screen-reconcile',
+      'screen-settings',
+    ];
     const currentHash = window.location.hash || '#screen-today';
     const currentScreenId = currentHash.replace('#', '');
     const currentIndex = screens.indexOf(currentScreenId);
-    
+
     const newIndex = currentIndex + direction;
     if (newIndex >= 0 && newIndex < screens.length) {
       window.location.hash = `#${screens[newIndex]}`;
@@ -2166,10 +2208,10 @@ if (false) {
 function updateTodayIcon() {
   const today = new Date();
   const day = today.getDate();
-  
+
   // Находим первую кнопку навигации (Сегодня)
   const firstNavItem = document.querySelector('.bottom-nav__item:first-child');
-  
+
   if (firstNavItem) {
     const icon = firstNavItem.querySelector('.bottom-nav__icon');
     if (icon) {

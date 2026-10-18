@@ -81,11 +81,12 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   const committedTotal = periodTransactions
     .filter((t) => t.type === 'committed')
     .reduce((sum, t) => sum + t.amount, 0);
-  // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи
+
+  // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи + переводы
   // Используется для баланса; spent — только для статистики
-  const moneyOut = periodTransactions
-    .filter(isMoneyOut)
-    .reduce((sum, t) => sum + t.amount, 0);
+    const moneyOut = periodTransactions
+      .filter(isMoneyOut)
+      .reduce((sum, t) => sum + t.amount, 0);
 
   const income = periodTransactions
     .filter(isIncome)
@@ -163,3 +164,4 @@ export function getTodayPayments(fixedExpenses) {
     return true;
   });
 }
+
