@@ -924,7 +924,6 @@ export function renderPensionPeriodInfo(settings) {
       <div class="period-info__row"><span class="period-info__label">Начало периода:</span><span class="period-info__value">${formatDate(startDate)}</span></div>
       <div class="period-info__row"><span class="period-info__label">Конец периода:</span><span class="period-info__value">${formatDate(nextPensionDate)}</span></div>
       <div class="period-info__row"><span class="period-info__label">Осталось дней:</span><span class="period-info__value">${daysLeft}</span></div>
-      <button class="btn-new-period" id="btn-new-period">🔄 Изменить или сбросить период</button>
     `;
   } else {
     // === НОВОЕ: Показываем ожидаемые даты вместо "Период ещё не начат" ===
