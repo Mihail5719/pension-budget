@@ -4,578 +4,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Руководство пользователя — Мой Бюджет</title>
-
+    <title>Руководство пользователя — Мой бюджет (v2.1)</title>
     <style>
         :root {
-            --bg-primary: #f9f9f9;
-            --bg-secondary: #f0f0f0;
-            --card-bg: #ffffff;
-            --text-primary: #333333;
-            --text-secondary: #666666;
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
             --color-primary: #3498db;
-            --color-primary-dark: #2980b9;
+            --color-success: #2ecc71;
+            --color-warning: #f39c12;
             --color-danger: #e74c3c;
-            --border-color: #e0e0e0;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --btn-primary-bg: #3498db;
-            --btn-primary-text: #ffffff;
-        }
-
-        .dark-theme {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2a2a2a;
-            --card-bg: #2d2d2d;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --color-primary: #5dade2;
-            --color-primary-dark: #3498db;
-            --color-danger: #e74c3c;
-            --border-color: #404040;
-            --shadow: rgba(0, 0, 0, 0.3);
-            --btn-primary-bg: #5dade2;
-            --btn-primary-text: #ffffff;
-        }
-
-        * {
-            box-sizing: border-box;
+            --border-radius: 12px;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            background: var(--bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
             color: var(--text-primary);
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            transition: background 0.3s, color 0.3s;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
         }
 
-        .guide-container {
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px var(--shadow);
-            max-width: 100%;
-            transition: background 0.3s;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
         h1 {
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--color-primary);
-            padding-bottom: 10px;
-            font-size: clamp(24px, 5vw, 32px);
+            text-align: center;
+            color: var(--color-primary);
+            margin-bottom: 10px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--color-success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 30px;
         }
 
         h2 {
+            border-bottom: 2px solid var(--bg-primary);
+            padding-bottom: 8px;
+            margin-top: 30px;
             color: var(--text-primary);
-            margin-top: 32px;
-            margin-bottom: 16px;
-            font-size: clamp(20px, 4vw, 24px);
-            border-left: 4px solid var(--color-primary);
-            padding-left: 12px;
         }
 
         h3 {
-            color: var(--text-primary);
-            margin-top: 24px;
-            margin-bottom: 12px;
-            font-size: 18px;
+            color: var(--color-primary);
+            margin-top: 20px;
         }
 
-        ul {
+        p,
+        li {
+            color: var(--text-secondary);
+        }
+
+        ul,
+        ol {
             padding-left: 20px;
-            margin-bottom: 16px;
         }
 
         li {
             margin-bottom: 8px;
         }
 
-        p {
-            margin-bottom: 12px;
-        }
-
-        .back-btn {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 12px 24px;
-            background: var(--btn-primary-bg);
-            color: var(--btn-primary-text);
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: background 0.2s;
-            max-width: 100%;
-        }
-
-        .back-btn:hover {
-            background: var(--color-primary-dark);
-        }
-
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px var(--shadow);
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-
-        .toc {
-            background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            border: 1px solid var(--border-color);
-        }
-
-        .toc h2 {
-            margin-top: 0;
-            border-left: none;
-            padding-left: 0;
-            font-size: 20px;
-        }
-
-        .toc ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .toc li {
-            margin-bottom: 12px;
-        }
-
-        .toc a {
-            color: var(--color-primary);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 16px;
-            display: block;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .toc a:hover {
-            background: var(--bg-primary);
-        }
-
-        /* === СТИЛИ ДЛЯ СКРИНШОТОВ === */
-        .screenshot {
-            width: 100%;
-            max-width: 360px;
-            margin: 20px auto;
-            display: block;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px var(--shadow);
-            border: 1px solid var(--border-color);
-        }
-
         .tip {
-            background: rgba(52, 152, 219, 0.1);
+            background-color: #e8f4f8;
             border-left: 4px solid var(--color-primary);
-            padding: 12px 16px;
-            margin: 16px 0;
-            border-radius: 8px;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
         }
 
         .warning {
-            background: rgba(231, 76, 60, 0.1);
-            border-left: 4px solid var(--color-danger);
-            padding: 12px 16px;
-            margin: 16px 0;
+            background-color: #fdf2e9;
+            border-left: 4px solid var(--color-warning);
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .screenshot {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            border: 2px solid var(--bg-primary);
             border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .module {
-            margin-bottom: 40px;
-            padding-top: 20px;
-            scroll-margin-top: 80px;
+        .screenshot-caption {
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: -10px;
+            margin-bottom: 20px;
         }
 
-        html {
-            scroll-behavior: smooth;
+        .screenshot-placeholder {
+            background: #f1f3f5;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #7f8c8d;
+            margin: 20px 0;
         }
 
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
+        .screenshot-placeholder strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+        }
 
-            .guide-container {
-                padding: 16px;
-            }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            padding: 12px;
+            background: var(--color-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+        }
 
-            h1 {
-                font-size: 24px;
-            }
-
-            h2 {
-                font-size: 18px;
-            }
-
-            .toc a {
-                font-size: 15px;
-            }
-
-            .theme-toggle {
-                top: 10px;
-                right: 10px;
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-
-            .screenshot {
-                max-width: 100%;
-            }
+        .back-link:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
 
 <body>
-    <button class="theme-toggle" id="themeToggle" title="Переключить тему">🌙</button>
 
-    <div class="guide-container">
-        <h1>📖 Руководство пользователя</h1>
+    <div class="container">
+        <h1>📘 Руководство пользователя</h1>
+        <div class="version-badge">Актуально для версии 2.1</div>
 
-        <nav class="toc">
-            <h2>Содержание</h2>
-            <ul>
-                <li><a href="#intro">Введение</a></li>
-                <li><a href="#common">Общие элементы интерфейса</a></li>
-                <li><a href="#module1">Модуль 1: Экран «Сегодня»</a></li>
-                <li><a href="#module2">Модуль 2: Экран «История операций»</a></li>
-                <li><a href="#module3">Модуль 3: Экран «Статистика»</a></li>
-                <li><a href="#module4">Модуль 4: Экран «Сверка»</a></li>
-                <li><a href="#module5">Модуль 5: Экран «Настройки»</a></li>
-            </ul>
-        </nav>
+        <h2>1. Начало работы</h2>
+        <p>При первом запуске приложение предложит вам пройти краткую настройку. Если вы пропустили этот шаг, вы всегда
+            можете настроить всё вручную в разделе <strong>«Настройки»</strong>.</p>
 
-        <section id="intro" class="module">
-            <h2>Введение</h2>
-            <p><strong>«Мой бюджет»</strong> — это приложение для честного учёта личных финансов между фиксированными
-                поступлениями (например, от пенсии до пенсии). Оно показывает, сколько вы можете тратить каждый день,
-                чтобы денег хватило до следующего поступления, и помогает не выйти за рамки бюджета.</p>
-            <p>Приложение работает как на компьютере, так и на смартфоне. На смартфоне его можно установить на рабочий
-                стол как обычное приложение — тогда оно будет работать даже без интернета.</p>
+        <div class="tip">💡 <strong>Совет:</strong> Для корректного расчёта дневного лимита важно указать реалистичную
+            сумму неприкосновенного запаса (НЗ). Эти деньги приложение будет автоматически резервировать и не включит их
+            в доступный для трат остаток.</div>
 
-            <div class="tip">
-                <strong>Главное правило контроля бюджета:</strong><br>
-                Каждый день достаточно сравнить две цифры:<br>
-                <strong>«Осталось до пенсии» в приложении + НЗ = Остаток на счёте в банке</strong>.<br>
-                Если они совпадают — ваш бюджет в порядке. Экран «Сверка» нужен только для детального разбора
-                расхождений, когда что-то пошло не так.
-            </div>
-        </section>
+        <h2>2. Настройка приложения</h2>
+        <p>Перейдите на вкладку <strong>«Настройки»</strong> (шестерёнка внизу экрана):</p>
 
-        <section id="common" class="module">
-            <h2>Общие элементы интерфейса</h2>
-            <p>Каждый экран приложения имеет одинаковую «рамку» — верхнюю шапку и нижнее меню навигации.</p>
+        <img src="docs/screenshots/screen-settings.png" class="screenshot" alt="Экран настроек">
+        <p class="screenshot-caption">Рис. 1. Экран настроек с управлением счетами</p>
 
-            <h3> Шапка (верхняя часть экрана)</h3>
-            <p>В верхней части любого экрана вы видите синий блок с тремя элементами:</p>
-            <ul>
-                <li><strong>Название приложения</strong> — «Мой бюджет» (по центру).</li>
-                <li><strong>Дата пенсии</strong> — под названием, мелким шрифтом: <em>«Пенсия: 23 числа»</em>.
-                    Напоминает, когда ждать следующего поступления.</li>
-                <li><strong>Переключатель темы</strong> 🌙/☀️ — в правом верхнем углу. Нажмите, чтобы переключиться между светлой и
-                    тёмной темой. Выбор запоминается.</li>
-            </ul>
+        <ul>
+            <li><strong>Источник дохода:</strong> Выберите «Пенсия», «Зарплата», «Стипендия» или «Свой вариант». Для
+                регулярных доходов появится поле «День получения».</li>
+            <li><strong>Сумма поступления и день:</strong> Укажите размер дохода и число месяца, когда он приходит.</li>
+            <li><strong>Неприкосновенный запас (НЗ):</strong> Сумма, которая всегда должна оставаться на счету на
+                экстренный случай.</li>
+            <li><strong>Управление счетами (Многоконточность):</strong> Нажмите «+ Добавить счёт». Приложение
+                автоматически распознает популярные банки (Сбербанк 🏦, Тинькофф 🏦, ВТБ 🏦) и подставит им фирменные
+                цвета.</li>
+            <li><strong>Обязательные платежи:</strong> Добавьте регулярные траты (ЖКХ, интернет, кредиты) с указанием
+                суммы и дня месяца.</li>
+        </ul>
 
-            <h3>📱 Нижнее меню навигации</h3>
-            <p>Внизу любого экрана расположены <strong>5 кнопок</strong> для переключения между разделами приложения:
-            </p>
-            <ul>
-                <li>📅 <strong>Сегодня</strong> — Главный экран (остаток, лимит, кнопка пенсии).</li>
-                <li> <strong>История</strong> — Все записи о расходах и доходах.</li>
-                <li>📊 <strong>Статистика</strong> — Диаграмма расходов и проценты по категориям.</li>
-                <li>🔄 <strong>Сверка</strong> — Проверка записей с банковской выпиской.</li>
-                <li>⚙️ <strong>Настройки</strong> — Параметры и данные.</li>
-            </ul>
-            <p>Нажмите на любую кнопку — и вы мгновенно перейдёте на соответствующий экран. Активная кнопка
-                подсвечивается.</p>
-        </section>
+        <h2>3. Главный экран и начало периода</h2>
+        <p>На главном экране вы видите ваш <strong>дневной лимит</strong> и цветовой индикатор:</p>
 
-        <section id="module1" class="module">
-            <h2>Модуль 1: Экран «Сегодня»</h2>
-            <p><strong>Главный экран — сколько можно потратить сегодня</strong></p>
-            <p>Когда вы открываете приложение, первым делом вы видите экран «Сегодня». Это ваш главный финансовый компас
-                на день.</p>
+        <div class="screenshot-placeholder">
+            <strong>📸 Скриншот: Главный экран (будет добавлен)</strong>
+            Здесь будет скриншот актуальной версии главного экрана с кнопкой "Поступление: Пенсия"
+        </div>
 
-            <img src="docs/screenshots/screen-today.png" alt="Главный экран Сегодня" class="screenshot">
+        <ul>
+            <li>🟢 <strong>Зелёный:</strong> Вы тратите в пределах безопасного лимита.</li>
+            <li>🟡 <strong>Жёлтый:</strong> Внимание, темп расходов выше рекомендуемого.</li>
+            <li>🔴 <strong>Красный:</strong> Осторожно, свободный бюджет на исходе.</li>
+        </ul>
 
-            <h3>Что здесь показано:</h3>
-            <ul>
-                <li>🔵 <strong>Остаток до пенсии</strong> — крупное число в центре карточки. Это сумма, которая у вас
-                    есть прямо сейчас и которую можно тратить до следующего поступления пенсии.</li>
-                <li>🟢 <strong>Индикатор (цветной кружок)</strong> — сигнал о состоянии бюджета:
-                    <ul>
-                        <li>🟢 <strong>Зелёный</strong> — всё хорошо, дневной лимит в норме.</li>
-                        <li>🟡 <strong>Жёлтый</strong> — внимание, вы приближаетесь к пределу.</li>
-                        <li>🔴 <strong>Красный</strong> — тревога, вы вышли за рамки безопасного лимита.</li>
-                    </ul>
-                </li>
-                <li> <strong>Безопасный дневной лимит</strong> — второе число на экране. Это сумма, которую вы можете
-                    тратить каждый день, чтобы денег хватило до пенсии. Под ним мелким шрифтом написано: <em>«чтобы
-                        хватило до пенсии»</em>.</li>
-                <li> <strong>Дней осталось</strong> — показывает, сколько дней осталось до следующей пенсии. Помогает
-                    понять, на сколько дней нужно растянуть остаток.</li>
-                <li>💸 <strong>Потрачено</strong> — показывает, сколько вы уже потратили за текущий период. Позволяет
-                    быстро оценить, насколько активно вы расходуете деньги.</li>
-            </ul>
+        <div class="tip">💡 <strong>Важно:</strong> Когда вы фактически получите деньги, нажмите кнопку <strong>«✅
+                Поступление: [Доход]»</strong>. Это запустит текущий период и перенесёт нераспределённый остаток с
+            прошлого месяца.</div>
 
-            <h3>Кнопка «Отметить поступление пенсии» (зелёная)</h3>
-            <p>Нажмите её в день, когда пенсия пришла на счёт. Приложение пересчитает дневной лимит с учётом новой
-                суммы, запомнит дату начала нового периода, а кнопка превратится в надпись «✅ Пенсия получена: ДД.ММ.ГГГГ» с кнопкой <span
-                    style="color: #3498db; font-weight: bold;">✎</span> «Изменить» рядом.
-            <div class="warning">⚠️ <strong>Важно:</strong> если пенсия ещё не пришла, не нажимайте эту кнопку — иначе
-                дневной лимит будет посчитан неправильно.</div>
+        <h2>4. Учёт операций</h2>
+        <h3>📝 Запись расхода</h3>
+        <p>Нажмите <strong>«+ Расход»</strong>. Выберите категорию, а затем подкатегорию.</p>
 
-            <h3>Кнопка «Использовать НЗ» (если НЗ &gt; 0)</h3>
-            <p>Позволяет взять деньги из Неприкосновенного Запаса в экстренной ситуации. Приложение спросит сумму и
-                причину, уменьшит НЗ и запишет операцию.</p>
+        <div class="screenshot-placeholder">
+            <strong>📸 Скриншот: Модалка расхода с цветным кружком (будет добавлен)</strong>
+            Здесь будет скриншот модалки добавления расхода с цветным индикатором подкатегории
+        </div>
 
-            <h3>Блок «Сегодня к оплате» (если есть платежи на сегодня)</h3>
-            <p>Показывает фиксированные платежи, которые нужно оплатить сегодня. У каждого платежа две кнопки:</p>
-            <ul>
-                <li><span style="color: #27ae60; font-weight: bold;">✓</span> — отметить как оплаченное.</li>
-                <li><span style="color: #3498db; font-weight: bold;">⏸</span> — отложить на завтра.</li>
-            </ul>
-        </section>
+        <div class="tip">🎨 <strong>Цветные индикаторы (новая функция v2.1):</strong> При выборе подкатегории (например,
+            «Мясо» или «Овощи») справа от списка появится маленький цветной кружок. Эти же кружки отображаются в истории
+            операций, позволяя мгновенно считывать структуру трат.</div>
 
-        <section id="module2" class="module">
-            <h2>Модуль 2: Экран «История операций»</h2>
-            <p><strong>Журнал всех ваших финансовых записей</strong></p>
-            <p>Экран «История операций» — это журнал всех ваших финансовых движений: расходов, доходов и фиксированных
-                платежей. Здесь вы можете увидеть, куда ушли деньги, откуда пришли, и при необходимости исправить или
-                удалить любую запись.</p>
+        <p>Вы также можете указать <em>Предмет покупки</em> (например, "Молоко") и <em>Место</em> (например,
+            "Пятёрочка"), а также выбрать конкретный счёт, с которого была произведена оплата.</p>
 
-            <img src="docs/screenshots/screen-history.png" alt="Экран История операций" class="screenshot">
+        <h3>💰 Запись дохода и Переводы</h3>
+        <ul>
+            <li><strong>Доход:</strong> Используйте для любых дополнительных поступлений (подработка, возврат долга,
+                подарки).</li>
+            <li><strong>Перевод:</strong> Используйте для перемещения денег между вашими счетами. Переводы <strong>не
+                    считаются</strong> ни доходом, ни расходом и не влияют на общий дневной лимит.</li>
+        </ul>
 
-            <h3>Как устроен экран</h3>
-            <p>Все записи сгруппированы по дням. Каждый день начинается с <strong>шапки</strong>, в которой показан
-                развёрнутый итог за этот день:</p>
-            <ul>
-                <li><strong>Доход</strong> — зелёным цветом со знаком плюс (например, <strong>+5 000,00 ₽</strong>).
-                </li>
-                <li><strong>Расход</strong> — красным цветом со знаком минус (например, <strong>−2 350,00 ₽</strong>).
-                </li>
-            </ul>
-            <p>Если в этот день была только одна операция (только доход или только расход) — показывается только она. Если в этот
-                день не было операций — шапка не показывается. Под шапкой идут <strong>карточки операций</strong> в хронологическом
-                порядке (сверху — более поздние).</p>
+        <h2>5. История операций</h2>
+        <p>Во вкладке <strong>«История»</strong> все операции сгруппированы по дням. Вы можете редактировать или удалять
+            любую запись.</p>
 
-            <h3>Карточка операции</h3>
-            <p>Каждая карточка содержит:</p>
-            <ul>
-                <li>🏷️ <strong>Категория и подкатегория</strong> — например, «Продукты → Овощи и фрукты». Рядом с
-                    категорией стоит эмодзи для быстрого визуального поиска.</li>
-                <li>💰 <strong>Сумма</strong> — справа от категории. Расходы показаны <strong>красным</strong> цветом со знаком минус,
-                    доходы — <strong>зелёным</strong> со знаком плюс.</li>
-                <li>📝 <strong>Предмет покупки</strong> (если указан) — третья строка карточки, курсивом. Например:
-                    <em>«сосиски, молоко, хлеб»</em>. Это поле необязательное.</li>
-                <li><span style="color: #3498db; font-weight: bold;">✎</span> <strong>Кнопка редактирования</strong> (карандаш) — справа
-                    внизу карточки. Открывает окно, где можно изменить категорию, подкатегорию, сумму, дату и предмет покупки.</li>
-                <li><span style="color: #e74c3c; font-weight: bold;">✕</span> <strong>Кнопка удаления</strong> (крестик) — рядом с
-                    карандашом. Удаляет запись после подтверждения.</li>
-            </ul>
+        <img src="docs/screenshots/screen-history.png" class="screenshot" alt="История операций">
+        <p class="screenshot-caption">Рис. 2. История операций с группировкой по дням</p>
 
-            <h3>Как добавить расход</h3>
-            <ol>
-                <li>На экране <strong>«Сегодня»</strong> нажмите синюю кнопку <strong>«Записать расход»</strong>.</li>
-                <li>В открывшемся окне выберите <strong>категорию</strong> и <strong>подкатегорию</strong>.</li>
-                <li>Введите <strong>сумму</strong> (стоимость в рублях и через запятую или точку в копейках — приложение
-                    поймёт).</li>
-                <li>4. <em>(Необязательно)</em> В поле <strong>«Предмет покупки»</strong> напишите конкретные товары.</li>
-                <li>Нажмите <strong>«Сохранить»</strong>.</li>
-            </ol>
+        <h2>6. Статистика и сверка</h2>
+        <h3>📊 Статистика</h3>
+        <p>Во вкладке <strong>«Статистика»</strong> вы увидите круговую диаграмму расходов по категориям и детализацию
+            по подкатегориям.</p>
 
-            <h3>Как добавить доход</h3>
-            <ol>
-                <li>На экране <strong>«Сегодня»</strong> нажмите зелёную кнопку <strong>«Добавить доход»</strong>.</li>
-                <li>Выберите категорию дохода (например, «Подарки», «Подработка», «Возврат долга» и т.д.).</li>
-                <li>Введите сумму и нажмите <strong>«Сохранить»</strong>.</li>
-            </ol>
-            <p><em>Доходы увеличивают остаток до пенсии и влияют на дневной лимит — он сразу же изменится в сторону
-                    увеличения.</em></p>
+        <img src="docs/screenshots/screen-stats.png" class="screenshot" alt="Статистика">
+        <p class="screenshot-caption">Рис. 3. Круговая диаграмма расходов</p>
 
-            <h3>Как отредактировать или удалить запись</h3>
-            <ul>
-                <li>Нажмите <span style="color: #3498db; font-weight: bold;">✎</span> (карандаш) на нужной карточке, измените поля и
-                    нажмите «Сохранить».</li>
-                <li>Нажмите <span style="color: #e74c3c; font-weight: bold;">✕</span> (крестик) и подтвердите удаление. ️ Удаление
-                    нельзя отменить.</li>
-            </ul>
+        <h3>🔄 Сверка с банком</h3>
+        <p>Функция сверки помогает сопоставить ваши записи с выпиской из банка. Алгоритм автоматически находит
+            совпадения и помечает расхождения.</p>
 
-            <h3>Особые случаи</h3>
-            <ul>
-                <li>🔓 <strong>Использование НЗ</strong> — такие записи помечены оранжевой полоской слева. Их нельзя
-                    редактировать, только удалить (при удалении сумма вернётся в НЗ).</li>
-                <li><strong>Фиксированные платежи</strong> — записи с иконкой 📋 создаются при оплате фиксированных платежей (ЖКХ,
-                    кредит и т.д.). Они тоже редактируются, как обычные.</li>
-            </ul>
-        </section>
+        <img src="docs/screenshots/screen-reconcile.png" class="screenshot" alt="Сверка с банком">
+        <p class="screenshot-caption">Рис. 4. Экран сверки операций с банковской выпиской</p>
 
-        <section id="module3" class="module">
-            <h2>Модуль 3: Экран «Статистика»</h2>
-            <p><strong>Куда ушли деньги</strong></p>
-            <p>Экран «Статистика» показывает полную картину ваших финансов за текущий период (от последней пенсии до
-                следующей).</p>
+        <h2>7. Архивация периодов</h2>
+        <p>Когда старый период закончился и вы хотите начать новый с чистого листа:</p>
+        <ol>
+            <li>Зайдите в <strong>«Настройки»</strong>.</li>
+            <li>Нажмите кнопку <strong>«🔒 Закрыть период и создать архив»</strong>.</li>
+            <li>Подтвердите действие. Приложение сохранит полную историю, перенесёт остаток и очистит текущий список
+                операций.</li>
+        </ol>
 
-            <img src="docs/screenshots/screen-stats.png" alt="Экран Статистика" class="screenshot">
+        <div class="screenshot-placeholder">
+            <strong>📸 Скриншот: Раздел архивов (будет добавлен)</strong>
+            Здесь будет скриншот раздела архивов в настройках
+        </div>
 
-            <p>Экран состоит из трёх блоков, расположенных сверху вниз:</p>
+        <p>Просматривать закрытые периоды можно в разделе <strong>«Архивы»</strong> внизу страницы настроек.</p>
 
-            <h3>Блок 1: Сводка по доходам и расходам</h3>
-            <ul>
-                <li>💚 <strong>Доходы</strong> — зелёным цветом со знаком плюс (пенсия + дополнительные доходы).</li>
-                <li>❤️ <strong>Расходы</strong> — красным цветом со знаком минус (все траты за период).</li>
-                <li>⚪ <strong>Нефиксированные</strong> — чёрным цветом (повседневные траты, записанные вручную).</li>
-                <li> <strong>Фиксированные</strong> — чёрным цветом (регулярные платежи, настроенные в разделе
-                    «Настройки»).</li>
-            </ul>
+        <h2>8. Резервное копирование</h2>
+        <p>Все данные хранятся локально в вашем браузере. Чтобы не потерять их:</p>
+        <ul>
+            <li>Регулярно нажимайте <strong>«Экспорт данных»</strong> в настройках.</li>
+            <li>Для восстановления нажмите <strong>«Импорт данных»</strong> и выберите сохранённый файл.</li>
+        </ul>
 
-            <h3>Блок 2: Круговая диаграмма</h3>
-            <p>Наглядно показывает, какие категории нефиксированных расходов занимают большую часть бюджета. Наведите
-                палец (или курсор) на сектор, чтобы увидеть точную сумму и процент.</p>
+        <h2>9. Дополнительные возможности</h2>
+        <ul>
+            <li>🌙 <strong>Тёмная тема:</strong> Переключается кнопкой в правом верхнем углу главного экрана.</li>
+            <li>📱 <strong>Установка на телефон:</strong> В браузере Chrome/Safari нажмите «Поделиться» → «На экран
+                "Домой"». Приложение будет работать как нативное, даже без интернета (PWA).</li>
+        </ul>
 
-            <h3>Блок 3: Детальная разбивка по подкатегориям</h3>
-            <p>Раздел <strong>«По подкатегориям»</strong> раскрывает каждую категорию до конкретных статей.</p>
-            <div class="tip">
-                <strong>Как читать проценты:</strong><br>
-                • Процент рядом с <strong>категорией</strong> (например, ЖКХ 30.6%) — это доля категории <strong>от всех
-                    расходов за период</strong>.<br>
-                • Процент рядом с <strong>подкатегорией</strong> (например, Коммуналка 71.2%) — это доля подкатегории
-                <strong>внутри своей категории</strong>.
-            </div>
-            <p><em>Если за текущий период вы ещё ничего не записали, вместо диаграммы вы увидите сообщение: «Нет
-                    расходов за этот период».</em></p>
-        </section>
-
-        <section id="module4" class="module">
-            <h2>Модуль 4: Экран «Сверка»</h2>
-            <p><strong>Проверка ваших записей по банковской выписке</strong></p>
-            <p>Экран «Сверка» позволяет загрузить выписку из банка и автоматически сравнить её с записями в приложении.
-            </p>
-
-            <img src="docs/screenshots/screen-reconcile.png" alt="Экран Сверка" class="screenshot">
-
-            <h3>Как провести сверку</h3>
-            <ol>
-                <li><strong>Получите выписку из банка.</strong> Приложение понимает CSV-файлы или текст, скопированный
-                    из PDF.</li>
-                <li>Загрузите файл или вставьте текст в поле и нажмите «Разобрать текст».</li>
-                <li>Дождитесь результатов.</li>
-            </ol>
-
-            <h3>Как читать отчёт</h3>
-            <ul>
-                <li>✅ <strong>Точные совпадения (1 к 1)</strong> — операции, которые есть и в банке, и в приложении.
-                </li>
-                <li>✅ <strong>Групповые совпадения</strong> — когда одна операция в банке равна сумме нескольких записей
-                    в приложении в один день.</li>
-                <li>🔴 <strong>Не учтено в приложении</strong> — операции из выписки, которые вы забыли записать. Рядом
-                    есть кнопка <strong>«Добавить»</strong> для мгновенного переноса в Историю.</li>
-                <li>⚪ <strong>Не отражено в банке</strong> — записи в приложении, отсутствующие в выписке (например,
-                    траты наличными).</li>
-            </ul>
-
-            <div class="tip">💡 <strong>Совет:</strong> проводите сверку раз в неделю или после крупных покупок для
-                полной уверенности.</div>
-        </section>
-
-        <section id="module5" class="module">
-            <h2>Модуль 5: Экран «Настройки»</h2>
-            <p><strong>Первоначальная настройка и управление данными</strong></p>
-
-            <img src="docs/screenshots/screen-settings.png" alt="Экран Настройки" class="screenshot">
-
-            <h3>Основные параметры</h3>
-            <ul>
-                <li>💰 <strong>Начальный остаток</strong> — сумма на счёте в начале периода. Обычно заполняется
-                    автоматически.</li>
-                <li>🏦 <strong>Размер пенсии</strong> — сумма ежемесячного поступления.</li>
-                <li>📅 <strong>День пенсии</strong> — число месяца, когда приходит пенсия (например, 23).</li>
-                <li>🔒 <strong>Неприкосновенный запас (НЗ)</strong> — сумма, которую вы решили не тратить. Приложение
-                    учитывает её при расчёте лимита, но не включает в доступные траты.</li>
-            </ul>
-            <p><em>После изменения любого поля приложение автоматически сохранит изменения и пересчитает лимит.</em></p>
-
-            <h3>Фиксированные платежи</h3>
-            <p>Здесь вы указываете регулярные платежи, которые списываются каждый месяц (коммуналка, кредит, подписки).
-                Нажмите <strong>«Добавить платёж»</strong>, введите название, сумму и день списания. Платежи можно редактировать (<span style="color: #3498db; font-weight: bold;">✎</span>) или удалять (<span
-                    style="color: #e74c3c; font-weight: bold;">✕</span>). Они вычитаются из остатка при расчёте дневного лимита.
-
-            <h3>Экспорт и импорт данных</h3>
-            <p>Это <strong>самый важный раздел</strong> для безопасности ваших данных.</p>
-            <ul>
-                <li>📤 <strong>Экспорт:</strong> нажмите кнопку, скачайте JSON-файл и сохраните его в надёжном месте
-                    (облако, Telegram «Избранное», компьютер).</li>
-                <li>📥 <strong>Импорт:</strong> выберите ранее сохранённый JSON-файл для восстановления данных.
-                    <em>Внимание: импорт полностью заменяет текущие данные.</em></li>
-            </ul>
-
-            <div class="tip">
-                💡 <strong>Правило синхронизации:</strong> если вы пользуетесь приложением на нескольких устройствах,
-                договоритесь, какое из них — «мастер». Правки делайте только на мастере, а на остальных импортируйте
-                данные. Индикатор синхронизации покажет дату последнего экспорта и количество записей.
-            </div>
-
-            <h3>Удаление записей за период</h3>
-            <p>Позволяет массово удалить все операции за указанный диапазон дат (например, после закрытия периода).
-                Перед удалением обязательно сделайте экспорт данных.</p>
-            <div class="warning">⚠️ <em>Действие нельзя отменить.</em></div>
-        </section>
-
-        <a href="index.html" class="back-btn">← Вернуться в приложение</a>
+        <a href="index.html" class="back-link">← Вернуться в приложение</a>
     </div>
 
-    <script>
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            body.classList.add('dark-theme');
-            themeToggle.textContent = '☀️';
-        }
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('dark-theme');
-            const isDark = body.classList.contains('dark-theme');
-            themeToggle.textContent = isDark ? '☀️' : '🌙';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        });
-
-        document.querySelectorAll('.toc a').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href').substring(1);
-                const targetElement = document.getElementById(targetId);
-                if (targetElement) {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
-    </script>
 </body>
 
 </html>
