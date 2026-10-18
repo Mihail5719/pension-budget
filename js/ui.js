@@ -310,9 +310,16 @@ export function renderTransactionList(transactions, pensionDay) {
       const accountColor = account ? account.color : '#95a5a6';
       const accountName = account ? account.name : 'Счёт';
 
-      const subLine = transaction.subcategory
-        ? `<span class="transaction__subcategory">${transaction.subcategory}</span>`
-        : '';
+      // === ГИБРИДНОЕ ПРЕДСТАВЛЕНИЕ: Цветной кружок подкатегории в истории ===
+      let subLine = '';
+      if (transaction.subcategory) {
+        const subColor = getSubcategoryColor(transaction.subcategory);
+        subLine = `<span class="transaction__subcategory">
+                     <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${subColor}; margin-right: 6px; vertical-align: middle;"></span>
+                     ${transaction.subcategory}
+                   </span>`;
+      }
+      // ======================================================================
       const itemLine = transaction.item
         ? `<span class="transaction__item">${transaction.item}</span>`
         : '';

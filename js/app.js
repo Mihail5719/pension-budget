@@ -184,6 +184,17 @@ function setupEventListeners() {
     fillSubcategories(expenseCategorySelect.value);
   });
 
+  // === НОВОЕ: Обновляем цветной кружок при выборе подкатегории в модалке ===
+  const expenseSubcategorySelect = document.getElementById(
+    'expense-subcategory',
+  );
+  if (expenseSubcategorySelect) {
+    expenseSubcategorySelect.addEventListener('change', () => {
+      updateSubcategoryColorIndicator(expenseSubcategorySelect);
+    });
+  }
+  // ===========================================================================
+
   // При смене категории в модалке редактирования — пересоздаём подкатегории
   const editCategorySelect = document.getElementById('edit-category');
   editCategorySelect.addEventListener('change', () => {
@@ -201,7 +212,22 @@ function setupEventListeners() {
       option.textContent = sub.name;
       subSelect.appendChild(option);
     });
+
+    // === НОВОЕ: Обновляем цветной кружок сразу после пересоздания списка ===
+    updateSubcategoryColorIndicator(subSelect);
+    // =======================================================================
   });
+
+  // === НОВОЕ: Обновляем цветной кружок при выборе подкатегории в модалке редактирования ===
+  const editSubcategorySelect = document.getElementById('edit-subcategory');
+  if (editSubcategorySelect) {
+    editSubcategorySelect.addEventListener('change', () => {
+      updateSubcategoryColorIndicator(editSubcategorySelect);
+    });
+  }
+  // ===========================================================================
+
+  expenseSaveBtn.addEventListener('click', saveExpense);
 
   expenseSaveBtn.addEventListener('click', saveExpense);
   expenseCancelBtn.addEventListener('click', closeExpenseModal);
@@ -650,7 +676,7 @@ function setupEventListeners() {
         }
 
         saveData(appData);
-        renderAccountsList(appData.settings.accounts, appData.transactions);
+        renderAccountsList();
         console.log('✅ Счёт удалён:', account.name);
       }
     }
@@ -868,14 +894,53 @@ let incomeModal,
   incomeSaveBtn,
   incomeCancelBtn;
 
+// Генератор стабильного цвета для подкатегории по её названию
+function getSubcategoryColor(name) {
+  if (!name) return '#95a5a6'; // Серый по умолчанию
+
+  // === ЯРКИЕ ЦВЕТА ДЛЯ КЛЮЧЕВЫХ ПОДКАТЕГОРИЙ ===
+    const brightColors = {
+      Мясо: '#e74c3c', // Ярко-красный
+      Рыба: '#2196F3', // Ярко-синий (как вода)
+      'Овощи и фрукты': '#2ecc71', // Ярко-зелёный
+      Молочное: '#3498db', // Ярко-синий
+      'Хлеб и бакалея': '#FF9800', // Ярко-оранжевый
+      Бензин: '#9b59b6', // Фиолетовый
+      Коммуналка: '#1abc9c', // Бирюзовый
+      Лекарства: '#e91e63', // Розовый
+      Мобильный: '#00bcd4', // Голубой
+      Разное: '#95a5a6', // Серый (нейтральный)
+    };
+  // ===============================================
+
+  // Если есть явный цвет — используем его
+  if (brightColors[name]) {
+    return brightColors[name];
+  }
+
+  // Иначе генерируем на основе хэша
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 75%, 50%)`; // Увеличили насыщенность и контраст
+}
+window.getSubcategoryColor = getSubcategoryColor;
+
+window.getSubcategoryColor = getSubcategoryColor;
+
 // Заполняем селект подкатегорий по выбранной категории
 function fillSubcategories(categoryId) {
   const select = document.getElementById('expense-subcategory');
+  if (!select) return; // Защита от ошибок, если элемента нет на странице
+  
   select.innerHTML = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.textContent = '-- выберите --';
   select.appendChild(placeholder);
+  
   const subs = SUBCATEGORIES[categoryId] || [];
   subs.forEach((sub) => {
     const option = document.createElement('option');
@@ -883,6 +948,35 @@ function fillSubcategories(categoryId) {
     option.textContent = sub.name;
     select.appendChild(option);
   });
+
+  // Сразу обновляем цветной индикатор после заполнения списка
+  updateSubcategoryColorIndicator(select);
+}
+
+window.fillSubcategories = fillSubcategories;
+
+// Вспомогательная функция: рисует цветной кружок рядом с выпадающим списком
+function updateSubcategoryColorIndicator(selectElement) {
+  // Ищем существующий индикатор или создаем новый
+  let indicator = selectElement.parentNode.querySelector('.subcategory-color-indicator');
+  if (!indicator) {
+    indicator = document.createElement('span');
+    indicator.className = 'subcategory-color-indicator';
+        indicator.style.cssText = indicator.style.cssText =
+          'position: absolute; right: 20px; top: 68%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%; transition: background-color 0.2s ease; pointer-events: none;';
+        selectElement.parentNode.style.position = 'relative';
+    selectElement.parentNode.insertBefore(indicator, selectElement.nextSibling);
+  }
+
+  // Определяем цвет на основе текста выбранной опции
+  const selectedOption = selectElement.options[selectElement.selectedIndex];
+  if (selectedOption && selectedOption.value !== '') {
+    indicator.style.backgroundColor = getSubcategoryColor(selectedOption.textContent);
+    indicator.style.opacity = '1';
+  } else {
+    indicator.style.backgroundColor = '#cbd5e1'; // Бледно-серый, если ничего не выбрано
+    indicator.style.opacity = '0.5';
+  }
 }
 
 // Открытие модального окна расходов с гарантированным заполнением категорий
