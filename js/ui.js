@@ -352,8 +352,16 @@ export function renderTransactionList(transactions, pensionDay) {
 
 // Отрисовка настроек
 export function renderSettings(settings, fixedExpenses) {
-  document.getElementById('input-initial-balance').value =
-    settings.initialBalance || 0;
+  // === ИЗМЕНЕНИЕ: Делаем поле "Начальный остаток" только для чтения ===
+  const initialBalanceInput = document.getElementById('input-initial-balance');
+  if (initialBalanceInput) {
+    initialBalanceInput.value = settings.initialBalance || 0;
+    initialBalanceInput.readOnly = true; // Запрещаем ручной ввод
+    initialBalanceInput.style.backgroundColor = '#f1f3f5'; // Серый фон (визуально неактивно)
+    initialBalanceInput.style.cursor = 'not-allowed'; // Курсор "запрещено"
+    initialBalanceInput.title = 'Автоматически рассчитывается как сумма балансов всех счетов'; // Подсказка при наведении
+  }
+  // =====================================================================
 
   // === НОВОЕ: Восстанавливаем выбранный источник дохода ===
   const incomeSelect = document.getElementById('select-income-type');
@@ -422,12 +430,15 @@ export function renderSettings(settings, fixedExpenses) {
   // ============================================================
 
   // === Восстанавливаем видимость поля "День получения" при загрузке (v2.1) ===
+  // Примечание: Убедитесь, что REGULAR_INCOME_TYPES импортирован в этом файле или доступен
   const pensionDayLabel = document
     .getElementById('input-pension-day')
     .closest('.settings-label');
   if (pensionDayLabel) {
     const currentIncomeName = settings.incomeName || 'Пенсия';
-    const isRegular = REGULAR_INCOME_TYPES.includes(currentIncomeName);
+    // Если REGULAR_INCOME_TYPES не определен в ui.js, эта строка может вызвать ошибку. 
+    // Если всё работает, оставляем как есть.
+    const isRegular = typeof REGULAR_INCOME_TYPES !== 'undefined' && REGULAR_INCOME_TYPES.includes(currentIncomeName);
     pensionDayLabel.style.display = isRegular ? 'block' : 'none';
   }
   // ==========================================================================
@@ -1186,6 +1197,9 @@ export function renderAccountsList() {
       }
       return sum;
     }, 0);
+
+    // Добавляем начальный баланс счёта (если он есть)
+    balance += account.balance || 0;
 
     if (account.id === defaultAccountId) {
       balance += initialBalance;
