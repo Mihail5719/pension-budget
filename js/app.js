@@ -928,8 +928,6 @@ function getSubcategoryColor(name) {
 }
 window.getSubcategoryColor = getSubcategoryColor;
 
-window.getSubcategoryColor = getSubcategoryColor;
-
 // Заполняем селект подкатегорий по выбранной категории
 function fillSubcategories(categoryId) {
   const select = document.getElementById('expense-subcategory');
@@ -1058,16 +1056,6 @@ function saveExpense() {
       store: storeValue,
       accountId,
     });
-
-    // 2. Создаём и сохраняем через модуль (передаем accountId!)
-  createExpense(appData, {
-    categoryId,
-    amount,
-    subId,
-    item: itemValue,
-    store: storeValue,
-    accountId,
-  });
 
   // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
   saveData(appData);
@@ -1225,15 +1213,6 @@ function handleSettingsChange() {
   }
 
   // Обновляем данные
-  appData.settings.initialBalance = initialBalance; // ← НОВАЯ СТРОКА
-  appData.settings.pensionAmount = pensionAmount;
-  appData.settings.pensionDay = pensionDay;
-  appData.settings.reserveAmount = reserveAmount;
-
-  // Сохраняем
-  saveData(appData);
-
-    // Обновляем данные
   appData.settings.initialBalance = initialBalance; // ← НОВАЯ СТРОКА
   appData.settings.pensionAmount = pensionAmount;
   appData.settings.pensionDay = pensionDay;
