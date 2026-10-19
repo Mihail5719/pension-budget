@@ -129,18 +129,17 @@ if ('serviceWorker' in navigator) {
 }
 
 /**
- * Пересчитывает initialBalance как сумму балансов всех счетов.
- * Вызывается автоматически при создании или редактировании счёта.
+ * Пересчитывает initialBalance как сумму начальных балансов всех счетов.
  */
 function recalculateInitialBalance() {
   const accounts = appData.settings.accounts || [];
-  const totalBalance = accounts.reduce((sum, account) => {
-    return sum + (account.balance || 0);
+  const totalInitialBalance = accounts.reduce((sum, account) => {
+    return sum + (account.initialBalance || 0); // <-- ВАЖНО: initialBalance
   }, 0);
   
-  appData.settings.initialBalance = totalBalance;
+  appData.settings.initialBalance = totalInitialBalance;
   
-  console.log('💰 initialBalance пересчитан:', totalBalance, '₽');
+  console.log('💰 initialBalance пересчитан:', totalInitialBalance, '₽');
 }
 
 function setupEventListeners() {
@@ -524,7 +523,7 @@ function setupEventListeners() {
   if (btnSaveAccount) {
     btnSaveAccount.addEventListener('click', () => {
       const name = document.getElementById('account-name').value.trim();
-      const balance =
+      const initialBalance =
         parseFloat(
           document.getElementById('account-balance').value.replace(',', '.'),
         ) || 0;
@@ -535,15 +534,13 @@ function setupEventListeners() {
       }
 
       if (editingAccountId) {
-        // === 1. РЕДАКТИРОВАНИЕ существующего счёта ===
         const account = appData.settings.accounts.find(
           (a) => a.id === editingAccountId,
         );
         if (account) {
           account.name = name;
-          account.balance = balance; // <-- ДОБАВИТЬ
+          account.initialBalance = initialBalance; // Используем initialBalance
 
-          // Умное определение эмодзи и цвета
           const lowerName = name.toLowerCase();
           if (lowerName.includes('сбер')) {
             account.emoji = '🏦';
@@ -562,19 +559,16 @@ function setupEventListeners() {
             account.emoji = account.emoji || '💼';
             account.color = account.color || '#3498db';
           }
-          console.log('✅ Счёт обновлён:', account);
         }
       } else {
-        // === 2. ДОБАВЛЕНИЕ нового счёта ===
         const newAccount = {
           id: 'account_' + Date.now(),
           name: name,
           emoji: '💼',
           color: '#3498db',
-          balance: balance, // <-- ДОБАВИТЬ
+          initialBalance: initialBalance, // Используем initialBalance
         };
 
-        // Применяем умные цвета и к новому счёту тоже!
         const lowerName = name.toLowerCase();
         if (lowerName.includes('сбер')) {
           newAccount.emoji = '🏦';
@@ -592,43 +586,41 @@ function setupEventListeners() {
         }
 
         appData.settings.accounts.push(newAccount);
-
-        // === ВАЖНО: Если это первый счёт или defaultAccountId потерян, делаем его дефолтным ===
         if (
           !appData.settings.defaultAccountId ||
           appData.settings.accounts.length === 1
         ) {
           appData.settings.defaultAccountId = newAccount.id;
-          console.log('🏆 Счёт назначен счетом по умолчанию:', newAccount.id);
         }
-
-        console.log('✅ Счёт добавлен:', newAccount);
       }
 
-      // Пересчитываем initialBalance как сумму всех балансов счетов
-      recalculateInitialBalance();
+      // 1. Пересчитываем общий начальный остаток
+      const totalInitial = appData.settings.accounts.reduce(
+        (sum, acc) => sum + (acc.initialBalance || 0),
+        0,
+      );
+      appData.settings.initialBalance = totalInitial;
 
-      // === 3. ЕДИНОЕ сохранение и обновление интерфейса ===
+      // 2. Обновляем поле на экране НЕМЕДЛЕННО
+      const initialBalanceInput = document.getElementById(
+        'input-initial-balance',
+      );
+      if (initialBalanceInput) {
+        initialBalanceInput.value = totalInitial;
+      }
+
+      // 3. Сохраняем и обновляем списки
       saveData(appData);
-
-      if (typeof window.updateReconcileBanner === 'function') {
-        window.updateReconcileBanner();
-        console.log('✅ Баннер сверки обновлён после сохранения счёта');
-      }
-
-      if (typeof renderAccountsList === 'function') {
-        renderAccountsList(); // ← ВАЖНО: вызываем БЕЗ аргументов!
-      }
-
-      if (typeof renderTodayScreen === 'function') {
+      if (typeof renderAccountsList === 'function') renderAccountsList();
+      if (typeof renderTodayScreen === 'function')
         renderTodayScreen(
           appData.settings,
           appData.fixedExpenses,
           appData.transactions,
         );
-      }
+      if (typeof window.updateReconcileBanner === 'function')
+        window.updateReconcileBanner();
 
-      // Закрываем модалку и сбрасываем ID редактирования
       document.getElementById('account-modal').classList.remove('is-open');
       editingAccountId = null;
     });
@@ -646,8 +638,9 @@ function setupEventListeners() {
           'Редактировать счёт';
         document.getElementById('account-name').value = account.name;
         // Убрали поля эмодзи и цвета — они больше не нужны
-                document.getElementById('account-balance').value =
-                  account.balance || 0;
+        // Подставляем текущий начальный баланс счёта в поле ввода
+        document.getElementById('account-balance').value =
+          account.initialBalance || 0; // <-- ВАЖНО: initialBalance
         document.getElementById('account-modal').classList.add('is-open');
       }
     }
