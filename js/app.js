@@ -509,6 +509,12 @@ function setupEventListeners() {
   if (btnSaveAccount) {
     btnSaveAccount.addEventListener('click', () => {
       const name = document.getElementById('account-name').value.trim();
+          const balance =
+            parseFloat(
+              document
+                .getElementById('account-balance')
+                .value.replace(',', '.'),
+            ) || 0;
 
       if (!name) {
         alert('Пожалуйста, введите название счёта');
@@ -522,6 +528,7 @@ function setupEventListeners() {
         );
         if (account) {
           account.name = name;
+          account.balance = balance; // <-- ДОБАВИТЬ
 
           // Умное определение эмодзи и цвета
           const lowerName = name.toLowerCase();
@@ -551,6 +558,7 @@ function setupEventListeners() {
           name: name,
           emoji: '💼',
           color: '#3498db',
+          balance: balance, // <-- ДОБАВИТЬ
         };
 
         // Применяем умные цвета и к новому счёту тоже!
@@ -622,6 +630,8 @@ function setupEventListeners() {
           'Редактировать счёт';
         document.getElementById('account-name').value = account.name;
         // Убрали поля эмодзи и цвета — они больше не нужны
+                document.getElementById('account-balance').value =
+                  account.balance || 0;
         document.getElementById('account-modal').classList.add('is-open');
       }
     }

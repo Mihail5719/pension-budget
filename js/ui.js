@@ -1187,6 +1187,9 @@ export function renderAccountsList() {
       return sum;
     }, 0);
 
+    // Добавляем начальный баланс счёта (если он есть)
+    balance += account.balance || 0;
+
     if (account.id === defaultAccountId) {
       balance += initialBalance;
       // Добавляем пенсию, так как она поступает в начале периода
