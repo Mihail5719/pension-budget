@@ -31,9 +31,9 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   // 1. Отрисовка табов счетов
   renderTodayTabs(settings.accounts || []);
 
-  // === 2. ЕДИНЫЙ РАСЧЁТ ДНЕЙ (Исправлено для точного подсчёта) ===
+  // === 2. ЕДИНЫЙ РАСЧЁТ ДНЕЙ ===
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Начало сегодняшнего дня
+  today.setHours(0, 0, 0, 0);
 
   let endDate;
   if (settings.currentPeriodStart) {
@@ -47,7 +47,6 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     }
   }
   
-  // Считаем до НАЧАЛА дня поступления (00:00:00), чтобы 16-е -> 23-е было ровно 7 дней
   endDate.setHours(0, 0, 0, 0);
 
   const diffTime = endDate.getTime() - today.getTime();
@@ -56,62 +55,63 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   console.log('📅 Сегодня:', today.toLocaleString('ru-RU'));
   console.log('📅 День поступления:', endDate.toLocaleString('ru-RU'));
   console.log('✅ Итоговых дней осталось:', daysLeft);
-  // ================================================================
 
   let result;
 
   if (currentTodayAccountId === 'all') {
     // === "ВСЕ СЧЕТА": стандартный глобальный расчёт ===
     result = calculateDailyLimit(settings, fixedExpenses, transactions);
-    
-    // ПЕРЕЗАПИСЫВАЕМ дни и лимит на наши правильные значения
     result.daysLeft = daysLeft;
     result.dailyLimit = result.remaining / daysLeft;
-    
   } else {
     // === КОНКРЕТНЫЙ СЧЁТ ===
-    const isDefault = currentTodayAccountId === settings.defaultAccountId;
+
+    // 1. Находим объект счёта, чтобы взять его НАЧАЛЬНЫЙ остаток
+    const account = settings.accounts.find(
+      (a) => a.id === currentTodayAccountId,
+    );
+    const accInitialBalance = account ? account.initialBalance || 0 : 0;
+
+    // 2. Фильтруем транзакции по этому счёту
     const accTx = transactions.filter(
-      (t) => t.accountId === currentTodayAccountId || t.fromAccountId === currentTodayAccountId || t.toAccountId === currentTodayAccountId
+      (t) =>
+        t.accountId === currentTodayAccountId ||
+        t.fromAccountId === currentTodayAccountId ||
+        t.toAccountId === currentTodayAccountId,
     );
 
+    // 3. ВАЖНО: Фильтруем только транзакции ТЕКУЩЕГО периода
     const periodStartStr = settings.currentPeriodStart;
-    const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
-    let balance = 0;
+    const periodStartDate = periodStartStr
+      ? periodStartStr.split('T')[0]
+      : null;
 
-    if (isDefault) {
-      balance += settings.initialBalance || 0;
-      if (settings.currentPeriodStart) balance += settings.pensionAmount || 0;
+    const periodTx = periodStartDate
+      ? accTx.filter((t) => t.date.split('T')[0] >= periodStartDate)
+      : accTx;
 
-      const periodTx = periodStartDate ? accTx.filter((t) => t.date.split('T')[0] >= periodStartDate) : accTx;
-      balance += periodTx.reduce((sum, t) => {
-        if (t.type === 'income') return sum + t.amount;
-        if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
-        if (t.type === 'transfer') {
-          if (t.fromAccountId === currentTodayAccountId) return sum - t.amount;
-          if (t.toAccountId === currentTodayAccountId) return sum + t.amount;
-        }
-        return sum;
-      }, 0);
+    // 4. Считаем баланс только по транзакциям текущего периода
+    const txBalance = periodTx.reduce((sum, t) => {
+      if (t.type === 'income') return sum + t.amount;
+      if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
+      if (t.type === 'transfer') {
+        if (t.fromAccountId === currentTodayAccountId) return sum - t.amount;
+        if (t.toAccountId === currentTodayAccountId) return sum + t.amount;
+      }
+      return sum;
+    }, 0);
 
-      balance -= settings.reserveAmount || 0;
-      const paidIds = new Set(periodTx.filter((t) => t.paymentId).map((t) => t.paymentId));
-      const fixedTotal = fixedExpenses.filter((p) => !paidIds.has(p.id)).reduce((sum, p) => sum + p.amount, 0);
-      balance -= fixedTotal;
-    } else {
-      balance = accTx.reduce((sum, t) => {
-        if (t.type === 'income') return sum + t.amount;
-        if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
-        if (t.type === 'transfer') {
-          if (t.fromAccountId === currentTodayAccountId) return sum - t.amount;
-          if (t.toAccountId === currentTodayAccountId) return sum + t.amount;
-        }
-        return sum;
-      }, 0);
+    // 5. Итоговый баланс = начальный остаток + операции текущего периода
+    let balance = accInitialBalance + txBalance;
+
+    // 6. Если это счёт по умолчанию — добавляем пенсию (она поступает именно на него)
+    if (currentTodayAccountId === settings.defaultAccountId) {
+      balance += settings.pensionAmount || 0;
     }
 
-    const periodSpent = accTx
-      .filter((t) => (!periodStartDate ? (t.type === 'expense' || t.type === 'committed') : (t.type === 'expense' || t.type === 'committed') && t.date.split('T')[0] >= periodStartDate))
+    // 6. Считаем потраченное за период (для отображения)
+    const periodSpent = periodTx
+      .filter((t) => t.type === 'expense' || t.type === 'committed')
       .reduce((sum, t) => sum + t.amount, 0);
 
     result = {
@@ -165,12 +165,13 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     }
   }
 
+  // Эти блоки должны быть в самом конце функции, вне всех if/else
   const noReserveWarning = document.getElementById('no-reserve-warning');
   if (noReserveWarning) noReserveWarning.style.display = settings.reserveAmount <= 0 ? 'flex' : 'none';
 
   const btnUseReserve = document.getElementById('btn-use-reserve');
   if (btnUseReserve) btnUseReserve.style.display = settings.reserveAmount > 0 ? 'block' : 'none';
-}
+}    
 
 // Отрисовка списка транзакций с группировкой по дням и раздельными итогами
 export function renderTransactionList(transactions, pensionDay) {
@@ -1188,26 +1189,27 @@ export function renderAccountsList() {
       );
     });
 
-    let balance = accountTransactions.reduce((sum, t) => {
-      if (t.type === 'income') return sum + t.amount;
-      if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
-      if (t.type === 'transfer') {
-        if (t.fromAccountId === account.id) return sum - t.amount;
-        if (t.toAccountId === account.id) return sum + t.amount;
-      }
-      return sum;
-    }, 0);
+        let balance = accountTransactions.reduce((sum, t) => {
+          if (t.type === 'income') return sum + t.amount;
+          if (t.type === 'expense' || t.type === 'committed')
+            return sum - t.amount;
+          if (t.type === 'transfer') {
+            if (t.fromAccountId === account.id) return sum - t.amount;
+            if (t.toAccountId === account.id) return sum + t.amount;
+          }
+          return sum;
+        }, 0);
 
-    // Добавляем начальный баланс счёта (если он есть)
-    balance += account.balance || 0;
+        // 1. ДОБАВЛЯЕМ начальный баланс ИМЕННО ЭТОГО счёта (исправлено с account.balance на account.initialBalance)
+        balance += account.initialBalance || 0;
 
-    if (account.id === defaultAccountId) {
-      balance += initialBalance;
-      // Добавляем пенсию, так как она поступает в начале периода
-      if (periodStartDate) {
-        balance += pensionAmount;
-      }
-    }
+        // 2. Если это счёт по умолчанию, добавляем пенсию (она приходит на основной счёт)
+        // Глобальный initialBalance сюда добавлять НЕ НУЖНО, он уже учтён в пункте 1 для каждого счёта!
+        if (account.id === defaultAccountId) {
+          if (periodStartDate) {
+            balance += pensionAmount;
+          }
+        }
 
     const item = document.createElement('div');
     item.className = 'account-item';
