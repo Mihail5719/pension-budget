@@ -24,14 +24,11 @@ const isCommitted = (t) => t.type === 'committed';
 const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
 // ─── конец блока предикатов ───
 
-// Обновление экрана "Сегодня"
+// Обновление экрана "Сегодня" (Упрощённая версия: только общий расчёт)
 export function renderTodayScreen(settings, fixedExpenses, transactions) {
-  console.log('🚨 ФУНКЦИЯ renderTodayScreen ЗАПУЩЕНА!');
+  console.log('🚨 ФУНКЦИЯ renderTodayScreen ЗАПУЩЕНА (Упрощённая)!');
 
-  // 1. Отрисовка табов счетов
-  renderTodayTabs(settings.accounts || []);
-
-  // === 2. ЕДИНЫЙ РАСЧЁТ ДНЕЙ ===
+  // 1. Расчёт дней до следующего поступления
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -46,85 +43,19 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
       endDate.setMonth(endDate.getMonth() + 1);
     }
   }
-  
   endDate.setHours(0, 0, 0, 0);
 
   const diffTime = endDate.getTime() - today.getTime();
   const daysLeft = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1);
 
-  console.log('📅 Сегодня:', today.toLocaleString('ru-RU'));
-  console.log('📅 День поступления:', endDate.toLocaleString('ru-RU'));
-  console.log('✅ Итоговых дней осталось:', daysLeft);
+  // 2. ТОЛЬКО глобальный расчёт (убрали логику переключения счетов)
+  const result = calculateDailyLimit(settings, fixedExpenses, transactions);
+  
+  // Перезаписываем дни и лимит на наши точные значения
+  result.daysLeft = daysLeft;
+  result.dailyLimit = result.remaining / daysLeft;
 
-  let result;
-
-  if (currentTodayAccountId === 'all') {
-    // === "ВСЕ СЧЕТА": стандартный глобальный расчёт ===
-    result = calculateDailyLimit(settings, fixedExpenses, transactions);
-    result.daysLeft = daysLeft;
-    result.dailyLimit = result.remaining / daysLeft;
-  } else {
-    // === КОНКРЕТНЫЙ СЧЁТ ===
-
-    // 1. Находим объект счёта, чтобы взять его НАЧАЛЬНЫЙ остаток
-    const account = settings.accounts.find(
-      (a) => a.id === currentTodayAccountId,
-    );
-    const accInitialBalance = account ? account.initialBalance || 0 : 0;
-
-    // 2. Фильтруем транзакции по этому счёту
-    const accTx = transactions.filter(
-      (t) =>
-        t.accountId === currentTodayAccountId ||
-        t.fromAccountId === currentTodayAccountId ||
-        t.toAccountId === currentTodayAccountId,
-    );
-
-    // 3. ВАЖНО: Фильтруем только транзакции ТЕКУЩЕГО периода
-    const periodStartStr = settings.currentPeriodStart;
-    const periodStartDate = periodStartStr
-      ? periodStartStr.split('T')[0]
-      : null;
-
-    const periodTx = periodStartDate
-      ? accTx.filter((t) => t.date.split('T')[0] >= periodStartDate)
-      : accTx;
-
-    // 4. Считаем баланс только по транзакциям текущего периода
-    const txBalance = periodTx.reduce((sum, t) => {
-      if (t.type === 'income') return sum + t.amount;
-      if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
-      if (t.type === 'transfer') {
-        if (t.fromAccountId === currentTodayAccountId) return sum - t.amount;
-        if (t.toAccountId === currentTodayAccountId) return sum + t.amount;
-      }
-      return sum;
-    }, 0);
-
-    // 5. Итоговый баланс = начальный остаток + операции текущего периода
-    let balance = accInitialBalance + txBalance;
-
-    // 6. Если это счёт по умолчанию — добавляем пенсию (она поступает именно на него)
-    if (currentTodayAccountId === settings.defaultAccountId) {
-      balance += settings.pensionAmount || 0;
-    }
-
-    // 6. Считаем потраченное за период (для отображения)
-    const periodSpent = periodTx
-      .filter((t) => t.type === 'expense' || t.type === 'committed')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    result = {
-      dailyLimit: balance / daysLeft,
-      remaining: balance,
-      spent: periodSpent,
-      daysLeft: daysLeft,
-      currentBalance: balance,
-      freeBudget: balance,
-    };
-  }
-
-  // === 3. ОТРИСОВКА НА ЭКРАНЕ ===
+  // 3. Отрисовка на экране
   const indicatorState = getIndicatorState(result.dailyLimit, result.freeBudget);
   renderTodayPayments(getTodayPayments(fixedExpenses));
 
@@ -142,6 +73,7 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     headerSubtitle.textContent = `${settings.incomeName || 'Пенсия'}: ${settings.pensionDay} числа`;
   }
 
+  // Кнопка отметки поступления
   const btnMarkPension = document.getElementById('btn-mark-pension');
   const pensionStatusText = document.getElementById('pension-status-text');
   const pensionDateDisplay = document.getElementById('pension-date-display');
@@ -160,17 +92,23 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
       const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
       pensionDateDisplay.textContent = `✅ Поступление: ${incomeName} (${dateStr})`;
     } else {
-      btnMarkPension.style.display = (currentTodayAccountId === 'all' || currentTodayAccountId === settings.defaultAccountId) ? 'block' : 'none';
+      btnMarkPension.style.display = 'block'; 
       pensionStatusText.style.display = 'none';
     }
   }
 
-  // Эти блоки должны быть в самом конце функции, вне всех if/else
+  // Предупреждения о резерве
   const noReserveWarning = document.getElementById('no-reserve-warning');
   if (noReserveWarning) noReserveWarning.style.display = settings.reserveAmount <= 0 ? 'flex' : 'none';
 
   const btnUseReserve = document.getElementById('btn-use-reserve');
   if (btnUseReserve) btnUseReserve.style.display = settings.reserveAmount > 0 ? 'block' : 'none';
+
+  // === СКРЫВАЕМ ТАБЫ, ЕСЛИ ОНИ ОСТАЛИСЬ В HTML ===
+  const tabsContainer = document.querySelector('.tabs-container') || document.getElementById('today-tabs');
+  if (tabsContainer) {
+    tabsContainer.style.display = 'none';
+  }
 }    
 
 // Отрисовка списка транзакций с группировкой по дням и раздельными итогами
