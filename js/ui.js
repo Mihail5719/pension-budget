@@ -1109,10 +1109,15 @@ export function renderAccountsList() {
   const accounts = appData.settings.accounts;
   const transactions = appData.transactions || [];
   const periodStartStr = appData.settings.currentPeriodStart;
-  const initialBalance = appData.settings.initialBalance || 0;
   const defaultAccountId = appData.settings.defaultAccountId;
   const pensionAmount = appData.settings.pensionAmount || 0;
   const periodStartDate = periodStartStr ? periodStartStr.split('T')[0] : null;
+
+  // === НОВОЕ: Переменные для раздельного подсчета ===
+  let totalBalanceAll = 0;
+  let totalBalanceActive = 0;
+  let totalBalanceSavings = 0;
+  const accountElements = [];
 
   accounts.forEach((account) => {
     const accountTransactions = transactions.filter((t) => {
@@ -1127,27 +1132,31 @@ export function renderAccountsList() {
       );
     });
 
-        let balance = accountTransactions.reduce((sum, t) => {
-          if (t.type === 'income') return sum + t.amount;
-          if (t.type === 'expense' || t.type === 'committed')
-            return sum - t.amount;
-          if (t.type === 'transfer') {
-            if (t.fromAccountId === account.id) return sum - t.amount;
-            if (t.toAccountId === account.id) return sum + t.amount;
-          }
-          return sum;
-        }, 0);
+    let balance = accountTransactions.reduce((sum, t) => {
+      if (t.type === 'income') return sum + t.amount;
+      if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
+      if (t.type === 'transfer') {
+        if (t.fromAccountId === account.id) return sum - t.amount;
+        if (t.toAccountId === account.id) return sum + t.amount;
+      }
+      return sum;
+    }, 0);
 
-        // 1. ДОБАВЛЯЕМ начальный баланс ИМЕННО ЭТОГО счёта (исправлено с account.balance на account.initialBalance)
-        balance += account.initialBalance || 0;
+    // Добавляем начальный баланс этого счёта
+    balance += account.initialBalance || 0;
 
-        // 2. Если это счёт по умолчанию, добавляем пенсию (она приходит на основной счёт)
-        // Глобальный initialBalance сюда добавлять НЕ НУЖНО, он уже учтён в пункте 1 для каждого счёта!
-        if (account.id === defaultAccountId) {
-          if (periodStartDate) {
-            balance += pensionAmount;
-          }
-        }
+    // Если это счёт по умолчанию, добавляем пенсию
+    if (account.id === defaultAccountId && periodStartDate) {
+      balance += pensionAmount;
+    }
+
+    // === НОВОЕ: Распределяем баланс по категориям ===
+    totalBalanceAll += balance;
+    if (account.isSavings) {
+      totalBalanceSavings += balance;
+    } else {
+      totalBalanceActive += balance;
+    }
 
     const item = document.createElement('div');
     item.className = 'account-item';
@@ -1156,7 +1165,10 @@ export function renderAccountsList() {
 
     item.innerHTML = `
       <div class="account-item__info">
-        <div class="account-item__name">${account.name}</div>
+        <div class="account-item__name">
+          ${account.name} 
+          ${account.isSavings ? '<span style="font-size:0.8em; color:var(--text-secondary); margin-left: 8px;">(Накопительный)</span>' : ''}
+        </div>
         <div class="account-item__balance">Баланс: ${formatMoney(balance)}</div>
       </div>
       <div class="account-item__actions">
@@ -1164,29 +1176,47 @@ export function renderAccountsList() {
         <button class="btn-delete-account" data-account-id="${account.id}" title="Удалить">🗑️</button>
       </div>
     `;
-    container.appendChild(item);
+    accountElements.push(item);
   });
+
+  // === НОВОЕ: Создаём красивый блок сводки ===
+  const summaryBlock = document.createElement('div');
+  summaryBlock.className = 'account-item';
+  summaryBlock.style.backgroundColor = 'var(--bg-secondary, #f0f4f8)';
+  summaryBlock.style.borderLeft = '4px solid var(--primary-color, #27ae60)';
+  summaryBlock.style.fontWeight = 'bold';
+  summaryBlock.style.marginBottom = '16px';
+  summaryBlock.style.borderRadius = '8px';
+  summaryBlock.style.padding = '16px';
+
+  summaryBlock.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; color: var(--text-primary);">
+        <span>💰 Общий баланс всех счетов</span>
+        <span style="font-size: 1.2em; color: var(--primary-color, #27ae60);">${formatMoney(totalBalanceAll)}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95em; color: var(--text-secondary); border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; margin-top: 4px;">
+        <span>🔹 Активные счета</span>
+        <span>${formatMoney(totalBalanceActive)}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95em; color: var(--text-secondary);">
+        <span>🔸 Накопительные счета</span>
+        <span>${formatMoney(totalBalanceSavings)}</span>
+      </div>
+    </div>
+  `;
+
+  // Очищаем контейнер и добавляем сначала сводку, потом все счета
+  container.innerHTML = '';
+  container.appendChild(summaryBlock);
+  accountElements.forEach((el) => container.appendChild(el));
+  // ================================================================
 
   // === ДИАГНОСТИКА ===
   console.log('📊 [renderAccountsList] Отрисовка счетов:');
-  console.log('  periodStartDate:', periodStartDate);
-  console.log('  initialBalance:', initialBalance);
-  console.log('  pensionAmount:', pensionAmount);
-  console.log('  Всего транзакций в appData:', transactions.length);
-
-  // Считаем, сколько транзакций попало в каждый счёт
-  accounts.forEach((account) => {
-    const txsForAccount = transactions.filter(
-      (t) =>
-        t.accountId === account.id ||
-        t.fromAccountId === account.id ||
-        t.toAccountId === account.id,
-    );
-    console.log(
-      `  Счёт "${account.name}": всего транзакций ${txsForAccount.length}`,
-    );
-  });
-  // =================
+  console.log('  Общий баланс:', totalBalanceAll.toFixed(2), '₽');
+  console.log('  Активные:', totalBalanceActive.toFixed(2), '₽');
+  console.log('  Накопительные:', totalBalanceSavings.toFixed(2), '₽');
 }
 
 /**
