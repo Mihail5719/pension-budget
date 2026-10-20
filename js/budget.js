@@ -78,11 +78,15 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // Деньги, покинувшие кошелёк: расходы + переводы
+  // Деньги, покинувшие кошелёк: расходы + переводы ТОЛЬКО на накопительные счета
   const moneyOut = periodTransactions
     .filter((t) => {
       if (t.type === 'expense' || t.type === 'committed') return true;
-      if (t.type === 'transfer') return true;
+      // Перевод учитываем только если он идёт на накопительный счёт
+      if (t.type === 'transfer') {
+        const toAccount = settings.accounts.find((a) => a.id === t.toAccountId);
+        return toAccount && toAccount.isSavings;
+      }
       return false;
     })
     .reduce((sum, t) => sum + t.amount, 0);
