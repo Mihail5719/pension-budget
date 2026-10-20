@@ -33,7 +33,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     reserveAmount,
     pensionDay,
     currentPeriodStart,
-    initialBalance = 0, // ← Учитываем начальный остаток
+    initialBalance = 0,
   } = settings;
 
   // 1. Определяем даты периода
@@ -42,17 +42,14 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   today.setHours(0, 0, 0, 0);
 
   if (currentPeriodStart) {
-    // ПЕНСИЯ ПОЛУЧЕНА: используем фактическую дату начала периода
     startDate = new Date(currentPeriodStart);
     startDate.setHours(0, 0, 0, 0);
 
-    // Следующая пенсия: +1 месяц, день = pensionDay
     endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + 1);
     endDate.setDate(pensionDay);
     endDate.setHours(23, 59, 59, 999);
   } else {
-    // ПЕНСИЯ ЕЩЁ НЕ ПОЛУЧЕНА: считаем до следующего pensionDay
     const period = getCurrentPeriod(pensionDay);
     startDate = period.startDate;
     endDate = period.endDate;
@@ -64,8 +61,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     return tDate >= startDate && tDate <= endDate;
   });
 
-  // Резерв только по НЕоплаченным в текущем периоде платежам:
-  // оплата любого типа (старые expense и новые committed) снимает резерв
+  // Резерв только по НЕоплаченным в текущем периоде платежам
   const paidIds = new Set(
     periodTransactions.filter((t) => t.paymentId).map((t) => t.paymentId),
   );
@@ -73,57 +69,89 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((p) => !paidIds.has(p.id))
     .reduce((sum, p) => sum + p.amount, 0);
 
-  // 3. Считаем доходы и расходы
+  // 3. Считаем доходы и расходы (общие)
   const spent = periodTransactions
-    .filter(isExpense)
+    .filter((t) => t.type === 'expense' || t.type === 'committed')
     .reduce((sum, t) => sum + t.amount, 0);
-  // Фиксированные платежи, оплаченные в периоде
-  const committedTotal = periodTransactions
-    .filter((t) => t.type === 'committed')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  // Деньги, покинувшие кошелёк: расходы + будущие обязательные платежи + переводы
-  // Используется для баланса; spent — только для статистики
-    const moneyOut = periodTransactions
-      .filter(isMoneyOut)
-      .reduce((sum, t) => sum + t.amount, 0);
 
   const income = periodTransactions
-    .filter(isIncome)
+    .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // 4. === БУХГАЛТЕРСКИЙ РАСЧЁТ ===
-  // Если пенсия получена — добавляем её к балансу
-  // Текущий баланс = Начальный остаток + (Пенсия если отмечена) + Доходы - Расходы
+  // Деньги, покинувшие кошелёк: расходы + переводы
+  const moneyOut = periodTransactions
+    .filter((t) => {
+      if (t.type === 'expense' || t.type === 'committed') return true;
+      if (t.type === 'transfer') return true;
+      return false;
+    })
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  // 4. === БУХГАЛТЕРСКИЙ РАСЧЁТ ОБЩЕГО БАЛАНСА ===
   const currentBalance =
     initialBalance +
     (currentPeriodStart ? pensionAmount : 0) +
     income -
     moneyOut;
 
-  // Свободный бюджет = Текущий баланс - НЗ - Фиксированные платежи
-  // (Фиксированные платежи вычитаем, потому что они гарантированно будут списаны)
-  const freeBudget = currentBalance - reserveAmount - fixedTotal;
+  // 5. === НОВОЕ: ВЫЧИСЛЯЕМ БАЛАНС НАКОПИТЕЛЬНЫХ СЧЕТОВ ===
+  let savingsBalance = 0;
+  if (settings.accounts) {
+    settings.accounts.forEach((account) => {
+      if (account.isSavings) {
+        // Доходы на этот накопительный счет
+        const accIncome = periodTransactions
+          .filter(
+            (t) =>
+              t.type === 'income' &&
+              (t.accountId === account.id || t.toAccountId === account.id),
+          )
+          .reduce((sum, t) => sum + t.amount, 0);
 
-  // Остаток после потраченного (свободные деньги)
+        // Расходы и переводы с этого накопительного счета
+        const accMoneyOut = periodTransactions
+          .filter((t) => {
+            if (t.type === 'expense' || t.type === 'committed') {
+              return (
+                t.accountId === account.id || t.fromAccountId === account.id
+              );
+            }
+            if (t.type === 'transfer') {
+              return t.fromAccountId === account.id;
+            }
+            return false;
+          })
+          .reduce((sum, t) => sum + t.amount, 0);
+
+        // Текущий баланс накопительного счета = начальный + доходы - расходы
+        const accCurrentBalance =
+          (account.initialBalance || 0) + accIncome - accMoneyOut;
+        savingsBalance += accCurrentBalance;
+      }
+    });
+  }
+
+  // 6. Свободный бюджет = Текущий баланс - НЗ - Фиксированные платежи
+  // (Накопления уже исключены из initialBalance, вычитать их повторно НЕ НУЖНО)
+  const freeBudget = currentBalance - reserveAmount - fixedTotal;
   const remaining = freeBudget;
 
-  // 5. Считаем оставшиеся дни
+  // 7. Считаем оставшиеся дни
   const diffTime = endDate.getTime() - today.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const daysLeft = Math.max(diffDays, 1);
 
-  // 6. Дневной лимит
+  // 8. Дневной лимит
   const dailyLimit = remaining / daysLeft;
 
   return {
     dailyLimit,
     remaining,
     spent,
-    committedTotal,
     income,
     freeBudget,
-    currentBalance, // ← Добавляем текущий баланс
+    currentBalance,
+    savingsBalance, // ← Возвращаем сумму накоплений (пригодится для отображения)
     daysLeft,
     fixedTotal,
     periodStart: startDate.toISOString().split('T')[0],
