@@ -2,6 +2,7 @@
   "name": "Мой бюджет",
   "short_name": "Бюджет",
   "description": "Приложение для учёта расходов до пенсии",
+  "version": "2.1.0",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f7fa",
