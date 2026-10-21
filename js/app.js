@@ -2253,3 +2253,11 @@ if (document.readyState === 'loading') {
 } else {
   updateTodayIcon();
 }
+
+  // Обработчик кнопки "О приложении"
+  const btnAbout = document.getElementById('btn-about');
+  if (btnAbout) {
+    btnAbout.addEventListener('click', () => {
+      window.location.hash = '#screen-about';
+    });
+  }

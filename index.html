@@ -62,14 +62,109 @@
                     <button class="btn btn--primary btn--large welcome-btn" id="btn-start-setup">
                         Начать настройку
                     </button>
+
+                    <button id="btn-about"
+                        style="background: transparent; border: 1px solid #ccc; color: #666; padding: 10px 20px; border-radius: 8px; margin-top: 15px; cursor: pointer;">
+                        ℹ️ О приложении
+                    </button>
+
                 </div>
             </section>
+
+            <!-- Экран "О приложении" -->
+            <section id="screen-about" class="screen">
+                <div class="container">
+                    <div class="header">
+                        <button class="btn-back" onclick="window.location.hash = '#screen-welcome'">← Назад</button>
+                        <h2>О приложении</h2>
+                    </div>
+
+                    <div class="about-content">
+                        <p class="about-intro">Добро пожаловать в ваш персональный финансовый помощник! Это приложение
+                            создано,
+                            чтобы вы всегда точно знали, сколько денег у вас есть, куда они уходят и сколько можно
+                            тратить каждый
+                            день без риска для бюджета.</p>
+
+                        <h3>👵 Для кого это приложение?</h3>
+                        <p>Для людей с фиксированным и регулярным доходом. В настройках вы можете выбрать основной
+                            источник
+                            поступлений (например, пенсию или зарплату) и указать дату получения. Приложение
+                            автоматически подстроит
+                            все расчеты и лимиты под ваш личный график.</p>
+
+                        <h3> Что умеет приложение:</h3>
+                        <ul>
+                            <li><strong>💰 Точный расчет доступных средств («Осталось»)</strong><br>Приложение
+                                автоматически считает
+                                ваш реальный доступный бюджет до следующего поступления. Оно учитывает начальный
+                                остаток, все
+                                доходы, расходы и ваш неприкосновенный запас (НЗ).</li>
+                            <li><strong>🏦 Управление несколькими счетами</strong><br>Ведите учет по всем вашим картам и
+                                счетам
+                                (Сбербанк, ВТБ, Тинькофф и др.) в одном месте. Приложение автоматически рассчитывает
+                                актуальный
+                                баланс по каждому из них.</li>
+                            <li><strong> Надежная «Копилка» (Накопительные счета)</strong><br>Вы можете пометить любой
+                                счет как
+                                «Накопительный». Деньги на нем продолжают учитываться в вашем общем богатстве, но
+                                <strong>не
+                                    участвуют</strong> в расчете ежедневного лимита. Это защищает ваши сбережения от
+                                случайных трат.
+                            </li>
+                            <li><strong>🔄 Умный учет переводов</strong><br>Переводы между вашими основными счетами не
+                                уменьшают ваш
+                                бюджет, так как деньги просто меняют «карман». А вот перевод на накопительный счет
+                                честно уменьшит
+                                доступный остаток, «заморозив» эти средства.</li>
+                            <li><strong> Прозрачная финансовая сводка</strong><br>В разделе «Настройки» вы всегда видите
+                                контрольную
+                                сумму: Общий баланс, Активные счета и Накопительные счета. Это гарантирует, что цифры в
+                                приложении
+                                всегда сходятся с реальностью до копейки.</li>
+                            <li><strong> Учет регулярных платежей и дневной лимит</strong><br>Приложение знает о ваших
+                                обязательных
+                                расходах (кредиты, коммунальные услуги) и заранее вычитает их из бюджета. На основе
+                                оставшейся суммы
+                                оно рассчитывает безопасный <strong>дневной лимит</strong>, чтобы вы могли спокойно
+                                планировать свои
+                                покупки.</li>
+                            <li><strong>📦 Архивирование и чистая история</strong><br>Когда месяц заканчивается,
+                                воспользуйтесь
+                                функцией «Закрыть период и создать архив». Она сохраняет всю историю прошлых операций в
+                                надежный
+                                архив, освобождает текущий бюджет от старых данных и позволяет вам начать новый период с
+                                чистого
+                                листа.</li>
+                        </ul>
+
+                        <h3> Ваши гарантии:</h3>
+                        <ul>
+                            <li><strong>🔐 Абсолютная конфиденциальность.</strong> Ваши финансовые данные принадлежат
+                                только вам.
+                                Приложение не требует регистрации, не отправляет информацию в облако и не передает её
+                                третьим лицам.
+                                Всё хранится локально на вашем устройстве.</li>
+                            <li><strong> Работает без интернета.</strong> Приложение можно установить на главный экран
+                                смартфона как
+                                обычное (нативное) приложение. После установки оно работает мгновенно и не требует
+                                подключения к
+                                сети — ваши финансы под контролем даже в самолете, в метро или за городом.</li>
+                        </ul>
+
+                        <p class="about-footer"><strong>Ваш финансовый контроль начинается здесь. Планируйте уверенно,
+                                тратьте
+                                осознанно, накапливайте стабильно!</strong></p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Экран 1: Сегодня -->
             <section class="screen screen--today" id="screen-today">
-                    <h2 class="screen__title screen__title--hidden">Главный экран</h2>
-                    <!-- Горизонтальные табы счетов на экране "Сегодня" (v2.6) -->
-                    <div id="today-tabs-container" class="stats-tabs"></div>
-                    <div class="today-card">
+                <h2 class="screen__title screen__title--hidden">Главный экран</h2>
+                <!-- Горизонтальные табы счетов на экране "Сегодня" (v2.6) -->
+                <div id="today-tabs-container" class="stats-tabs"></div>
+                <div class="today-card">
                     <span id="remaining-label">Осталось до следующего поступления</span>
                     <div class="today-card__amount" id="remaining-amount">0 ₽</div>
                     <div class="today-card__indicator" id="indicator"></div>
@@ -99,15 +194,15 @@
 
                 <!-- Блок "Сегодня к оплате" (внутри секции, сразу после карточки) -->
                 <div id="today-payments-container" class="today-payments"></div>
-                
+
                 <button class="btn btn--primary btn--large" id="btn-add-expense">
                     Записать расход
                 </button>
-                
+
                 <button class="btn btn--success btn--large" id="btn-add-income">
                     Добавить доход
                 </button>
-                
+
                 <!-- Кнопка перевода между счетами (НОВОЕ, v2.5) -->
                 <button class="btn btn--transfer btn--large" id="btn-add-transfer">
                     ⇄ Перевод между счетами
@@ -159,10 +254,10 @@
                 <div class="settings-group">
                     <label class="settings-label">
                         <span class="settings-label__text">💰 Начальный остаток</span>
-                        <input type="text" class="settings-input money-field" id="input-initial-balance" data-field="initialBalance"
-                            placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-initial-balance"
+                            data-field="initialBalance" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
-                
+
                     <!-- === НОВОЕ ПОЛЕ: Источник дохода (v2.1, Идея 1) === -->
                     <label class="settings-label">
                         <span class="settings-label__text">Источник дохода</span>
@@ -186,30 +281,30 @@
                             </optgroup>
                         </select>
                     </label>
-                
+
                     <!-- Поле для своего варианта (скрыто по умолчанию) -->
                     <label class="settings-label" id="custom-income-label" style="display: none;">
                         <span class="settings-label__text">Укажите свой вариант</span>
-                        <input type="text" class="settings-input" id="input-custom-income" placeholder="Например: Дивиденды"
-                            maxlength="30">
+                        <input type="text" class="settings-input" id="input-custom-income"
+                            placeholder="Например: Дивиденды" maxlength="30">
                     </label>
                     <!-- ============================================ -->
-                
+
                     <label class="settings-label">
                         <span class="settings-label__text" id="income-amount-label">Размер пенсии</span>
-                        <input type="text" class="settings-input money-field" id="input-pension" data-field="pensionAmount"
-                            placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-pension"
+                            data-field="pensionAmount" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
-                
+
                     <label class="settings-label">
                         <span class="settings-label__text">День получения</span>
                         <input type="number" class="settings-input" id="input-pension-day" min="1" max="31">
                     </label>
-                
+
                     <label class="settings-label">
                         <span class="settings-label__text">Неприкосновенный запас</span>
-                        <input type="text" class="settings-input money-field" id="input-reserve" data-field="reserveAmount"
-                            placeholder="0,00 ₽" inputmode="decimal">
+                        <input type="text" class="settings-input money-field" id="input-reserve"
+                            data-field="reserveAmount" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
                 </div>
 
@@ -256,9 +351,10 @@
                 </div>
 
                 <button id="btn-new-period" class="btn btn--secondary">📅 Новый период</button>
-                
+
                 <!-- НОВАЯ КНОПКА: Закрыть период с архивацией (v2.1) -->
-                <button id="btn-close-period" class="btn btn--danger" style="margin-top: 10px;">🔒 Закрыть период и создать
+                <button id="btn-close-period" class="btn btn--danger" style="margin-top: 10px;">🔒 Закрыть период и
+                    создать
                     архив</button>
 
                 <div class="delete-card">
@@ -292,7 +388,8 @@
                 <!-- БАННЕР: Явное указание счёта для сверки -->
                 <div class="reconcile-target-banner">
                     <div class="reconcile-target__text">
-                        <strong id="reconcile-account-name" class="reconcile-account-name" style="color: #2c3e50;">Счёт по умолчанию</strong>
+                        <strong id="reconcile-account-name" class="reconcile-account-name" style="color: #2c3e50;">Счёт
+                            по умолчанию</strong>
                         <div class="reconcile-target__hint">⚠️ Вставьте выписку или операции только от этого банка</div>
                     </div>
                 </div>
@@ -428,12 +525,12 @@
         <div class="modal__overlay"></div>
         <div class="modal__content">
             <h2 class="modal__title">Добавить доход</h2>
-    
+
             <label class="modal__label">
                 <span class="modal__label-text">Тип дохода</span>
                 <select class="modal__select" id="income-category"></select>
             </label>
-    
+
             <!-- Выбор счёта -->
             <label class="modal__label">
                 <span class="modal__label-text">Счёт:</span>
@@ -441,25 +538,25 @@
                     <!-- Счета будут добавляться через JavaScript -->
                 </select>
             </label>
-    
+
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
-                <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal" min="0"
-                    step="0.01">
+                <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal"
+                    min="0" step="0.01">
             </label>
-    
+
             <!-- Поле предмета (НОВОЕ) -->
             <label class="modal__label">
                 <span class="modal__label-text">Предмет (необязательно):</span>
                 <input type="text" class="modal__input" id="income-item" placeholder="Например: Зарплата, Подарок">
             </label>
-    
+
             <!-- Поле источника (НОВОЕ) -->
             <label class="modal__label">
                 <span class="modal__label-text">Источник (необязательно):</span>
                 <input type="text" class="modal__input" id="income-store" placeholder="Например: ООО Ромашка, Иван И.">
             </label>
-    
+
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-income">Отмена</button>
                 <button class="btn btn--success" id="btn-save-income">Добавить</button>
@@ -472,7 +569,7 @@
         <div class="modal__overlay"></div>
         <div class="modal__content">
             <h2 class="modal__title">Перевод между счетами</h2>
-    
+
             <!-- Откуда -->
             <label class="modal__label">
                 <span class="modal__label-text">Откуда:</span>
@@ -480,7 +577,7 @@
                     <!-- Счета заполняются через JavaScript -->
                 </select>
             </label>
-    
+
             <!-- Куда -->
             <label class="modal__label">
                 <span class="modal__label-text">Куда:</span>
@@ -488,20 +585,20 @@
                     <!-- Счета заполняются через JavaScript -->
                 </select>
             </label>
-    
+
             <!-- Сумма -->
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽):</span>
                 <input type="number" class="modal__input" id="transfer-amount" placeholder="0.00" inputmode="decimal"
                     min="0" step="0.01">
             </label>
-    
+
             <!-- Комментарий (опционально) -->
             <label class="modal__label">
                 <span class="modal__label-text">Комментарий (необязательно):</span>
                 <input type="text" class="modal__input" id="transfer-note" placeholder="Например: На продукты">
             </label>
-    
+
             <!-- Кнопки -->
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-transfer">Отмена</button>
@@ -518,13 +615,13 @@
         <div class="modal__overlay"></div>
         <div class="modal__content">
             <h3 class="modal__title">Редактировать запись</h3>
-    
+
             <!-- Категория -->
             <label class="modal__label">
                 <span class="modal__label-text">Категория:</span>
                 <select class="modal__select" id="edit-category"></select>
             </label>
-    
+
             <!-- Подкатегория (только для расходов) -->
             <label class="modal__label" id="edit-subcategory-label" style="display: none;">
                 <span class="modal__label-text">Подкатегория:</span>
@@ -532,56 +629,56 @@
                     <option value="">-- выберите --</option>
                 </select>
             </label>
-    
+
             <!-- Сумма -->
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽):</span>
                 <input type="number" class="modal__input" id="edit-amount" placeholder="0" inputmode="numeric" min="1">
             </label>
-    
+
             <!-- Предмет покупки -->
             <label class="modal__label">
                 <span class="modal__label-text">Предмет покупки (необязательно):</span>
                 <input type="text" class="modal__input" id="edit-item" placeholder="Например: Молоко, Хлеб">
             </label>
-    
+
             <!-- Место покупки -->
             <label class="modal__label">
                 <span class="modal__label-text">Место покупки (необязательно):</span>
                 <input type="text" class="modal__input" id="edit-store" placeholder="Например: Пятёрочка, Магнит">
             </label>
-    
+
             <!-- Счёт (только для обычных транзакций) -->
             <label class="modal__label" id="edit-account-label">
                 <span class="modal__label-text">Счёт:</span>
                 <select class="modal__select" id="edit-account"></select>
             </label>
-    
+
             <!-- Откуда (только для переводов) -->
             <label class="modal__label" id="edit-transfer-from-label" style="display: none;">
                 <span class="modal__label-text">Откуда:</span>
                 <select class="modal__select" id="edit-transfer-from"></select>
             </label>
-    
+
             <!-- Куда (только для переводов) -->
             <label class="modal__label" id="edit-transfer-to-label" style="display: none;">
                 <span class="modal__label-text">Куда:</span>
                 <select class="modal__select" id="edit-transfer-to"></select>
             </label>
-    
+
             <!-- Дата -->
             <label class="modal__label">
                 <span class="modal__label-text">Дата:</span>
                 <input type="date" class="modal__input" id="edit-date"
                     style="font-size: 18px; font-weight: 400; text-align: left;">
             </label>
-    
+
             <!-- Комментарий (НОВОЕ) -->
             <label class="modal__label">
                 <span class="modal__label-text">Комментарий (необязательно):</span>
                 <input type="text" class="modal__input" id="edit-note" placeholder="Например: На продукты">
             </label>
-    
+
             <!-- Кнопки -->
             <div class="modal__buttons">
                 <button class="btn btn--primary" id="btn-save-edit">Сохранить</button>
