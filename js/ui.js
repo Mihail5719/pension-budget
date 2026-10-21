@@ -418,6 +418,7 @@ export function renderAll(data) {
     renderAccountsList();
   }
   // ==============================================================================
+  renderAccountsList();
 }
 
 function renderTodayPayments(payments) {

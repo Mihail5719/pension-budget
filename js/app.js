@@ -1100,6 +1100,11 @@ function saveExpense() {
 
   // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
   saveData(appData);
+
+  // === ОБНОВЛЯЕМ СПИСОК СЧЕТОВ В НАСТРОЙКАХ МГНОВЕННО ===
+  if (typeof renderAccountsList === 'function') renderAccountsList();
+  // ======================================================
+
   if (typeof updateSyncIndicator === 'function') {
     updateSyncIndicator(appData.transactions, appData.lastModified);
   }
