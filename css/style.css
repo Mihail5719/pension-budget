@@ -1745,6 +1745,8 @@ input[type='tel'] {
   font-weight: 600;
 }
 
+.stats-tab:hover:not(.active)
+
 /* Цветная точка счёта в статистике (Вишенка v2.4) */
 .stats-account-dot {
   display: inline-block;
@@ -1837,62 +1839,6 @@ select.settings-input:focus {
   border-color: #3498db;
 }
 
-/* === Стили для экрана "О приложении" === */
-.about-content {
-  padding: 10px 5px 40px 5px;
-  color: var(--text-primary, #333);
-  line-height: 1.6;
-  font-size: 15px;
-}
-
-.about-intro {
-  font-size: 16px;
-  margin-bottom: 20px;
-  color: var(--text-secondary, #555);
-}
-
-.about-content h3 {
-  margin-top: 25px;
-  margin-bottom: 10px;
-  color: var(--primary-color, #27ae60);
-  font-size: 18px;
-}
-
-.about-content ul {
-  list-style-type: none; /* Убираем стандартные точки */
-  padding-left: 0;
-}
-
-.about-content li {
-  margin-bottom: 15px;
-  padding-left: 10px;
-  border-left: 3px solid var(--bg-secondary, #f0f4f8);
-}
-
-.about-content li strong {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--text-primary, #222);
-}
-
-.about-footer {
-  margin-top: 30px;
-  padding: 15px;
-  background-color: var(--bg-secondary, #f0f4f8);
-  border-radius: 10px;
-  text-align: center;
-  color: var(--primary-color, #27ae60);
-}
-
-.btn-back {
-  background: none;
-  border: none;
-  color: var(--primary-color, #27ae60);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 5px 0;
-  margin-bottom: 10px;
-}
 
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)
