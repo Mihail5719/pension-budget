@@ -1,4 +1,4 @@
-import { saveData, archiveCurrentPeriod, } from './storage.js';
+import { saveData, archiveCurrentPeriod } from './storage.js';
 import { formatMoney, formatDateOnly, getCurrentPeriod } from './utils.js';
 import {
   calculateDailyLimit,
@@ -38,7 +38,11 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     endDate.setMonth(endDate.getMonth() + 1);
     endDate.setDate(settings.pensionDay);
   } else {
-    endDate = new Date(today.getFullYear(), today.getMonth(), settings.pensionDay);
+    endDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      settings.pensionDay,
+    );
     if (endDate <= today) {
       endDate.setMonth(endDate.getMonth() + 1);
     }
@@ -50,22 +54,31 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
 
   // 2. ТОЛЬКО глобальный расчёт (убрали логику переключения счетов)
   const result = calculateDailyLimit(settings, fixedExpenses, transactions);
-  
+
   // Перезаписываем дни и лимит на наши точные значения
   result.daysLeft = daysLeft;
   result.dailyLimit = result.remaining / daysLeft;
 
   // 3. Отрисовка на экране
-  const indicatorState = getIndicatorState(result.dailyLimit, result.freeBudget);
+  const indicatorState = getIndicatorState(
+    result.dailyLimit,
+    result.freeBudget,
+  );
   renderTodayPayments(getTodayPayments(fixedExpenses));
 
-  document.getElementById('remaining-amount').textContent = formatMoney(result.remaining);
-  
+  document.getElementById('remaining-amount').textContent = formatMoney(
+    result.remaining,
+  );
+
   const indicatorEl = document.getElementById('indicator');
   indicatorEl.className = 'today-card__indicator indicator--' + indicatorState;
-  
-  document.getElementById('daily-limit').textContent = formatMoney(result.dailyLimit);
-  document.getElementById('spent-total').textContent = formatMoney(result.spent);
+
+  document.getElementById('daily-limit').textContent = formatMoney(
+    result.dailyLimit,
+  );
+  document.getElementById('spent-total').textContent = formatMoney(
+    result.spent,
+  );
   document.getElementById('days-left').textContent = result.daysLeft;
 
   const headerSubtitle = document.querySelector('.header__subtitle');
@@ -82,8 +95,10 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     const isMarked = !!settings.currentPeriodStart;
     const incomeName = settings.incomeName || 'Пенсия';
 
-    document.getElementById('remaining-label').textContent = 'Осталось до следующего поступления';
-    document.getElementById('daily-limit-hint').textContent = 'чтобы хватило до следующего поступления';
+    document.getElementById('remaining-label').textContent =
+      'Осталось до следующего поступления';
+    document.getElementById('daily-limit-hint').textContent =
+      'чтобы хватило до следующего поступления';
 
     if (isMarked) {
       btnMarkPension.style.display = 'none';
@@ -92,48 +107,143 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
       const dateStr = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
       pensionDateDisplay.textContent = `✅ Поступление: ${incomeName} (${dateStr})`;
     } else {
-      btnMarkPension.style.display = 'block'; 
+      btnMarkPension.style.display = 'block';
       pensionStatusText.style.display = 'none';
     }
   }
 
   // Предупреждения о резерве
   const noReserveWarning = document.getElementById('no-reserve-warning');
-  if (noReserveWarning) noReserveWarning.style.display = settings.reserveAmount <= 0 ? 'flex' : 'none';
+  if (noReserveWarning)
+    noReserveWarning.style.display =
+      settings.reserveAmount <= 0 ? 'flex' : 'none';
 
   const btnUseReserve = document.getElementById('btn-use-reserve');
-  if (btnUseReserve) btnUseReserve.style.display = settings.reserveAmount > 0 ? 'block' : 'none';
+  if (btnUseReserve)
+    btnUseReserve.style.display = settings.reserveAmount > 0 ? 'block' : 'none';
 
   // === СКРЫВАЕМ ТАБЫ, ЕСЛИ ОНИ ОСТАЛИСЬ В HTML ===
-  const tabsContainer = document.querySelector('.tabs-container') || document.getElementById('today-tabs');
+  const tabsContainer =
+    document.querySelector('.tabs-container') ||
+    document.getElementById('today-tabs');
   if (tabsContainer) {
     tabsContainer.style.display = 'none';
   }
-}    
+}
+
+// === НОВОЕ: Отрисовка табов для экрана Истории ===
+function renderHistoryTabs() {
+  const listEl = document.getElementById('transaction-list');
+  if (!listEl) return;
+
+  // Находим или создаем контейнер для табов
+  let tabsContainer = document.getElementById('history-tabs-container');
+  if (!tabsContainer) {
+    tabsContainer = document.createElement('div');
+    tabsContainer.id = 'history-tabs-container';
+    tabsContainer.style.cssText =
+      'display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; -webkit-overflow-scrolling: touch;';
+    listEl.parentElement.insertBefore(tabsContainer, listEl);
+  }
+  tabsContainer.innerHTML = '';
+
+  const accounts = window.appData.settings.accounts;
+  const currentId = window.currentHistoryAccountId || 'all';
+
+  console.log(
+    '📊 [renderHistoryTabs] Доступные счета:',
+    accounts.map((a) => `${a.name} (${a.id}) isSavings:${a.isSavings}`),
+  );
+  console.log(' [renderHistoryTabs] Текущий выбранный счёт:', currentId);
+
+  // 1. Таб "Все"
+  const allTab = document.createElement('button');
+  allTab.className = `stats-tab ${currentId === 'all' ? 'active' : ''}`;
+  allTab.textContent = 'Все счета';
+  allTab.onclick = () => {
+    window.currentHistoryAccountId = 'all';
+    console.log('✅ [renderHistoryTabs] Выбрано: ВСЕ счета');
+    renderHistoryTabs();
+    renderTransactionList(
+      window.appData.transactions,
+      window.appData.settings.pensionDay,
+    );
+  };
+  tabsContainer.appendChild(allTab);
+
+  // 2. Табы по активным счетам
+  if (accounts && accounts.length > 0) {
+    accounts.forEach((acc) => {
+      if (acc.isSavings) {
+        console.log(
+          `⏭️ [renderHistoryTabs] Пропускаем накопительный счёт: ${acc.name}`,
+        );
+        return;
+      }
+
+      const tab = document.createElement('button');
+      tab.className = `stats-tab ${currentId === acc.id ? 'active' : ''}`;
+      tab.textContent = `${acc.emoji || '💼'} ${acc.name}`;
+      tab.onclick = () => {
+        window.currentHistoryAccountId = acc.id;
+        console.log(
+          `✅ [renderHistoryTabs] Выбран счёт: ${acc.name} (ID: ${acc.id})`,
+        );
+        renderHistoryTabs();
+        renderTransactionList(
+          window.appData.transactions,
+          window.appData.settings.pensionDay,
+        );
+      };
+      tabsContainer.appendChild(tab);
+    });
+  }
+}
 
 // Отрисовка списка транзакций с группировкой по дням и раздельными итогами
 export function renderTransactionList(transactions, pensionDay) {
   const listEl = document.getElementById('transaction-list');
+  if (!listEl) return;
+
+  // === ВАЖНО: Полностью очищаем список перед новой отрисовкой ===
   listEl.innerHTML = '';
+  // ===============================================================
+
+  // === НОВОЕ: Сначала рисуем табы ===
+  if (typeof renderHistoryTabs === 'function') {
+    renderHistoryTabs();
+  }
+  // ==================================
+
+  // Инициализируем переменную, если её еще нет
+  if (typeof window.currentHistoryAccountId === 'undefined') {
+    window.currentHistoryAccountId = 'all';
+  }
 
   // === ФИЛЬТР ПО СЧЁТУ (Многоконточность) ===
-  console.log('🔄 Обновление истории. Выбранный счёт:', currentTodayAccountId);
-  
-  const filteredTransactions = currentTodayAccountId === 'all'
-    ? transactions
-    : transactions.filter(t =>
-        t.accountId === currentTodayAccountId ||
-        t.fromAccountId === currentTodayAccountId ||
-        t.toAccountId === currentTodayAccountId
-      );
+  console.log(
+    '🔄 Обновление истории. Выбранный счёт:',
+    window.currentHistoryAccountId,
+  );
+
+  const filteredTransactions =
+    window.currentHistoryAccountId === 'all'
+      ? transactions
+      : transactions.filter(
+          (t) =>
+            t.accountId === window.currentHistoryAccountId ||
+            t.fromAccountId === window.currentHistoryAccountId ||
+            t.toAccountId === window.currentHistoryAccountId,
+        );
   // ==========================================
 
   if (filteredTransactions.length === 0) {
-    const emptyMessage = currentTodayAccountId === 'all' 
-      ? 'Пока нет операций' 
-      : 'По этому счёту операций пока нет';
-      
-    listEl.innerHTML = `<p style="text-align: center; color: var(--color-text-secondary); padding: 40px;">${emptyMessage}</p>`;
+    const emptyMessage =
+      window.currentHistoryAccountId === 'all'
+        ? 'Пока нет операций'
+        : 'По этому счёту операций пока нет';
+
+    listEl.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 40px;">${emptyMessage}</p>`;
     return;
   }
 
@@ -298,7 +408,8 @@ export function renderSettings(settings, fixedExpenses) {
     initialBalanceInput.readOnly = true; // Запрещаем ручной ввод
     initialBalanceInput.style.backgroundColor = '#f1f3f5'; // Серый фон (визуально неактивно)
     initialBalanceInput.style.cursor = 'not-allowed'; // Курсор "запрещено"
-    initialBalanceInput.title = 'Автоматически рассчитывается как сумма балансов всех счетов'; // Подсказка при наведении
+    initialBalanceInput.title =
+      'Автоматически рассчитывается как сумма балансов всех счетов'; // Подсказка при наведении
   }
   // =====================================================================
 
@@ -375,9 +486,11 @@ export function renderSettings(settings, fixedExpenses) {
     .closest('.settings-label');
   if (pensionDayLabel) {
     const currentIncomeName = settings.incomeName || 'Пенсия';
-    // Если REGULAR_INCOME_TYPES не определен в ui.js, эта строка может вызвать ошибку. 
+    // Если REGULAR_INCOME_TYPES не определен в ui.js, эта строка может вызвать ошибку.
     // Если всё работает, оставляем как есть.
-    const isRegular = typeof REGULAR_INCOME_TYPES !== 'undefined' && REGULAR_INCOME_TYPES.includes(currentIncomeName);
+    const isRegular =
+      typeof REGULAR_INCOME_TYPES !== 'undefined' &&
+      REGULAR_INCOME_TYPES.includes(currentIncomeName);
     pensionDayLabel.style.display = isRegular ? 'block' : 'none';
   }
   // ==========================================================================
@@ -404,8 +517,6 @@ export function updateSyncIndicator(transactions, lastModifiedDate) {
   // Меняем слово "Обновлено" на "Сохранено"
   indicatorText.textContent = `Записей: ${count} | Сохранено: ${dateStr}`;
 }
-
-  
 
 export function renderAll(data) {
   renderTodayScreen(data.settings, data.fixedExpenses, data.transactions);
@@ -594,9 +705,13 @@ function renderStatsTabs(accounts) {
 
   if (accounts && accounts.length > 0) {
     accounts.forEach((acc) => {
+      // === НОВОЕ: Пропускаем накопительные счета ===
+      if (acc.isSavings) return;
+      // ============================================
+
       const tab = document.createElement('button');
       tab.className = `stats-tab ${currentStatsAccountId === acc.id ? 'active' : ''}`;
-      tab.textContent = acc.name;
+      tab.textContent = `${acc.emoji || '💼'} ${acc.name}`;
       tab.onclick = () => {
         currentStatsAccountId = acc.id;
         renderStatsTabs(accounts);
@@ -903,8 +1018,8 @@ export function renderPensionPeriodInfo(settings) {
     // ============================================
   }
 }
-    
-    // ==========================================
+
+// ==========================================
 // 1. КНОПКА "НОВЫЙ ПЕРИОД" (Существующая логика)
 // ==========================================
 const btnNewPeriod = document.getElementById('btn-new-period');
@@ -913,9 +1028,10 @@ if (btnNewPeriod) {
   btnNewPeriod.parentNode.replaceChild(freshBtn, btnNewPeriod);
 
   freshBtn.addEventListener('click', () => {
-    const currentDate = window.appData && window.appData.settings.currentPeriodStart
-      ? window.appData.settings.currentPeriodStart.split('T')[0]
-      : '';
+    const currentDate =
+      window.appData && window.appData.settings.currentPeriodStart
+        ? window.appData.settings.currentPeriodStart.split('T')[0]
+        : '';
     const userChoice = prompt(
       'Введите новую дату начала периода (в формате ГГГГ-ММ-ДД, например 2026-09-23)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ПОЛНОСТЬЮ СБРОСИТЬ отметку.',
       currentDate,
@@ -924,38 +1040,72 @@ if (btnNewPeriod) {
     if (userChoice === null) return;
 
     if (userChoice.trim() === '') {
-      if (confirm('Сбросить отметку о получении пенсии? Кнопка на главном экране появится снова.')) {
+      if (
+        confirm(
+          'Сбросить отметку о получении пенсии? Кнопка на главном экране появится снова.',
+        )
+      ) {
         if (window.appData) {
           delete window.appData.settings.currentPeriodStart;
           saveData(window.appData);
           renderPensionPeriodInfo(window.appData.settings);
-          renderTodayScreen(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
-          if (window.expenseChartInstance) renderStats(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+          renderTodayScreen(
+            window.appData.settings,
+            window.appData.fixedExpenses,
+            window.appData.transactions,
+          );
+          if (window.expenseChartInstance)
+            renderStats(
+              window.appData.settings,
+              window.appData.fixedExpenses,
+              window.appData.transactions,
+            );
         }
       }
     } else {
       const newDate = new Date(userChoice);
       if (!isNaN(newDate.getTime())) {
         if (window.appData) {
-          const oldStart = window.appData.settings.currentPeriodStart ? new Date(window.appData.settings.currentPeriodStart) : null;
+          const oldStart = window.appData.settings.currentPeriodStart
+            ? new Date(window.appData.settings.currentPeriodStart)
+            : null;
           if (oldStart && newDate.getTime() > oldStart.getTime()) {
-            const oldBalance = calculateDailyLimit(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+            const oldBalance = calculateDailyLimit(
+              window.appData.settings,
+              window.appData.fixedExpenses,
+              window.appData.transactions,
+            );
             const carryOver = oldBalance.currentBalance - oldBalance.fixedTotal;
-            const userAgrees = confirm(`Вы переносите период вперёд.\n\nНераспределённый остаток: ${carryOver.toFixed(2)} ₽\nОн будет перенесён как начальный баланс нового периода.\n\nПродолжить? (Нажмите "Отмена", чтобы изменить дату без переноса остатка)`);
+            const userAgrees = confirm(
+              `Вы переносите период вперёд.\n\nНераспределённый остаток: ${carryOver.toFixed(2)} ₽\nОн будет перенесён как начальный баланс нового периода.\n\nПродолжить? (Нажмите "Отмена", чтобы изменить дату без переноса остатка)`,
+            );
             if (!userAgrees) return;
-            window.appData.settings.initialBalance = Math.round(carryOver * 100) / 100;
-            const initialInput = document.getElementById('input-initial-balance');
+            window.appData.settings.initialBalance =
+              Math.round(carryOver * 100) / 100;
+            const initialInput = document.getElementById(
+              'input-initial-balance',
+            );
             if (initialInput) initialInput.value = carryOver.toFixed(2);
           }
           window.appData.settings.currentPeriodStart = newDate.toISOString();
           saveData(window.appData);
           renderPensionPeriodInfo(window.appData.settings);
-          renderTodayScreen(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
-          renderStats(window.appData.settings, window.appData.fixedExpenses, window.appData.transactions);
+          renderTodayScreen(
+            window.appData.settings,
+            window.appData.fixedExpenses,
+            window.appData.transactions,
+          );
+          renderStats(
+            window.appData.settings,
+            window.appData.fixedExpenses,
+            window.appData.transactions,
+          );
           alert('✅ Период успешно обновлён!');
         }
       } else {
-        alert('❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).');
+        alert(
+          '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
+        );
       }
     }
   });
@@ -1033,14 +1183,19 @@ if (btnClosePeriod) {
         }
         // ✅ ДОБАВЛЕНО: Обновляем историю (чтобы список транзакций очистился/обновился)
         if (typeof renderTransactionList === 'function') {
-          renderTransactionList(appData.transactions, appData.settings.pensionDay);
+          renderTransactionList(
+            appData.transactions,
+            appData.settings.pensionDay,
+          );
         }
         // ============================================================
 
         // Синхронизируем поле initialBalance визуально (на всякий случай)
         const initialInput = document.getElementById('input-initial-balance');
         if (initialInput) {
-          initialInput.value = archive.finalBalance.toFixed(2).replace('.', ',');
+          initialInput.value = archive.finalBalance
+            .toFixed(2)
+            .replace('.', ',');
         }
       }
     }
@@ -1226,11 +1381,15 @@ export function renderAccountsList() {
 export function renderArchivesList() {
   const archivesSection = document.getElementById('archives-section');
   const archivesList = document.getElementById('archives-list');
-  
+
   if (!archivesSection || !archivesList) return;
 
   const appData = window.appData;
-  if (!appData || !appData.settings.archives || appData.settings.archives.length === 0) {
+  if (
+    !appData ||
+    !appData.settings.archives ||
+    appData.settings.archives.length === 0
+  ) {
     archivesSection.style.display = 'none';
     return;
   }
@@ -1332,14 +1491,15 @@ function viewArchiveDetails(archive) {
 
       <h3>📋 История операций (${archive.transactions.length})</h3>
       <div style="max-height: 400px; overflow-y: auto;">
-        ${archive.transactions.map(tx => {
-          const txDate = new Date(tx.date).toLocaleDateString('ru-RU');
-          const isIncome = tx.type === 'income';
-          const amount = isIncome
-            ? `+${tx.amount.toFixed(2)} ₽`
-            : `-${tx.amount.toFixed(2)} ₽`;
-          const color = isIncome ? '#28a745' : '#dc3545';
-          return `
+        ${archive.transactions
+          .map((tx) => {
+            const txDate = new Date(tx.date).toLocaleDateString('ru-RU');
+            const isIncome = tx.type === 'income';
+            const amount = isIncome
+              ? `+${tx.amount.toFixed(2)} ₽`
+              : `-${tx.amount.toFixed(2)} ₽`;
+            const color = isIncome ? '#28a745' : '#dc3545';
+            return `
             <div style="padding: 8px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between;">
               <div>
                 <div style="font-weight: 600;">${tx.category || 'Без категории'}</div>
@@ -1349,7 +1509,8 @@ function viewArchiveDetails(archive) {
               <div style="font-weight: 600; color: ${color};">${amount}</div>
             </div>
           `;
-        }).join('')}
+          })
+          .join('')}
       </div>
 
       <button onclick="this.closest('.modal-overlay').remove()" style="margin-top: 20px; padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em;">
@@ -1387,92 +1548,88 @@ document.addEventListener('DOMContentLoaded', () => {
   const customLabel = document.getElementById('custom-income-label');
   const customInput = document.getElementById('input-custom-income');
 
-    if (incomeSelect) {
-      incomeSelect.addEventListener('change', (e) => {
-        const selectedValue = e.target.value;
+  if (incomeSelect) {
+    incomeSelect.addEventListener('change', (e) => {
+      const selectedValue = e.target.value;
 
-        // 1. Показываем/скрываем поле "Свой вариант"
-        if (selectedValue === 'custom') {
-          customLabel.style.display = 'block';
-          customInput.focus();
+      // 1. Показываем/скрываем поле "Свой вариант"
+      if (selectedValue === 'custom') {
+        customLabel.style.display = 'block';
+        customInput.focus();
+      } else {
+        customLabel.style.display = 'none';
+        customInput.value = '';
+      }
+
+      // 2. Определяем итоговое имя дохода
+      const finalIncomeName =
+        selectedValue === 'custom'
+          ? customInput.value.trim() || 'Пенсия'
+          : selectedValue;
+
+      // 3. === НОВОЕ: Проверяем, регулярный ли это доход ===
+      const isRegular = REGULAR_INCOME_TYPES.includes(finalIncomeName);
+      const pensionDayLabel = document
+        .getElementById('input-pension-day')
+        .closest('.settings-label');
+
+      if (pensionDayLabel) {
+        if (isRegular) {
+          pensionDayLabel.style.display = 'block'; // Показываем поле "День получения"
         } else {
-          customLabel.style.display = 'none';
-          customInput.value = '';
+          pensionDayLabel.style.display = 'none'; // Скрываем поле "День получения"
+          document.getElementById('input-pension-day').value = ''; // Очищаем его
         }
+      }
+      // ==========================================
 
-        // 2. Определяем итоговое имя дохода
-        const finalIncomeName =
-          selectedValue === 'custom'
-            ? customInput.value.trim() || 'Пенсия'
-            : selectedValue;
+      // 4. Сохраняем в localStorage и window.appData
+      const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+      appData.settings = appData.settings || {};
+      appData.settings.incomeName = finalIncomeName;
 
-        // 3. === НОВОЕ: Проверяем, регулярный ли это доход ===
-        const isRegular = REGULAR_INCOME_TYPES.includes(finalIncomeName);
-        const pensionDayLabel = document
-          .getElementById('input-pension-day')
-          .closest('.settings-label');
+      // Если доход нерегулярный, обнуляем день получения в данных
+      if (!isRegular) {
+        appData.settings.pensionDay = null;
+      }
 
-        if (pensionDayLabel) {
-          if (isRegular) {
-            pensionDayLabel.style.display = 'block'; // Показываем поле "День получения"
-          } else {
-            pensionDayLabel.style.display = 'none'; // Скрываем поле "День получения"
-            document.getElementById('input-pension-day').value = ''; // Очищаем его
-          }
-        }
-        // ==========================================
+      localStorage.setItem('pensionBudget', JSON.stringify(appData));
 
-        // 4. Сохраняем в localStorage и window.appData
-        const appData = JSON.parse(
-          localStorage.getItem('pensionBudget') || '{}',
-        );
-        appData.settings = appData.settings || {};
-        appData.settings.incomeName = finalIncomeName;
-
-        // Если доход нерегулярный, обнуляем день получения в данных
+      if (window.appData) {
+        window.appData.settings.incomeName = finalIncomeName;
         if (!isRegular) {
-          appData.settings.pensionDay = null;
+          window.appData.settings.pensionDay = null;
         }
+      }
 
-        localStorage.setItem('pensionBudget', JSON.stringify(appData));
+      // 5. Мгновенное обновление интерфейса
+      const incomeAmountLabel = document.getElementById('income-amount-label');
+      if (incomeAmountLabel) {
+        incomeAmountLabel.textContent = 'Сумма поступления';
+      }
 
-        if (window.appData) {
-          window.appData.settings.incomeName = finalIncomeName;
-          if (!isRegular) {
-            window.appData.settings.pensionDay = null;
-          }
-        }
+      const currentPeriodLabel = document.getElementById(
+        'current-period-label',
+      );
+      if (currentPeriodLabel) {
+        currentPeriodLabel.textContent = `📅 Текущий период: ${finalIncomeName}`;
+      }
 
-        // 5. Мгновенное обновление интерфейса
-        const incomeAmountLabel = document.getElementById(
-          'income-amount-label',
+      if (typeof renderTodayScreen === 'function' && window.appData) {
+        renderTodayScreen(
+          window.appData.settings,
+          window.appData.fixedExpenses,
+          window.appData.transactions,
         );
-        if (incomeAmountLabel) {
-          incomeAmountLabel.textContent = 'Сумма поступления';
-        }
+      }
 
-        const currentPeriodLabel = document.getElementById(
-          'current-period-label',
-        );
-        if (currentPeriodLabel) {
-          currentPeriodLabel.textContent = `📅 Текущий период: ${finalIncomeName}`;
-        }
-
-        if (typeof renderTodayScreen === 'function' && window.appData) {
-          renderTodayScreen(
-            window.appData.settings,
-            window.appData.fixedExpenses,
-            window.appData.transactions,
-          );
-        }
-
-        console.log(
-          '✅ Источник дохода:',
-          finalIncomeName,
-          isRegular ? '(регулярный)' : '(нерегулярный)',
-        );
-      });
-    }
+      console.log(
+        '✅ Источник дохода:',
+        finalIncomeName,
+        isRegular ? '(регулярный)' : '(нерегулярный)',
+      );
+    });
+  }
 
   // Обработчик для поля "Свой вариант" (чтобы обновлялось при вводе текста)
   if (customInput) {
@@ -1481,13 +1638,15 @@ document.addEventListener('DOMContentLoaded', () => {
       appData.settings = appData.settings || {};
       appData.settings.incomeName = e.target.value.trim() || 'Пенсия';
       localStorage.setItem('pensionBudget', JSON.stringify(appData));
-      
+
       if (window.appData) {
         window.appData.settings.incomeName = appData.settings.incomeName;
       }
 
       // Мгновенно обновляем фиолетовый блок и главный экран
-      const currentPeriodLabel = document.getElementById('current-period-label');
+      const currentPeriodLabel = document.getElementById(
+        'current-period-label',
+      );
       if (currentPeriodLabel) {
         currentPeriodLabel.textContent = `📅 Текущий период: ${appData.settings.incomeName}`;
       }
@@ -1496,7 +1655,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTodayScreen(
           window.appData.settings,
           window.appData.fixedExpenses,
-          window.appData.transactions
+          window.appData.transactions,
         );
       }
     });
