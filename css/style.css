@@ -1006,50 +1006,29 @@ body.dark-theme {
 
 .today-payments__empty {
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #6b7280);
   font-size: 16px;
-  margin: 0;
-}
-
-.today-payments__list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.today-payment-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
-}
-
-.today-payment-item__info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.today-payment-item__name {
-  font-size: 16px;
+  margin: 16px 0;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   font-weight: 500;
-  color: var(--text-primary);
-}
-
-.today-payment-item__amount {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-danger);
-}
-
-.today-payment-item__actions {
   display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
-  flex-shrink: 0;
 }
+
+/* === ТЁМНАЯ ТЕМА === */
+body.dark-theme .today-payments__empty {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1f1f1f 100%);
+  border: 1px solid #404040;
+  color: #a0a0a0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+/* =========================== */
 
 /* --- Статус пенсии --- */
 .pension-status-text {
@@ -1840,6 +1819,8 @@ select.settings-input:focus {
 }
 
 
+/* ================================================== */
+
 /* ============================================================================
  * 12. МЕДИАЗАПРОСЫ (ВСЕ В ОДНОМ МЕСТЕ!)
  * ============================================================================ */
@@ -2088,3 +2069,93 @@ select.settings-input:focus {
     padding: 8px 2px;
   }
 }
+
+/* === АДАПТАЦИЯ КАРТОЧКИ "СЕГОДНЯ" ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  .today-card {
+    max-width: 800px;
+    padding: 40px;
+  }
+
+  .today-card__amount {
+    font-size: 56px;
+  }
+
+  .today-card__amount--secondary {
+    font-size: 42px;
+  }
+
+  .today-card__indicator {
+    width: 80px;
+    height: 80px;
+  }
+
+  .today-card__label--small {
+    font-size: 18px;
+  }
+}
+/* ========================================================== */
+
+/* === СЕТКА КНОПОК НА ГЛАВНОМ ЭКРАНЕ (v2.1) === */
+.main-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md, 12px);
+  max-width: 100%;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.main-actions .btn {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+}
+
+/* На десктопе — сетка 2x2, ширина как у карточки */
+@media (min-width: 768px) {
+  .main-actions {
+    grid-template-columns: 1fr 1fr;
+    max-width: 800px;
+  }
+}
+/* ================================================== */
+
+/* === АДАПТАЦИЯ НИЖНЕЙ НАВИГАЦИИ ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  .bottom-nav {
+    border-top: none; /* Убираем линию на десктопе */
+    max-width: 100%;  /* Оставляем на всю ширину */
+    padding: 12px 20px; /* Чуть больше отступов для красоты */
+  }
+}
+/* ========================================================== */
+
+/* === АДАПТАЦИЯ БЫСТРОЙ СТАТИСТИКИ ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  .quick-stats {
+    max-width: 800px; /* Выравниваем с карточкой и кнопками */
+    gap: 20px;
+  }
+
+  .stat {
+    padding: 24px;
+    border-radius: 12px;
+  }
+
+  .stat__label {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .stat__value {
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .stat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px var(--shadow, rgba(0, 0, 0, 0.1));
+  }
+}
+/* ========================================================== */
