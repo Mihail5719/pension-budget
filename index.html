@@ -162,8 +162,6 @@
             <!-- Экран 1: Сегодня -->
             <section class="screen screen--today" id="screen-today">
                 <h2 class="screen__title screen__title--hidden">Главный экран</h2>
-                <!-- Горизонтальные табы счетов на экране "Сегодня" (v2.6) -->
-                <div id="today-tabs-container" class="stats-tabs"></div>
                 <div class="today-card">
                     <span id="remaining-label">Осталось до следующего поступления</span>
                     <div class="today-card__amount" id="remaining-amount">0 ₽</div>
@@ -195,23 +193,25 @@
                 <!-- Блок "Сегодня к оплате" (внутри секции, сразу после карточки) -->
                 <div id="today-payments-container" class="today-payments"></div>
 
-                <button class="btn btn--primary btn--large" id="btn-add-expense">
-                    Записать расход
-                </button>
-
-                <button class="btn btn--success btn--large" id="btn-add-income">
-                    Добавить доход
-                </button>
-
-                <!-- Кнопка перевода между счетами (НОВОЕ, v2.5) -->
-                <button class="btn btn--transfer btn--large" id="btn-add-transfer">
-                    ⇄ Перевод между счетами
-                </button>
-
-                <!-- Кнопка "Использовать НЗ" -->
-                <button id="btn-use-reserve" class="btn btn--warning" style="display: none;">
-                    🔓 Использовать НЗ
-                </button>
+                <div class="main-actions">
+                    <button class="btn btn--primary btn--large" id="btn-add-expense">
+                        Записать расход
+                    </button>
+                
+                    <button class="btn btn--success btn--large" id="btn-add-income">
+                        Добавить доход
+                    </button>
+                
+                    <!-- Кнопка перевода между счетами (НОВОЕ, v2.5) -->
+                    <button class="btn btn--transfer btn--large" id="btn-add-transfer">
+                        ⇄ Перевод между счетами
+                    </button>
+                
+                    <!-- Кнопка "Использовать НЗ" -->
+                    <button id="btn-use-reserve" class="btn btn--warning" style="display: none;">
+                        🔓 Использовать НЗ
+                    </button>
+                </div>
 
                 <div class="quick-stats">
                     <div class="stat">
