@@ -948,7 +948,14 @@ export function renderStats(settings, fixedExpenses, transactions) {
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { usePointStyle: true, padding: 15 },
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                size: 14,
+                weight: '500',
+              },
+            },
           },
           tooltip: {
             callbacks: {
