@@ -2159,3 +2159,170 @@ select.settings-input:focus {
   }
 }
 /* ========================================================== */
+
+/* === АДАПТАЦИЯ ТАБОВ СЧЕТОВ ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  .stats-tabs {
+    padding: 16px 24px;
+    justify-content: flex-start;
+  }
+
+  .stats-tab {
+    padding: 12px 24px;
+    font-size: 1rem;
+    border-radius: 24px;
+    transition: all 0.3s ease;
+  }
+
+  /* Hover для светлой темы */
+  body:not(.dark-theme) .stats-tab:hover:not(.active) {
+    background-color: #e8e8e8;
+    transform: translateY(-2px);
+  }
+
+  /* Hover для тёмной темы */
+  body.dark-theme .stats-tab:hover:not(.active) {
+    background-color: #3a3a3a;
+    transform: translateY(-2px);
+  }
+
+  .stats-tab.active {
+    padding: 12px 28px;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+    transform: translateY(-2px);
+  }
+}
+/* ========================================================== */
+
+/* === АДАПТАЦИЯ ЭКРАНА СТАТИСТИКИ ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  .stats-card {
+    max-width: 800px; /* Расширяем карточку */
+    padding: 32px;
+  }
+
+  .stats-title {
+    font-size: 1.5em;
+    margin-bottom: 24px;
+  }
+
+  .stats-row {
+    font-size: 1.15em;
+  }
+
+  .stats-row.income,
+  .stats-row.expense {
+    font-size: 1.3em;
+  }
+
+  .stats-breakdown {
+    max-width: 800px; /* Расширяем блок с диаграммой */
+  }
+
+  .stats-breakdown-title {
+    font-size: 1.2em;
+  }
+
+  /* Центрируем табы на десктопе */
+  .stats-tabs {
+    justify-content: center;
+    padding: 20px 24px;
+  }
+}
+/* ========================================================== */
+
+/* === АДАПТАЦИЯ ДИАГРАММЫ ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  #stats-chart {
+    padding: 32px;
+  }
+
+  #stats-chart canvas {
+    max-width: 500px;
+    max-height: 500px;
+    width: 500px !important; /* Принудительно задаём размер */
+    height: 500px !important;
+  }
+}
+/* ========================================================== */
+
+  /* Легенда под диаграммой */
+  .chart-legend,
+  .stats-legend {
+    font-size: 14px;
+    margin-top: 24px;
+  }
+
+  .chart-legend-item,
+  .legend-item {
+    font-size: 14px;
+    margin: 8px 12px;
+  }
+
+/* ========================================================== */
+
+/* === УБИРАЕМ ЛИНИЮ У ТАБОВ НА ДЕСКТОПЕ (v2.1) === */
+@media (min-width: 768px) {
+  .stats-tabs {
+    border-bottom: none; /* Убираем линию на десктопе */
+  }
+}
+/* ========================================================== */
+
+/* === ТЁМНАЯ ТЕМА ДЛЯ ЭКРАНА СТАТИСТИКИ (v2.1) === */
+body.dark-theme .stats-card {
+  background: #1f1f1f;
+  color: #e0e0e0;
+}
+
+body.dark-theme .stats-title {
+  color: #ffffff;
+}
+
+body.dark-theme .stats-breakdown-title {
+  color: #ffffff;
+  border-bottom-color: #404040;
+}
+
+body.dark-theme .stats-divider {
+  background: #404040;
+}
+
+body.dark-theme .stats-row:not(.income):not(.expense) {
+  color: #e0e0e0;
+}
+
+/* Контейнер диаграммы */
+body.dark-theme #stats-chart {
+  background: #1f1f1f;
+}
+
+/* === КАРТОЧКИ ПОДКАТЕГОРИЙ === */
+body.dark-theme .breakdown__card {
+  background: #1f1f1f !important;
+  border: 1px solid #404040;
+}
+
+body.dark-theme .breakdown__header {
+  color: #ffffff !important;
+}
+
+body.dark-theme .breakdown__row {
+  color: #e0e0e0 !important;
+  border-bottom-color: #404040;
+}
+
+body.dark-theme .breakdown__row span {
+  color: #e0e0e0 !important;
+}
+
+/* Прогресс-бары в подкатегориях */
+body.dark-theme .breakdown__bar,
+body.dark-theme .breakdown__bar-fill {
+  background: #2d2d2d !important;
+}
+
+body.dark-theme .breakdown__bar-fill {
+  opacity: 0.8;
+}
+/* ========================================================== */
