@@ -246,8 +246,6 @@ function setupEventListeners() {
   // ===========================================================================
 
   expenseSaveBtn.addEventListener('click', saveExpense);
-
-  expenseSaveBtn.addEventListener('click', saveExpense);
   expenseCancelBtn.addEventListener('click', closeExpenseModal);
 
   // Кнопки в модальном окне доходов
@@ -289,14 +287,12 @@ function setupEventListeners() {
     if (e.key === 'Escape') {
       if (expenseModal.classList.contains('is-open')) closeExpenseModal();
       if (incomeModal.classList.contains('is-open')) closeIncomeModal();
-      // <-- НОВОЕ (v2.5)
       if (transferModal && transferModal.classList.contains('is-open'))
         closeTransferModal();
     }
     if (e.key === 'Enter') {
       if (expenseModal.classList.contains('is-open')) saveExpense();
       if (incomeModal.classList.contains('is-open')) saveIncome();
-      // <-- НОВОЕ (v2.5)
       if (transferModal && transferModal.classList.contains('is-open'))
         saveTransfer();
     }
@@ -319,6 +315,96 @@ function setupEventListeners() {
   // Кнопка "Добавить платёж"
   const btnAddPayment = document.getElementById('btn-add-payment');
   btnAddPayment.addEventListener('click', handleAddPayment);
+
+  // === Обработчики для модального окна фиксированных платежей (Добавление и Редактирование) ===
+  const btnSaveFixedExpense = document.getElementById('btn-save-fixed-expense');
+  if (btnSaveFixedExpense) {
+    btnSaveFixedExpense.addEventListener('click', () => {
+      const name = document.getElementById('fixed-expense-name').value.trim();
+      const amountStr = document.getElementById('fixed-expense-amount').value;
+      const dayStr = document.getElementById('fixed-expense-day').value;
+      const accountId = document.getElementById('fixed-expense-account').value;
+
+      if (!name) {
+        alert('Введите название платежа');
+        return;
+      }
+      const amount = parseFloat(amountStr.replace(',', '.'));
+      if (isNaN(amount) || amount <= 0) {
+        alert('Введите корректную сумму');
+        return;
+      }
+      const day = parseInt(dayStr);
+      if (isNaN(day) || day < 1 || day > 28) {
+        alert('Введите день от 1 до 28');
+        return;
+      }
+
+      if (window.editingFixedExpenseId) {
+        // РЕЖИМ РЕДАКТИРОВАНИЯ
+        const payment = appData.fixedExpenses.find(
+          (p) => p.id === window.editingFixedExpenseId,
+        );
+        if (payment) {
+          payment.name = name;
+          payment.amount = amount;
+          payment.day = day;
+          payment.accountId = accountId; // Обновляем привязку к счёту!
+        }
+        window.editingFixedExpenseId = null; // Сбрасываем режим
+        document.getElementById('fixed-expense-modal-title').textContent =
+          'Добавить фиксированный платёж';
+      } else {
+        // РЕЖИМ ДОБАВЛЕНИЯ
+        const newPayment = {
+          id: Date.now(),
+          name: name,
+          amount: amount,
+          day: day,
+          accountId: accountId,
+        };
+        appData.fixedExpenses.push(newPayment);
+      }
+
+      saveData(appData);
+      renderSettings(appData.settings, appData.fixedExpenses);
+      renderTodayScreen(
+        appData.settings,
+        appData.fixedExpenses,
+        appData.transactions,
+      );
+      document
+        .getElementById('fixed-expense-modal')
+        .classList.remove('is-open');
+    });
+  }
+
+  const btnCancelFixedExpense = document.getElementById(
+    'btn-cancel-fixed-expense',
+  );
+  if (btnCancelFixedExpense) {
+    btnCancelFixedExpense.addEventListener('click', () => {
+      window.editingFixedExpenseId = null; // Сброс при отмене
+      document.getElementById('fixed-expense-modal-title').textContent =
+        'Добавить фиксированный платёж';
+      document
+        .getElementById('fixed-expense-modal')
+        .classList.remove('is-open');
+    });
+  }
+
+  const fixedExpenseModalEl = document.getElementById('fixed-expense-modal');
+  if (fixedExpenseModalEl) {
+    fixedExpenseModalEl.addEventListener('click', (e) => {
+      if (e.target === fixedExpenseModalEl.querySelector('.modal__overlay')) {
+        window.editingFixedExpenseId = null; // Сброс при клике на оверлей
+        document.getElementById('fixed-expense-modal-title').textContent =
+          'Добавить фиксированный платёж';
+        fixedExpenseModalEl.classList.remove('is-open');
+      }
+    });
+  }
+  // ======================================================================
 
   // Обработчики экспорта/импорта (обновлённые ID)
   document.getElementById('export-btn').addEventListener('click', handleExport);
@@ -352,7 +438,6 @@ function setupEventListeners() {
   const btnMarkPension = document.getElementById('btn-mark-pension');
   if (btnMarkPension) {
     btnMarkPension.addEventListener('click', () => {
-      // === ПЕРЕНОС ОСТАТКА (если это не первый период) ===
       let newInitialBalance = appData.settings.initialBalance;
       if (appData.settings.currentPeriodStart) {
         const oldBalance = calculateDailyLimit(
@@ -360,11 +445,9 @@ function setupEventListeners() {
           appData.fixedExpenses,
           appData.transactions,
         );
-        // Новый начальный остаток = текущий баланс - фиксированные платежи
         newInitialBalance = oldBalance.currentBalance - oldBalance.fixedTotal;
         console.log('🔄 Перенос остатка:', newInitialBalance);
       }
-      // ==========================================
 
       const transferMessage = appData.settings.currentPeriodStart
         ? `\n\nОстаток с прошлого периода (${newInitialBalance.toFixed(2)} ₽) будет перенесён как начальный баланс.`
@@ -375,23 +458,14 @@ function setupEventListeners() {
           `Отметить поступление пенсии сегодня?${transferMessage}\n\nДневной лимит будет пересчитан с учётом остатка.`,
         )
       ) {
-        // Устанавливаем новый начальный баланс
         appData.settings.initialBalance = newInitialBalance;
-
-        // 1. Сохраняем текущую дату как начало нового периода
         appData.settings.currentPeriodStart = new Date().toISOString();
-
-        // 2. Сохраняем данные
         saveData(appData);
-
-        // 3. Перерисовываем экран "Сегодня" (кнопка превратится в текст статуса)
         renderTodayScreen(
           appData.settings,
           appData.fixedExpenses,
           appData.transactions,
         );
-
-        // 4. Если открыта статистика, обновляем и её
         if (window.expenseChartInstance) {
           renderStats(
             appData.settings,
@@ -441,7 +515,6 @@ function setupEventListeners() {
       } else {
         const newDate = new Date(userChoice);
         if (!isNaN(newDate.getTime())) {
-          // === ЯВНЫЙ ПЕРЕНОС ОСТАТКА (Наблюдение 14) ===
           const oldStart = appData.settings.currentPeriodStart
             ? new Date(appData.settings.currentPeriodStart)
             : null;
@@ -470,7 +543,6 @@ function setupEventListeners() {
               '₽',
             );
           }
-          // ==========================================
 
           appData.settings.currentPeriodStart = newDate.toISOString();
           saveData(appData);
@@ -498,10 +570,8 @@ function setupEventListeners() {
   // ================================================================
   // === ОБРАБОТЧИКИ ДЛЯ УПРАВЛЕНИЯ СЧЕТАМИ (v2.1) ===
 
-  // Переменная для хранения ID редактируемого счёта (null если добавляем новый)
   let editingAccountId = null;
 
-  // Кнопка "Добавить счёт"
   const btnAddAccount = document.getElementById('btn-add-account');
   if (btnAddAccount) {
     btnAddAccount.addEventListener('click', () => {
@@ -509,12 +579,10 @@ function setupEventListeners() {
       document.getElementById('account-modal-title').textContent =
         'Добавить счёт';
       document.getElementById('account-name').value = '';
-      // Убрали поля эмодзи и цвета — они больше не нужны
       document.getElementById('account-modal').classList.add('is-open');
     });
   }
 
-  // Кнопка "Отмена" в модалке счёта
   const btnCancelAccount = document.getElementById('btn-cancel-account');
   if (btnCancelAccount) {
     btnCancelAccount.addEventListener('click', () => {
@@ -522,7 +590,6 @@ function setupEventListeners() {
     });
   }
 
-  // Кнопка "Сохранить" в модалке счёта
   const btnSaveAccount = document.getElementById('btn-save-account');
   if (btnSaveAccount) {
     btnSaveAccount.addEventListener('click', () => {
@@ -543,10 +610,9 @@ function setupEventListeners() {
         );
         if (account) {
           account.name = name;
-          account.initialBalance = initialBalance; // Используем initialBalance
-
+          account.initialBalance = initialBalance;
           account.isSavings =
-            document.getElementById('account-is-savings').checked; // <-- ДОБАВЛЕНО
+            document.getElementById('account-is-savings').checked;
 
           const lowerName = name.toLowerCase();
           if (lowerName.includes('сбер')) {
@@ -576,7 +642,7 @@ function setupEventListeners() {
           emoji: '',
           color: '#3498db',
           initialBalance: initialBalance,
-          isSavings: isSavings, // <-- ДОБАВЛЕНО
+          isSavings: isSavings,
         };
 
         const lowerName = name.toLowerCase();
@@ -604,16 +670,12 @@ function setupEventListeners() {
         }
       }
 
-      // 1. Пересчитываем общий начальный остаток
       const totalInitial = appData.settings.accounts
         .filter((account) => !account.isSavings)
         .reduce((sum, acc) => sum + (acc.initialBalance || 0), 0);
-      
+
       appData.settings.initialBalance = totalInitial;
 
-      
-
-      // 2. Обновляем поле на экране НЕМЕДЛЕННО
       const initialBalanceInput = document.getElementById(
         'input-initial-balance',
       );
@@ -621,7 +683,6 @@ function setupEventListeners() {
         initialBalanceInput.value = totalInitial;
       }
 
-      // 3. Сохраняем и обновляем списки
       saveData(appData);
       if (typeof renderAccountsList === 'function') renderAccountsList();
       if (typeof renderTodayScreen === 'function')
@@ -640,7 +701,6 @@ function setupEventListeners() {
 
   // Делегирование событий для кнопок редактирования и удаления счетов
   document.addEventListener('click', (e) => {
-    // Кнопка редактирования счёта
     if (e.target.closest('.btn-edit-account')) {
       const accountId = e.target.closest('.btn-edit-account').dataset.accountId;
       const account = appData.settings.accounts.find((a) => a.id === accountId);
@@ -649,10 +709,8 @@ function setupEventListeners() {
         document.getElementById('account-modal-title').textContent =
           'Редактировать счёт';
         document.getElementById('account-name').value = account.name;
-        // Убрали поля эмодзи и цвета — они больше не нужны
-        // Подставляем текущий начальный баланс счёта в поле ввода
         document.getElementById('account-balance').value =
-          account.initialBalance || 0; // <-- ВАЖНО: initialBalance
+          account.initialBalance || 0;
 
         document.getElementById('account-is-savings').checked =
           account.isSavings || false;
@@ -661,14 +719,12 @@ function setupEventListeners() {
       }
     }
 
-    // Кнопка удаления счёта
     if (e.target.closest('.btn-delete-account')) {
       const accountId = e.target.closest('.btn-delete-account').dataset
         .accountId;
       const account = appData.settings.accounts.find((a) => a.id === accountId);
 
       if (account) {
-        // Проверяем, есть ли транзакции на этом счёте
         const transactionsCount = appData.transactions.filter(
           (t) => t.accountId === accountId,
         ).length;
@@ -682,7 +738,6 @@ function setupEventListeners() {
 
           if (!confirmDelete) return;
 
-          // Переносим транзакции на счёт по умолчанию
           const defaultAccountId =
             appData.settings.defaultAccountId ||
             appData.settings.accounts[0].id;
@@ -697,12 +752,10 @@ function setupEventListeners() {
           if (!confirmDelete) return;
         }
 
-        // Удаляем счёт
         appData.settings.accounts = appData.settings.accounts.filter(
           (a) => a.id !== accountId,
         );
 
-        // Если удалили счёт по умолчанию, устанавливаем новый
         if (
           appData.settings.defaultAccountId === accountId &&
           appData.settings.accounts.length > 0
@@ -1287,46 +1340,34 @@ function handleSettingsChange() {
   console.log('Настройки обновлены', appData.settings);
 }
 
-// Обработчик добавления платежа
+// Обработчик добавления платежа (теперь через модальное окно)
 function handleAddPayment() {
-  const name = prompt('Название платежа (например: ЖКХ, Лекарства):');
-  if (!name) return;
-
-  const amountStr = prompt('Сумма платежа:');
-  if (!amountStr) return;
-
-  const amount = parseFloat(amountStr.replace(',', '.'));
-  if (isNaN(amount) || amount <= 0) {
-    alert('Пожалуйста, введите корректную сумму');
+  const modal = document.getElementById('fixed-expense-modal');
+  const accountSelect = document.getElementById('fixed-expense-account');
+  
+  // 1. Очищаем и заполняем список активных счетов
+  accountSelect.innerHTML = '';
+  const accounts = appData.settings.accounts.filter(acc => !acc.isSavings); // Кредиты обычно платят с активных
+  
+  if (accounts.length === 0) {
+    alert('Сначала добавьте хотя бы один активный счёт в настройках!');
     return;
   }
 
-  const dayStr = prompt(
-    'День месяца для оплаты (1-28):\nНапример, 5 — значит платить 5-го числа каждого месяца',
-  );
-  if (!dayStr) return;
+  accounts.forEach(acc => {
+    const option = document.createElement('option');
+    option.value = acc.id;
+    option.textContent = `${acc.emoji || '💼'} ${acc.name}`;
+    accountSelect.appendChild(option);
+  });
 
-  const day = parseInt(dayStr);
-  if (isNaN(day) || day < 1 || day > 28) {
-    alert('Пожалуйста, введите число от 1 до 28');
-    return;
-  }
-
-  const payment = {
-    id: Date.now(),
-    name: name.trim(),
-    amount: amount,
-    day: day, // ← День платежа добавлен!
-  };
-
-  appData.fixedExpenses.push(payment);
-  saveData(appData);
-  renderSettings(appData.settings, appData.fixedExpenses);
-  renderTodayScreen(
-    appData.settings,
-    appData.fixedExpenses,
-    appData.transactions,
-  );
+  // 2. Очищаем поля ввода
+  document.getElementById('fixed-expense-name').value = '';
+  document.getElementById('fixed-expense-amount').value = '';
+  document.getElementById('fixed-expense-day').value = '';
+  
+  // 3. Показываем модальное окно
+  modal.classList.add('is-open');
 }
 
 // Обработчик клика по кнопкам удаления и редактирования
@@ -1378,54 +1419,45 @@ function handleDeleteClick(event) {
     }
   }
 
-  // 4. Редактирование платежа
+  // 4. Редактирование платежа (теперь через модальное окно)
   if (target.dataset.action === 'edit-payment') {
     const paymentId = parseInt(target.dataset.id);
     const payment = appData.fixedExpenses.find((p) => p.id === paymentId);
 
     if (payment) {
-      const newName = prompt('Название платежа:', payment.name);
-      if (newName === null) return;
+      // Включаем режим редактирования
+      window.editingFixedExpenseId = paymentId;
+      document.getElementById('fixed-expense-modal-title').textContent =
+        'Редактировать платёж';
 
-      const currentAmountFormatted = formatMoney(payment.amount);
-      const newAmountStr = prompt(
-        `Сумма (текущая: ${currentAmountFormatted}):`,
-        currentAmountFormatted,
+      // Заполняем поля текущими данными
+      document.getElementById('fixed-expense-name').value = payment.name;
+      document.getElementById('fixed-expense-amount').value = payment.amount;
+      document.getElementById('fixed-expense-day').value = payment.day;
+
+      // Заполняем и выбираем текущий счёт
+      const accountSelect = document.getElementById('fixed-expense-account');
+      accountSelect.innerHTML = '';
+      const accounts = appData.settings.accounts.filter(
+        (acc) => !acc.isSavings,
       );
-      if (newAmountStr === null) return;
 
-      const cleanAmountStr = newAmountStr
-        .replace(/\s/g, '')
-        .replace('₽', '')
-        .replace(',', '.')
-        .trim();
-      const newAmount = parseFloat(cleanAmountStr);
+      accounts.forEach((acc) => {
+        const option = document.createElement('option');
+        option.value = acc.id;
+        option.textContent = `${acc.emoji || '💼'} ${acc.name}`;
+        // Если это текущий счёт платежа (или если его нет, выбираем первый)
+        if (
+          acc.id === payment.accountId ||
+          (!payment.accountId && accounts[0].id === acc.id)
+        ) {
+          option.selected = true;
+        }
+        accountSelect.appendChild(option);
+      });
 
-      if (isNaN(newAmount) || newAmount <= 0) {
-        alert('Некорректная сумма. Введите число, например: 4395.06');
-        return;
-      }
-
-      const newDayStr = prompt('День месяца (1-28):', payment.day);
-      if (newDayStr === null) return;
-
-      const newDay = parseInt(newDayStr);
-      if (isNaN(newDay) || newDay < 1 || newDay > 28) {
-        alert('День должен быть от 1 до 28');
-        return;
-      }
-
-      payment.name = newName.trim();
-      payment.amount = newAmount;
-      payment.day = newDay;
-
-      saveData(appData); // saveData уже обновит индикатор, но для надёжности:
-      if (typeof updateSyncIndicator === 'function') {
-        updateSyncIndicator(appData.transactions, appData.lastModified);
-      }
-
-      renderAll(appData);
-      console.log('Платёж обновлён:', payment);
+      // Открываем модальное окно
+      document.getElementById('fixed-expense-modal').classList.add('is-open');
     }
   }
 

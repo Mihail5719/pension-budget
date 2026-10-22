@@ -446,15 +446,27 @@ export function renderSettings(settings, fixedExpenses) {
   const listEl = document.getElementById('fixed-expenses-list');
   listEl.innerHTML = '';
 
-  fixedExpenses.forEach((expense) => {
-    const itemEl = document.createElement('div');
-    itemEl.className = 'fixed-expense';
-    itemEl.dataset.id = expense.id;
+    fixedExpenses.forEach((expense) => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'fixed-expense';
+      itemEl.dataset.id = expense.id;
 
-    itemEl.innerHTML = `
+      // === НОВОЕ: Находим название счёта ===
+      const account = window.appData?.settings?.accounts?.find(
+        (a) => a.id === expense.accountId,
+      );
+      const accountName = account
+        ? `${account.emoji || '💼'} ${account.name}`
+        : 'Не указан';
+      // ======================================
+
+      itemEl.innerHTML = `
       <div class="fixed-expense__info">
           <span class="fixed-expense__name">${expense.name}</span>
           <span class="fixed-expense__day">${expense.day ? expense.day + '-го числа' : ''}</span>
+          <span class="fixed-expense__account" style="display: block; font-size: 12px; color: var(--text-secondary, #666); margin-top: 4px;">
+            Со счёта: ${accountName}
+          </span>
       </div>
       <span class="fixed-expense__amount">${formatMoney(expense.amount)}</span>
       <div class="fixed-expense__actions">
@@ -462,8 +474,8 @@ export function renderSettings(settings, fixedExpenses) {
           <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
       </div>
     `;
-    listEl.appendChild(itemEl);
-  });
+      listEl.appendChild(itemEl);
+    });
 
   initMoneyFields();
   renderPensionPeriodInfo(settings);

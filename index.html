@@ -716,6 +716,43 @@
         </div>
     </div>
 
+        <!-- Модальное окно для добавления фиксированного платежа -->
+        <div class="modal" id="fixed-expense-modal">
+            <div class="modal__overlay"></div>
+            <div class="modal__content">
+                <h2 class="modal__title" id="fixed-expense-modal-title">Добавить фиксированный платёж</h2>
+        
+                <label class="modal__label">
+                    <span class="modal__label-text">Название (например: Кредит ВТБ)</span>
+                    <input type="text" class="modal__input" id="fixed-expense-name" placeholder="Название платежа">
+                </label>
+        
+                <label class="modal__label">
+                    <span class="modal__label-text">Сумма (₽)</span>
+                    <input type="number" class="modal__input" id="fixed-expense-amount" placeholder="0.00" inputmode="decimal"
+                        min="0" step="0.01">
+                </label>
+        
+                <label class="modal__label">
+                    <span class="modal__label-text">День месяца (1-28)</span>
+                    <input type="number" class="modal__input" id="fixed-expense-day" placeholder="5" min="1" max="28">
+                </label>
+        
+                <!-- Выбор счёта для списания -->
+                <label class="modal__label">
+                    <span class="modal__label-text">Списать со счёта:</span>
+                    <select class="modal__select" id="fixed-expense-account">
+                        <!-- Счета будут добавляться через JavaScript -->
+                    </select>
+                </label>
+        
+                <div class="modal__buttons">
+                    <button class="btn btn--secondary" id="btn-cancel-fixed-expense">Отмена</button>
+                    <button class="btn btn--primary" id="btn-save-fixed-expense">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
     <script type="module" src="js/app.js"></script>
     <!-- Hammer.js для свайп-навигации -->
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
