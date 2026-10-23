@@ -50,14 +50,19 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   endDate.setHours(0, 0, 0, 0);
 
   const diffTime = endDate.getTime() - today.getTime();
-  const daysLeft = Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 1);
+
+  // Реальное количество дней (для отображения) - может быть 0
+  const realDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Защищённое количество дней (для расчёта) - всегда ≥ 1
+  const safeDaysLeft = Math.max(realDaysLeft, 1);
 
   // 2. ТОЛЬКО глобальный расчёт (убрали логику переключения счетов)
   const result = calculateDailyLimit(settings, fixedExpenses, transactions);
 
   // Перезаписываем дни и лимит на наши точные значения
-  result.daysLeft = daysLeft;
-  result.dailyLimit = result.remaining / daysLeft;
+  result.daysLeft = realDaysLeft; // Показываем реальное значение (0, 1, 2...)
+  result.dailyLimit = result.remaining / safeDaysLeft; // Считаем с защитой от деления на 0
 
   // 3. Отрисовка на экране
   const indicatorState = getIndicatorState(
