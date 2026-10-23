@@ -2541,3 +2541,399 @@ body.dark-theme .reconcile-item__action:hover {
   background: #2980b9;
 }
 /* ========================================================== */
+
+/* === АДАПТАЦИЯ ЭКРАНА НАСТРОЕК ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  /* Основной контейнер */
+  .screen--settings,
+  #screen-settings {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* Заголовок экрана */
+  .screen__title {
+    font-size: 28px;
+    margin-bottom: 24px;
+  }
+
+  /* Карточка "Мои счета" */
+  .accounts-section {
+    padding: 32px;
+    border-radius: 16px;
+  }
+
+  .accounts-section h2,
+  .accounts-section .accounts-title {
+    font-size: 1.4em;
+    margin-bottom: 20px;
+  }
+
+  /* Элементы списка счетов */
+  .account-item {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .account-item__name {
+    font-size: 18px;
+  }
+
+  .account-item__balance {
+    font-size: 15px;
+  }
+
+  .account-item__icon {
+    font-size: 28px;
+    width: 44px;
+  }
+
+  /* Кнопка "Добавить счёт" */
+  .btn-add-account {
+    padding: 16px 32px;
+    font-size: 1.1em;
+    border-radius: 12px;
+  }
+
+  /* Сетка настроек (Начальный остаток, Сумма поступления и т.д.) */
+  .settings-group {
+    gap: 20px;
+  }
+
+  .settings-group label,
+  .settings-label {
+    font-size: 1.05em;
+    font-weight: 600;
+  }
+
+  .settings-group input,
+  .settings-group select {
+    padding: 14px 16px;
+    font-size: 1.05em;
+    border-radius: 10px;
+  }
+
+  /* Фиксированные платежи */
+  .fixed-expenses {
+    gap: 16px;
+  }
+
+  .fixed-expense {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 0;
+  }
+
+  .fixed-expense__name {
+    font-size: 17px;
+  }
+
+  .fixed-expense__amount {
+    font-size: 17px;
+  }
+
+  /* Кнопка "Добавить платёж" */
+  .btn-add-expense {
+    padding: 16px 32px;
+    font-size: 1.1em;
+    border-radius: 12px;
+  }
+
+  /* Фиолетовый блок периода */
+  .period-info {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .period-info__row {
+    margin-bottom: 12px;
+    font-size: 1.05em;
+  }
+
+  .period-info__label {
+    font-size: 1em;
+  }
+
+  .period-info__value {
+    font-size: 1.05em;
+  }
+
+  /* Кнопки "Новый период", "Закрыть период" */
+  .btn-new-period {
+    padding: 14px 24px;
+    font-size: 1em;
+    border-radius: 10px;
+  }
+
+  /* Блок "Удалить записи за период" */
+  .delete-period-block {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  /* Кнопки "Инструкция", "Экспорт", "Импорт" */
+  .btn-instruction,
+  .btn-export,
+  .btn-import {
+    padding: 12px 24px;
+    font-size: 1em;
+    border-radius: 10px;
+  }
+
+  /* Статусная строка "Записей: 217 | Сохранено: ..." */
+  .status-bar {
+    padding: 14px 20px;
+    font-size: 1em;
+    border-radius: 10px;
+  }
+
+  /* === СЕТКА НАСТРОЕК ДЛЯ ДЕСКТОПА === */
+  .settings-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto 24px;
+  }
+
+  .settings-group label,
+  .settings-label {
+    font-size: 1.05em;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .settings-group input,
+  .settings-group select,
+  .settings-input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1.05em;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  /* Неприкосновенный запас — на всю ширину */
+  .settings-group .settings-label:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+}
+/* ========================================================== */
+
+/* === ТЁМНАЯ ТЕМА ДЛЯ ЭКРАНА НАСТРОЕК (v2.1) === */
+
+/* Карточка "Мои счета" */
+body.dark-theme .accounts-section {
+  background: #1f1f1f;
+  border-color: #404040;
+}
+
+body.dark-theme .accounts-section h2,
+body.dark-theme .accounts-section .accounts-title {
+  color: #ffffff;
+}
+
+/* Элементы списка счетов */
+body.dark-theme .account-item {
+  background: #2d2d2d;
+}
+
+body.dark-theme .account-item__name {
+  color: #ffffff;
+}
+
+body.dark-theme .account-item__balance {
+  color: #a0a0a0;
+}
+
+/* Общий баланс */
+body.dark-theme .accounts-balance,
+body.dark-theme .total-balance {
+  color: #27ae60;
+}
+
+/* Кнопка "Добавить счёт" */
+body.dark-theme .btn-add-account {
+  background: #3a3a3a;
+  color: #ffffff;
+  border-color: #505050;
+}
+
+body.dark-theme .btn-add-account:hover {
+  background: #4a4a4a;
+}
+
+/* Настройки (поля ввода) */
+body.dark-theme .settings-group label,
+body.dark-theme .settings-label {
+  color: #e0e0e0;
+}
+
+body.dark-theme .settings-group input,
+body.dark-theme .settings-group select {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+body.dark-theme .settings-group input:focus,
+body.dark-theme .settings-group select:focus {
+  border-color: #3498db;
+}
+
+/* Фиксированные платежи */
+body.dark-theme .fixed-expense {
+  background: #2d2d2d;
+}
+
+body.dark-theme .fixed-expense__name {
+  color: #ffffff;
+}
+
+body.dark-theme .fixed-expense__day,
+body.dark-theme .fixed-expense__account {
+  color: #a0a0a0;
+}
+
+body.dark-theme .fixed-expense__amount {
+  color: #ffffff;
+}
+
+/* Кнопка "Добавить платёж" */
+body.dark-theme .btn-add-expense {
+  background: #3a3a3a;
+  color: #ffffff;
+  border-color: #505050;
+}
+
+body.dark-theme .btn-add-expense:hover {
+  background: #4a4a4a;
+}
+
+/* Фиолетовый блок периода — оставляем фиолетовым, но делаем текст светлее */
+body.dark-theme .period-info {
+  background: rgba(128, 90, 213, 0.3);
+}
+
+body.dark-theme .period-info__label {
+  color: #e0e0e0;
+}
+
+body.dark-theme .period-info__value {
+  color: #ffffff;
+}
+
+/* Кнопка "Новый период" */
+body.dark-theme .btn-new-period {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.dark-theme .btn-new-period:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Блок "Удалить записи за период" */
+body.dark-theme .delete-period-block {
+  background: #1f1f1f;
+  border-color: #e74c3c;
+}
+
+body.dark-theme .delete-period-block h3,
+body.dark-theme .delete-period-block .delete-title {
+  color: #e74c3c;
+}
+
+body.dark-theme .delete-period-block input[type="date"] {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+body.dark-theme .delete-period-block .delete-info {
+  color: #a0a0a0;
+}
+
+body.dark-theme .btn-delete-records {
+  background: #e74c3c;
+  color: #ffffff;
+}
+
+body.dark-theme .btn-delete-records:hover {
+  background: #c0392b;
+}
+
+/* Кнопки "Инструкция", "Экспорт", "Импорт" */
+body.dark-theme .btn-instruction,
+body.dark-theme .btn-export,
+body.dark-theme .btn-import {
+  background: #3a3a3a;
+  color: #ffffff;
+  border-color: #505050;
+}
+
+body.dark-theme .btn-instruction:hover,
+body.dark-theme .btn-export:hover,
+body.dark-theme .btn-import:hover {
+  background: #4a4a4a;
+}
+
+/* Статусная строка */
+body.dark-theme .status-bar {
+  background: #2d2d2d;
+  color: #a0a0a0;
+  border-color: #404040;
+}
+/* ========================================================== */
+
+/* === ИСПРАВЛЕНИЯ ЭКРАНА НАСТРОЕК (v2.1) === */
+
+/* 1. Неприкосновенный запас — на всю ширину */
+@media (min-width: 768px) {
+  .settings-group > *:nth-child(3),
+  .settings-group > *:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 2. Светлые поля readonly в тёмной теме */
+body.dark-theme input[readonly],
+body.dark-theme .settings-input[readonly] {
+  background: #2d2d2d !important;
+  color: #a0a0a0 !important;
+  border-color: #404040 !important;
+}
+
+/* 3. Унификация иконок удаления — заменяем корзины на крестики */
+.btn-delete-account::before {
+  content: '✕';
+  font-size: 18px;
+  color: var(--color-danger, #e74c3c);
+}
+
+.btn-delete-account {
+  font-size: 0; /* Скрываем оригинальный текст/эмодзи */
+  position: relative;
+}
+
+.btn-delete-account::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+/* ========================================================== */
+
+/* === ТЁМНАЯ ТЕМА: ИНДИКАТОР СИНХРОНИЗАЦИИ (v2.1) === */
+body.dark-theme .sync-indicator {
+  background: #2d2d2d !important; /* Перебиваем inline-стиль от JS */
+  color: #a0a0a0 !important;
+  border-color: #404040 !important;
+}
+/* ========================================================== */
+
