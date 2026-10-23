@@ -2326,3 +2326,218 @@ body.dark-theme .breakdown__bar-fill {
   opacity: 0.8;
 }
 /* ========================================================== */
+
+/* === АДАПТАЦИЯ ЭКРАНА СВЕРКИ ДЛЯ ДЕСКТОПА (v2.1) === */
+@media (min-width: 768px) {
+  /* Основной контейнер экрана */
+  .screen--reconcile,
+  #screen-reconcile {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* Карточки статистики — делаем в 4 колонки */
+  .reconcile-summary {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .reconcile-summary__item {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .reconcile-summary__value {
+    font-size: 2em;
+  }
+
+  .reconcile-summary__label {
+    font-size: 0.9em;
+  }
+
+  /* Блоки способов импорта */
+  .reconcile-block {
+    padding: 32px;
+    border-radius: 16px;
+  }
+
+  .reconcile-block__title {
+    font-size: 1.3em;
+    margin-bottom: 16px;
+  }
+
+  .reconcile-block__hint {
+    font-size: 1em;
+    margin-bottom: 20px;
+  }
+
+  /* Textarea для PDF — делаем шире и выше */
+  .reconcile-textarea {
+    min-height: 250px;
+    font-size: 1em;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* Кнопка "Разобрать текст" */
+  .reconcile-block button,
+  .reconcile-block .btn {
+    padding: 16px 32px;
+    font-size: 1.1em;
+    border-radius: 12px;
+  }
+
+  /* Группа результатов (Точные совпадения и т.д.) */
+  .reconcile-group {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .reconcile-group__title {
+    font-size: 1.15em;
+    margin-bottom: 12px;
+  }
+
+    /* Элементы списка совпадений */
+  .reconcile-item {
+    padding: 12px 0;
+    font-size: 1em;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .reconcile-item__description {
+    font-size: 1em;
+  }
+
+  .reconcile-item__date {
+    font-size: 0.9em;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .reconcile-item__amount {
+    font-size: 1.05em;
+    margin-right: 16px;
+  }
+
+  .reconcile-item__action {
+    padding: 8px 16px;
+    font-size: 0.95em;
+    border-radius: 8px;
+  }
+
+  .reconcile-item__info {
+    flex: 1;
+  }
+}
+
+/* === ТЁМНАЯ ТЕМА ДЛЯ ЭКРАНА СВЕРКИ (v2.1) === */
+
+/* Баннер выбора счёта */
+body.dark-theme .reconcile-target-banner {
+  background: #2d2d2d;
+  border-left-color: #3498db;
+}
+
+body.dark-theme .reconcile-account-name {
+  color: #ffffff;
+}
+
+body.dark-theme .reconcile-target__hint {
+  color: #a0a0a0;
+}
+
+/* Блоки способов импорта */
+body.dark-theme .reconcile-block {
+  background: #1f1f1f;
+  border-color: #404040;
+}
+
+body.dark-theme .reconcile-block__title {
+  color: #ffffff;
+}
+
+body.dark-theme .reconcile-block__hint {
+  color: #a0a0a0;
+}
+
+body.dark-theme .reconcile-block__hint code {
+  background: #2d2d2d;
+  color: #e0e0e0;
+}
+
+/* Textarea для PDF */
+body.dark-theme .reconcile-textarea {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+body.dark-theme .reconcile-textarea:focus {
+  border-color: #3498db;
+}
+
+/* Кнопка "Разобрать текст" и "Выбрать CSV-файл" */
+body.dark-theme .reconcile-block button,
+body.dark-theme .reconcile-block .btn {
+  background: #3a3a3a;
+  color: #ffffff;
+  border-color: #505050;
+}
+
+body.dark-theme .reconcile-block button:hover,
+body.dark-theme .reconcile-block .btn:hover {
+  background: #4a4a4a;
+}
+
+/* Карточки статистики */
+body.dark-theme .reconcile-summary__item {
+  background: #1f1f1f;
+  border-color: #404040;
+}
+
+body.dark-theme .reconcile-summary__value {
+  color: #ffffff;
+}
+
+body.dark-theme .reconcile-summary__label {
+  color: #a0a0a0;
+}
+
+/* Группа результатов (Точные совпадения и т.д.) */
+body.dark-theme .reconcile-group {
+  background: #1f1f1f;
+}
+
+body.dark-theme .reconcile-group__title {
+  color: #ffffff;
+}
+
+/* Элементы списка совпадений */
+body.dark-theme .reconcile-item {
+  border-bottom-color: #404040;
+}
+
+body.dark-theme .reconcile-item__description {
+  color: #e0e0e0;
+}
+
+body.dark-theme .reconcile-item__date {
+  color: #808080;
+}
+
+body.dark-theme .reconcile-item__amount {
+  color: #ffffff;
+}
+
+body.dark-theme .reconcile-item__action {
+  background: #3498db;
+  color: #ffffff;
+}
+
+body.dark-theme .reconcile-item__action:hover {
+  background: #2980b9;
+}
+/* ========================================================== */
