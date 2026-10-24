@@ -2937,3 +2937,191 @@ body.dark-theme .sync-indicator {
 }
 /* ========================================================== */
 
+/* Адаптация блока "Общий баланс" для мобильных */
+@media (max-width: 400px) {
+  .account-item div[style*="display: grid"] span:first-child {
+    font-size: 0.85em !important;
+  }
+  
+  .account-item div[style*="display: grid"] span:nth-child(2) {
+    font-size: 1em !important;
+    padding-left: 12px !important;
+  }
+}
+
+/* === Блок сводки "Общий баланс" === */
+.summary-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.summary-label {
+  flex: 1;
+  font-size: 1em;
+  color: var(--text-primary);
+}
+
+.summary-value {
+  white-space: nowrap;
+  font-size: 0.95em;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.summary-value-main {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--primary-color, #27ae60);
+}
+
+.summary-divider {
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* === Мобильная версия: текст сверху, число снизу === */
+@media (max-width: 400px) {
+  .summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .summary-value {
+    align-self: flex-start;
+  }
+}
+
+/* === Исправление блока "Потрачено" на мобильных === */
+.stat {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  overflow: hidden;
+  padding: 12px !important;
+}
+
+.stat__value {
+  word-break: break-word;
+  max-width: 100%;
+  font-size: clamp(1.2em, 5vw, 1.8em);
+}
+
+/* === Исправление кнопки "Изменить" в зелёном блоке === */
+.pension-info-block {
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.pension-info-block .btn-change,
+.pension-info-block button[onclick*="change"],
+.pension-info-block a.btn-change {
+  max-width: 45% !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+/* Мобильная адаптация зелёного блока */
+@media (max-width: 400px) {
+  .pension-info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px !important;
+  }
+  
+  .pension-info-block .btn-change,
+  .pension-info-block button[onclick*="change"] {
+    max-width: 100% !important;
+    margin-top: 8px;
+    align-self: flex-end;
+  }
+}
+
+/* === 1. Исправление блока "Потрачено" === */
+.stat {
+  min-width: 0; /* Критически важно: позволяет flex/grid-элементу сжиматься */
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.stat__value {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-size: clamp(1.2em, 4vw, 1.8em); /* Адаптивный размер, не будет гигантским на телефоне */
+}
+
+/* === 2. Исправление зелёного блока периода и кнопки "Изменить" === */
+#period-info {
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Универсальное правило для кнопки "Изменить" и похожих кнопок */
+.btn-change,
+button[onclick*="change"],
+button[onclick*="period"] {
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal; /* Разрешаем перенос текста кнопки на новую строку */
+  word-break: break-word;
+  padding: 8px 12px;
+}
+
+/* Мобильная адаптация: кнопка под текстом на всю ширину */
+@media (max-width: 400px) {
+  #period-info {
+    margin-bottom: 8px;
+  }
+  
+  /* Если кнопка лежит рядом с #period-info, растягиваем её аккуратно */
+  #period-info + button,
+  .btn-change {
+    width: 100%;
+    margin-top: 8px;
+    text-align: center;
+  }
+}
+
+/* === Исправление блока даты пенсии и кнопки "Изменить" === */
+.pension-status-text {
+  display: flex;
+  flex-wrap: wrap; /* Разрешаем перенос на новую строку, если не влезает */
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-edit-pension {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-size: 0.9em;
+  box-sizing: border-box;
+}
+
+/* Мобильная адаптация: на узких экранах кнопка уходит под текст и растягивается */
+@media (max-width: 400px) {
+  .pension-status-text {
+    flex-direction: column;
+    align-items: stretch; /* Растягиваем элементы на всю ширину */
+  }
+  
+  .btn-edit-pension {
+    width: 100%;
+    margin-top: 4px;
+    text-align: center;
+  }
+}

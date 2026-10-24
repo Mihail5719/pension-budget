@@ -1369,24 +1369,41 @@ export function renderAccountsList() {
   summaryBlock.style.borderRadius = '8px';
   summaryBlock.style.padding = '16px';
 
-  summaryBlock.innerHTML = `
-    <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: center;">
+  // Определяем, мобильный ли экран
+  const isMobile = window.innerWidth < 400;
+
+  // Короткие подписи для мобильных (с эмодзи!)
+  const labelTotal = isMobile
+    ? '💰 Общий баланс'
+    : '💰 Общий баланс всех счетов';
+  const labelActive = isMobile ? '🔹 Активные' : '🔹 Активные счета';
+  const labelSavings = isMobile ? '🔸 Накопительные' : '🔸 Накопительные счета';
+
+            summaryBlock.innerHTML = `
+    <div class="summary-block">
       <!-- Общий баланс -->
-      <span style="font-size: 1em; color: var(--text-primary);">💰 Общий баланс всех счетов</span>
-      <span style="font-size: 1.2em; color: var(--primary-color, #27ae60); white-space: nowrap; padding-left: 56px;">${formatMoney(totalBalanceAll)}</span>
+      <div class="summary-row">
+        <span class="summary-label">💰 Общий баланс всех счетов</span>
+        <span class="summary-value summary-value-main">${formatMoney(totalBalanceAll)}</span>
+      </div>
       
-      <!-- Разделитель на всю ширину -->
-      <div style="grid-column: 1 / -1; border-top: 1px solid rgba(0,0,0,0.1); margin: 4px 0;"></div>
+      <!-- Разделитель -->
+      <div class="summary-divider"></div>
       
       <!-- Активные счета -->
-      <span style="font-size: 0.95em; color: var(--text-secondary);">🔹 Активные счета</span>
-      <span style="font-size: 0.95em; color: var(--text-secondary); white-space: nowrap; padding-left: 56px;">${formatMoney(totalBalanceActive)}</span>
+      <div class="summary-row">
+        <span class="summary-label">🔹 Активные счета</span>
+        <span class="summary-value">${formatMoney(totalBalanceActive)}</span>
+      </div>
       
       <!-- Накопительные счета -->
-      <span style="font-size: 0.95em; color: var(--text-secondary);">🔸 Накопительные счета</span>
-      <span style="font-size: 0.95em; color: var(--text-secondary); white-space: nowrap; padding-left: 56px;">${formatMoney(totalBalanceSavings)}</span>
+      <div class="summary-row">
+        <span class="summary-label">🔸 Накопительные счета</span>
+        <span class="summary-value">${formatMoney(totalBalanceSavings)}</span>
+      </div>
     </div>
   `;
+
   // Очищаем контейнер и добавляем сначала сводку, потом все счета
   container.innerHTML = '';
   container.appendChild(summaryBlock);
