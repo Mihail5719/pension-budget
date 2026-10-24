@@ -451,21 +451,21 @@ export function renderSettings(settings, fixedExpenses) {
   const listEl = document.getElementById('fixed-expenses-list');
   listEl.innerHTML = '';
 
-    fixedExpenses.forEach((expense) => {
-      const itemEl = document.createElement('div');
-      itemEl.className = 'fixed-expense';
-      itemEl.dataset.id = expense.id;
+  fixedExpenses.forEach((expense) => {
+    const itemEl = document.createElement('div');
+    itemEl.className = 'fixed-expense';
+    itemEl.dataset.id = expense.id;
 
-      // === НОВОЕ: Находим название счёта ===
-      const account = window.appData?.settings?.accounts?.find(
-        (a) => a.id === expense.accountId,
-      );
-      const accountName = account
-        ? `${account.emoji || '💼'} ${account.name}`
-        : 'Не указан';
-      // ======================================
+    // === НОВОЕ: Находим название счёта ===
+    const account = window.appData?.settings?.accounts?.find(
+      (a) => a.id === expense.accountId,
+    );
+    const accountName = account
+      ? `${account.emoji || '💼'} ${account.name}`
+      : 'Не указан';
+    // ======================================
 
-      itemEl.innerHTML = `
+    itemEl.innerHTML = `
       <div class="fixed-expense__info">
           <span class="fixed-expense__name">${expense.name}</span>
           <span class="fixed-expense__day">${expense.day ? expense.day + '-го числа' : ''}</span>
@@ -479,8 +479,8 @@ export function renderSettings(settings, fixedExpenses) {
           <button class="btn-delete-payment" data-action="delete-payment" data-id="${expense.id}" title="Удалить">✕</button>
       </div>
     `;
-      listEl.appendChild(itemEl);
-    });
+    listEl.appendChild(itemEl);
+  });
 
   initMoneyFields();
   renderPensionPeriodInfo(settings);
@@ -1370,22 +1370,23 @@ export function renderAccountsList() {
   summaryBlock.style.padding = '16px';
 
   summaryBlock.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; color: var(--text-primary);">
-        <span>💰 Общий баланс всех счетов</span>
-        <span style="font-size: 1.2em; color: var(--primary-color, #27ae60);">${formatMoney(totalBalanceAll)}</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95em; color: var(--text-secondary); border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; margin-top: 4px;">
-        <span>🔹 Активные счета</span>
-        <span>${formatMoney(totalBalanceActive)}</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95em; color: var(--text-secondary);">
-        <span>🔸 Накопительные счета</span>
-        <span>${formatMoney(totalBalanceSavings)}</span>
-      </div>
+    <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: center;">
+      <!-- Общий баланс -->
+      <span style="font-size: 1em; color: var(--text-primary);">💰 Общий баланс всех счетов</span>
+      <span style="font-size: 1.2em; color: var(--primary-color, #27ae60); white-space: nowrap; padding-left: 56px;">${formatMoney(totalBalanceAll)}</span>
+      
+      <!-- Разделитель на всю ширину -->
+      <div style="grid-column: 1 / -1; border-top: 1px solid rgba(0,0,0,0.1); margin: 4px 0;"></div>
+      
+      <!-- Активные счета -->
+      <span style="font-size: 0.95em; color: var(--text-secondary);">🔹 Активные счета</span>
+      <span style="font-size: 0.95em; color: var(--text-secondary); white-space: nowrap; padding-left: 56px;">${formatMoney(totalBalanceActive)}</span>
+      
+      <!-- Накопительные счета -->
+      <span style="font-size: 0.95em; color: var(--text-secondary);">🔸 Накопительные счета</span>
+      <span style="font-size: 0.95em; color: var(--text-secondary); white-space: nowrap; padding-left: 56px;">${formatMoney(totalBalanceSavings)}</span>
     </div>
   `;
-
   // Очищаем контейнер и добавляем сначала сводку, потом все счета
   container.innerHTML = '';
   container.appendChild(summaryBlock);
