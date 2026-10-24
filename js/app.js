@@ -529,7 +529,10 @@ function setupEventListeners() {
 
               appData.transactions.forEach((tx) => {
                 const txDate = new Date(tx.date);
-                if (txDate >= untilDate) return; // Пропускаем транзакции ПОСЛЕ новой даты
+                // Включаем транзакции самого дня untilDate (до конца дня)
+                const untilDateEnd = new Date(untilDate);
+                untilDateEnd.setHours(23, 59, 59, 999);
+                if (txDate > untilDateEnd) return;
 
                 if (tx.type === 'expense' && tx.accountId === accountId) {
                   balance -= tx.amount;
