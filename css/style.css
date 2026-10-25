@@ -3128,3 +3128,43 @@ button[onclick*="period"] {
     text-align: center;
   }
 }
+
+/* === Единообразные отступы между блоками в настройках === */
+.pension-status-text,
+.archive-card,
+.delete-card,
+#archives-section {
+  margin-bottom: 24px;
+}
+
+/* У самого нижнего блока (архивы) нижний отступ не нужен */
+#archives-section {
+  margin-bottom: 0;
+}
+
+/* === Единообразные отступы между блоками в настройках === */
+#period-info,
+.pension-status-text,
+.archive-card,
+.delete-card,
+#archives-section {
+  margin-bottom: 24px;
+}
+
+/* У самого нижнего блока (архивы) нижний отступ не нужен */
+#archives-section {
+  margin-bottom: 0;
+}
+
+/* === Единообразные отступы между блоками в настройках === */
+.pension-period-block,
+.archive-card,
+.delete-card,
+#archives-section {
+  margin-bottom: 24px;
+}
+
+/* У самого нижнего блока (архивы) нижний отступ не нужен */
+#archives-section {
+  margin-bottom: 0;
+}
