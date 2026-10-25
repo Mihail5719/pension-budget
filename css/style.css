@@ -3190,3 +3190,13 @@ button[onclick*="period"] {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
+
+/* === Запрет переноса числа и знака ₽ в блоках статистики === */
+.stat__value {
+  white-space: nowrap;
+}
+
+.stat {
+  min-width: 0;
+  overflow: hidden;
+}

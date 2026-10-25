@@ -1453,39 +1453,40 @@ export function renderArchivesList() {
 }
 
 /**
- * Просмотр деталей архивного периода (v2.1) — с поддержкой тёмной темы
+ * Просмотр деталей архивного периода (v2.1) — компактный вид для мобильных
  */
 function viewArchiveDetails(archive) {
   const startDate = new Date(archive.startDate).toLocaleDateString('ru-RU');
   const endDate = new Date(archive.endDate).toLocaleDateString('ru-RU');
 
   const detailsHtml = `
-    <div style="padding: 20px;">
-      <h2 style="margin-top: 0; color: var(--text-primary);">📋 Архив периода: ${startDate} — ${endDate}</h2>
+    <div style="padding: 16px;">
+      <h2 style="margin-top: 0; color: var(--text-primary); white-space: nowrap; font-size: 1.2em;">📋 Архив периода</h2>
+      <p style="color: var(--text-secondary, #6c757d); font-size: 0.9em; margin-top: 4px; margin-bottom: 16px;">${startDate} — ${endDate}</p>
       
-      <div style="background: var(--bg-secondary, #f8f9fa); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color, #dee2e6);">
-        <h3 style="margin-top: 0; color: var(--text-primary);">💰 Финансовые итоги</h3>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+      <div style="background: var(--bg-secondary, #f8f9fa); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border-color, #dee2e6);">
+        <h3 style="margin-top: 0; margin-bottom: 10px; color: var(--text-primary); white-space: nowrap; font-size: 1em;">💰 Итоги</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           <div>
-            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Начальный баланс</div>
-            <div style="font-size: 1.2em; font-weight: 600; color: var(--text-primary);">${archive.initialBalance.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Начальный</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--text-primary); white-space: nowrap;">${archive.initialBalance.toFixed(2)} ₽</div>
           </div>
           <div>
-            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Конечный баланс</div>
-            <div style="font-size: 1.2em; font-weight: 600; color: var(--success-color, #28a745);">${archive.finalBalance.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Конечный</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--success-color, #28a745); white-space: nowrap;">${archive.finalBalance.toFixed(2)} ₽</div>
           </div>
           <div>
-            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Доходы</div>
-            <div style="font-size: 1.2em; font-weight: 600; color: var(--success-color, #28a745);">+${archive.totalIncome.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Доходы</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--success-color, #28a745); white-space: nowrap;">+${archive.totalIncome.toFixed(2)} ₽</div>
           </div>
           <div>
-            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Расходы</div>
-            <div style="font-size: 1.2em; font-weight: 600; color: var(--danger-color, #dc3545);">-${archive.totalExpenses.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Расходы</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--danger-color, #dc3545); white-space: nowrap;">-${archive.totalExpenses.toFixed(2)} ₽</div>
           </div>
         </div>
       </div>
 
-      <h3 style="color: var(--text-primary);">📋 История операций (${archive.transactions.length})</h3>
+      <h3 style="color: var(--text-primary); white-space: nowrap; font-size: 1em; margin-bottom: 8px;">📋 Операции (${archive.transactions.length})</h3>
       <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color, #dee2e6); border-radius: 8px; padding: 8px;">
         ${archive.transactions
           .map((tx) => {
@@ -1494,22 +1495,24 @@ function viewArchiveDetails(archive) {
             const amount = isIncome
               ? `+${tx.amount.toFixed(2)} ₽`
               : `-${tx.amount.toFixed(2)} ₽`;
-            const color = isIncome ? 'var(--success-color, #28a745)' : 'var(--danger-color, #dc3545)';
+            const color = isIncome
+              ? 'var(--success-color, #28a745)'
+              : 'var(--danger-color, #dc3545)';
             return `
-            <div style="padding: 8px; border-bottom: 1px solid var(--border-color, #dee2e6); display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-weight: 600; color: var(--text-primary);">${tx.category || 'Без категории'}</div>
-                <div style="color: var(--text-secondary, #6c757d); font-size: 0.9em;">${txDate} ${tx.subcategory ? `• ${tx.subcategory}` : ''}</div>
-                ${tx.item ? `<div style="color: var(--text-secondary, #6c757d); font-size: 0.85em; font-style: italic;">${tx.item}</div>` : ''}
+            <div style="padding: 8px; border-bottom: 1px solid var(--border-color, #dee2e6); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95em;">${tx.category || 'Без категории'}</div>
+                <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">${txDate}${tx.subcategory ? ` • ${tx.subcategory}` : ''}</div>
+                ${tx.item ? `<div style="color: var(--text-secondary, #6c757d); font-size: 0.75em; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.item}</div>` : ''}
               </div>
-              <div style="font-weight: 600; color: ${color}; white-space: nowrap; margin-left: 12px;">${amount}</div>
+              <div style="font-weight: 600; color: ${color}; white-space: nowrap; flex-shrink: 0; font-size: 0.95em;">${amount}</div>
             </div>
           `;
           })
           .join('')}
       </div>
 
-      <button onclick="this.closest('.modal-overlay').remove()" style="margin-top: 20px; padding: 12px 24px; background: var(--primary-color, #007bff); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; width: 100%;">
+      <button onclick="this.closest('.modal-overlay').remove()" style="margin-top: 16px; padding: 12px 24px; background: var(--primary-color, #007bff); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; width: 100%;">
         Закрыть
       </button>
     </div>
@@ -1528,9 +1531,10 @@ function viewArchiveDetails(archive) {
     justify-content: center;
     align-items: center;
     z-index: 10000;
+    padding: 16px;
   `;
   modal.innerHTML = `
-    <div style="background: var(--bg-secondary, white); border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color, #dee2e6); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+    <div style="background: var(--bg-secondary, white); border-radius: 12px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color, #dee2e6); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
       ${detailsHtml}
     </div>
   `;
