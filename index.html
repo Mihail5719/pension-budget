@@ -352,10 +352,29 @@
 
                 <button id="btn-new-period" class="btn btn--secondary">📅 Новый период</button>
 
-                <!-- НОВАЯ КНОПКА: Закрыть период с архивацией (v2.1) -->
-                <button id="btn-close-period" class="btn btn--danger" style="margin-top: 10px;">🔒 Закрыть период и
-                    создать
-                    архив</button>
+                <!-- НОВОЕ: Создать архив за период (без закрытия текущего периода) -->
+                <div class="archive-card"
+                    style="background: var(--bg-secondary, #f8f9fa); border: 1px solid var(--border-color, #dee2e6); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <h3 style="margin-top: 0; font-size: 1.1em; color: var(--text-primary);">📦 Создать архив за период</h3>
+                    <p style="font-size: 0.9em; color: var(--text-secondary, #6c757d); margin-bottom: 12px;">
+                        Период <strong>не закрывается</strong>. Данные только копируются в архив. Остаток не переносится.
+                    </p>
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+                        <label style="flex: 1; min-width: 120px; font-size: 0.9em;">От:
+                            <input type="date" id="archive-from" class="delete-card__input"
+                                style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; margin-top: 4px;">
+                        </label>
+                        <label style="flex: 1; min-width: 120px; font-size: 0.9em;">До:
+                            <input type="date" id="archive-to" class="delete-card__input"
+                                style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 6px; margin-top: 4px;">
+                        </label>
+                    </div>
+                    <p id="archive-preview" style="font-size: 0.9em; color: #6c757d; margin-bottom: 12px; min-height: 1.2em;">Укажите
+                        обе даты</p>
+                    <button id="create-archive-btn" class="btn"
+                        style="background: #17a2b8; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; font-size: 1em;">Создать
+                        архив</button>
+                </div>
 
                 <div class="delete-card">
                     <h3 class="delete-card__title">🗑 Удалить записи за период</h3>

@@ -621,7 +621,8 @@ body.dark-theme {
 /* Кнопки действий (иконки) */
 .btn-edit,
 .btn-delete,
-.btn-delete-payment {
+.btn-delete-payment,
+.btn-delete-archive {
   background: none;
   border: none;
   cursor: pointer;
@@ -644,14 +645,16 @@ body.dark-theme {
 }
 
 .btn-delete,
-.btn-delete-payment {
+.btn-delete-payment,
+.btn-delete-archive {
   color: var(--color-danger, #dc3545);
   font-size: 24px;
   margin-left: 12px;
 }
 
 .btn-delete:hover,
-.btn-delete-payment:hover {
+.btn-delete-payment:hover,
+.btn-delete-archive:hover {
   background-color: rgba(198, 40, 40, 0.1);
   transform: scale(1.1);
 }
