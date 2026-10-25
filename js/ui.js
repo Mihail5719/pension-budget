@@ -1,4 +1,4 @@
-import { saveData, archiveCurrentPeriod } from './storage.js';
+import { saveData, } from './storage.js';
 import { formatMoney, formatDateOnly, getCurrentPeriod } from './utils.js';
 import {
   calculateDailyLimit,
@@ -1044,185 +1044,130 @@ export function renderPensionPeriodInfo(settings) {
 }
 
 // ==========================================
-// 1. КНОПКА "НОВЫЙ ПЕРИОД" (Существующая логика)
+// 2. КНОПКА "СОЗДАТЬ АРХИВ ЗА ПЕРИОД" (v2.1)
 // ==========================================
-const btnNewPeriod = document.getElementById('btn-new-period');
-if (btnNewPeriod) {
-  const freshBtn = btnNewPeriod.cloneNode(true);
-  btnNewPeriod.parentNode.replaceChild(freshBtn, btnNewPeriod);
+const archiveFromInput = document.getElementById('archive-from');
+const archiveToInput = document.getElementById('archive-to');
+const archivePreview = document.getElementById('archive-preview');
+const btnCreateArchive = document.getElementById('create-archive-btn');
 
-  freshBtn.addEventListener('click', () => {
-    const currentDate =
-      window.appData && window.appData.settings.currentPeriodStart
-        ? window.appData.settings.currentPeriodStart.split('T')[0]
-        : '';
-    const userChoice = prompt(
-      'Введите новую дату начала периода (в формате ГГГГ-ММ-ДД, например 2026-09-23)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ПОЛНОСТЬЮ СБРОСИТЬ отметку.',
-      currentDate,
-    );
-
-    if (userChoice === null) return;
-
-    if (userChoice.trim() === '') {
-      if (
-        confirm(
-          'Сбросить отметку о получении пенсии? Кнопка на главном экране появится снова.',
-        )
-      ) {
-        if (window.appData) {
-          delete window.appData.settings.currentPeriodStart;
-          saveData(window.appData);
-          renderPensionPeriodInfo(window.appData.settings);
-          renderTodayScreen(
-            window.appData.settings,
-            window.appData.fixedExpenses,
-            window.appData.transactions,
-          );
-          if (window.expenseChartInstance)
-            renderStats(
-              window.appData.settings,
-              window.appData.fixedExpenses,
-              window.appData.transactions,
-            );
-        }
+// Живое обновление превью при выборе дат
+function updateArchivePreview() {
+  if (archiveFromInput && archiveToInput && archiveFromInput.value && archiveToInput.value) {
+    const from = new Date(archiveFromInput.value);
+    const to = new Date(archiveToInput.value);
+    
+    if (from <= to) {
+      const appData = window.appData;
+      let count = 0;
+      if (appData) {
+        const toEndOfDay = new Date(archiveToInput.value);
+        toEndOfDay.setHours(23, 59, 59, 999);
+        count = appData.transactions.filter(tx => {
+          const d = new Date(tx.date);
+          return d >= from && d <= toEndOfDay;
+        }).length;
       }
+      archivePreview.textContent = `Будет архивировано записей: ${count}`;
+      archivePreview.style.color = 'var(--success-color, #28a745)';
     } else {
-      const newDate = new Date(userChoice);
-      if (!isNaN(newDate.getTime())) {
-        if (window.appData) {
-          const oldStart = window.appData.settings.currentPeriodStart
-            ? new Date(window.appData.settings.currentPeriodStart)
-            : null;
-          if (oldStart && newDate.getTime() > oldStart.getTime()) {
-            const oldBalance = calculateDailyLimit(
-              window.appData.settings,
-              window.appData.fixedExpenses,
-              window.appData.transactions,
-            );
-            const carryOver = oldBalance.currentBalance - oldBalance.fixedTotal;
-            const userAgrees = confirm(
-              `Вы переносите период вперёд.\n\nНераспределённый остаток: ${carryOver.toFixed(2)} ₽\nОн будет перенесён как начальный баланс нового периода.\n\nПродолжить? (Нажмите "Отмена", чтобы изменить дату без переноса остатка)`,
-            );
-            if (!userAgrees) return;
-            window.appData.settings.initialBalance =
-              Math.round(carryOver * 100) / 100;
-            const initialInput = document.getElementById(
-              'input-initial-balance',
-            );
-            if (initialInput) initialInput.value = carryOver.toFixed(2);
-          }
-          window.appData.settings.currentPeriodStart = newDate.toISOString();
-          saveData(window.appData);
-          renderPensionPeriodInfo(window.appData.settings);
-          renderTodayScreen(
-            window.appData.settings,
-            window.appData.fixedExpenses,
-            window.appData.transactions,
-          );
-          renderStats(
-            window.appData.settings,
-            window.appData.fixedExpenses,
-            window.appData.transactions,
-          );
-          alert('✅ Период успешно обновлён!');
-        }
-      } else {
-        alert(
-          '❌ Неверный формат даты. Попробуйте снова (пример: 2026-09-23).',
-        );
-      }
+      archivePreview.textContent = '⚠️ Дата "От" позже даты "До"';
+      archivePreview.style.color = 'var(--danger-color, #dc3545)';
     }
-  });
+  } else {
+    archivePreview.textContent = 'Укажите обе даты';
+    archivePreview.style.color = 'var(--text-secondary, #6c757d)';
+  }
 }
 
-// ==========================================
-// 2. КNOПКА "ЗАКРЫТЬ ПЕРИОД И СОЗДАТЬ АРХИВ" (Исправлено v2.1)
-// ==========================================
-const btnClosePeriod = document.getElementById('btn-close-period');
-if (btnClosePeriod) {
-  btnClosePeriod.addEventListener('click', () => {
-    const appData = window.appData;
-    if (!appData || !appData.settings.currentPeriodStart) {
-      alert(
-        '⚠️ Нет активного периода для закрытия. Сначала отметьте получение дохода.',
-      );
+if (archiveFromInput) archiveFromInput.addEventListener('change', updateArchivePreview);
+if (archiveToInput) archiveToInput.addEventListener('change', updateArchivePreview);
+
+// Обработчик создания архива
+if (btnCreateArchive) {
+  btnCreateArchive.addEventListener('click', () => {
+    const fromDateStr = archiveFromInput.value;
+    const toDateStr = archiveToInput.value;
+
+    if (!fromDateStr || !toDateStr) {
+      alert('⚠️ Пожалуйста, укажите обе даты: "От" и "До".');
       return;
     }
 
-    const periodStart = new Date(appData.settings.currentPeriodStart);
-    const periodTransactions = appData.transactions.filter((tx) => {
-      return new Date(tx.date) >= periodStart;
+    const fromDate = new Date(fromDateStr);
+    const toDate = new Date(toDateStr);
+    toDate.setHours(23, 59, 59, 999); // Конец дня
+    fromDate.setHours(0, 0, 0, 0);    // Начало дня
+
+    if (fromDate > toDate) {
+      alert('⚠️ Дата "От" не может быть позже даты "До".');
+      return;
+    }
+
+    const appData = window.appData;
+    if (!appData) return;
+
+    // 1. Фильтруем транзакции в выбранном диапазоне
+    const rangeTransactions = appData.transactions.filter(tx => {
+      const txDate = new Date(tx.date);
+      return txDate >= fromDate && txDate <= toDate;
     });
 
-    const incomeName = appData.settings.incomeName || 'Пенсия';
-
-    const confirmMsg = `
-🔒 ЗАКРЫТИЕ ПЕРИОДА
-
-Период с: ${periodStart.toLocaleDateString('ru-RU')}
-Транзакций будет архивировано: ${periodTransactions.length}
-
-Действия:
-✅ Создать архив периода (с полной историей операций)
-✅ Перенести нераспределённый остаток в новый период
-✅ Очистить текущую историю операций
-
-Продолжить?
-    `.trim();
-
-    if (confirm(confirmMsg)) {
-      const calculatedBalance = calculateDailyLimit(
-        appData.settings,
-        appData.fixedExpenses,
-        appData.transactions,
-      );
-      const archive = archiveCurrentPeriod(appData, calculatedBalance);
-
-      if (archive) {
-        alert(
-          `✅ Период ${archive.periodId} успешно архивирован!\nОстаток ${archive.finalBalance.toFixed(2)} ₽ перенесён.`,
-        );
-
-        // === ПОЛНОЕ ОБНОВЛЕНИЕ ИНТЕРФЕЙСА БЕЗ ПЕРЕЗАГРУЗКИ (v2.1) ===
-        if (typeof renderPensionPeriodInfo === 'function') {
-          renderPensionPeriodInfo(appData.settings);
-        }
-        if (typeof renderTodayScreen === 'function') {
-          renderTodayScreen(
-            appData.settings,
-            appData.fixedExpenses,
-            appData.transactions,
-          );
-        }
-        if (typeof renderStats === 'function') {
-          renderStats(
-            appData.settings,
-            appData.fixedExpenses,
-            appData.transactions,
-          );
-        }
-        // ✅ ДОБАВЛЕНО: Обновляем настройки (это обновит фиолетовый блок и поля!)
-        if (typeof renderSettings === 'function') {
-          renderSettings(appData.settings, appData.fixedExpenses);
-        }
-        // ✅ ДОБАВЛЕНО: Обновляем историю (чтобы список транзакций очистился/обновился)
-        if (typeof renderTransactionList === 'function') {
-          renderTransactionList(
-            appData.transactions,
-            appData.settings.pensionDay,
-          );
-        }
-        // ============================================================
-
-        // Синхронизируем поле initialBalance визуально (на всякий случай)
-        const initialInput = document.getElementById('input-initial-balance');
-        if (initialInput) {
-          initialInput.value = archive.finalBalance
-            .toFixed(2)
-            .replace('.', ',');
-        }
+    if (rangeTransactions.length === 0) {
+      if (!confirm('⚠️ В выбранном периоде нет записей. Всё равно создать пустой архив?')) {
+        return;
       }
     }
+
+    // 2. Считаем итоги только для этого диапазона
+    let totalIncome = 0;
+    let totalExpenses = 0;
+    rangeTransactions.forEach(tx => {
+      if (tx.type === 'income') totalIncome += tx.amount;
+      else totalExpenses += Math.abs(tx.amount);
+    });
+
+    // 3. Вычисляем начальный баланс (баланс ДО даты "От")
+    const prevTransactions = appData.transactions.filter(tx => new Date(tx.date) < fromDate);
+    let initialBalance = appData.settings.initialBalance || 0;
+    prevTransactions.forEach(tx => {
+      if (tx.type === 'income') initialBalance += tx.amount;
+      else initialBalance -= Math.abs(tx.amount);
+    });
+
+    const finalBalance = initialBalance + totalIncome - totalExpenses;
+
+    // 4. Формируем объект архива
+    const newArchive = {
+      id: Date.now().toString(),
+      startDate: fromDate.toISOString(),
+      endDate: toDate.toISOString(),
+      closedAt: new Date().toISOString(),
+      initialBalance: Math.round(initialBalance * 100) / 100,
+      finalBalance: Math.round(finalBalance * 100) / 100,
+      totalIncome: Math.round(totalIncome * 100) / 100,
+      totalExpenses: Math.round(totalExpenses * 100) / 100,
+      transactions: rangeTransactions
+    };
+
+    // 5. Сохраняем
+    if (!appData.settings.archives) {
+      appData.settings.archives = [];
+    }
+    appData.settings.archives.push(newArchive);
+    saveData(appData);
+
+    alert(`✅ Архив за период ${fromDate.toLocaleDateString('ru-RU')} — ${toDate.toLocaleDateString('ru-RU')} успешно создан!\n\nТекущий период и баланс не изменены.`);
+    
+    // 6. Обновляем список архивов на экране
+    if (typeof renderArchivesList === 'function') {
+      renderArchivesList();
+    }
+    
+    // 7. Очищаем поля ввода
+    archiveFromInput.value = '';
+    archiveToInput.value = '';
+    updateArchivePreview();
   });
 }
 
@@ -1427,11 +1372,7 @@ export function renderArchivesList() {
   if (!archivesSection || !archivesList) return;
 
   const appData = window.appData;
-  if (
-    !appData ||
-    !appData.settings.archives ||
-    appData.settings.archives.length === 0
-  ) {
+  if (!appData || !appData.settings.archives || appData.settings.archives.length === 0) {
     archivesSection.style.display = 'none';
     return;
   }
@@ -1450,48 +1391,61 @@ export function renderArchivesList() {
 
     const card = document.createElement('div');
     card.style.cssText = `
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
+      background: var(--bg-secondary, #f8f9fa);
+      border: 1px solid var(--border-color, #dee2e6);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 12px;
-      cursor: pointer;
       transition: all 0.2s;
     `;
+    
     card.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <strong style="font-size: 1.1em;">📅 Период: ${startDate} — ${endDate}</strong>
-        <span style="color: #6c757d; font-size: 0.9em;">Закрыт: ${closedDate}</span>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div style="flex: 1;">
+          <strong style="font-size: 1.05em; display: block; margin-bottom: 4px;">📅 Архив: ${startDate} — ${endDate}</strong>
+          <span style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Создан: ${closedDate}</span>
+        </div>
+        <button class="btn-delete-archive" data-id="${archive.id}" title="Удалить архив">✕</button>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; font-size: 0.95em;">
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; font-size: 0.9em; margin-bottom: 12px;">
         <div>
-          <div style="color: #6c757d; font-size: 0.85em;">Начальный баланс</div>
-          <div style="font-weight: 600;">${archive.initialBalance.toFixed(2)} ₽</div>
+          <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em;">Доходы</div>
+          <div style="font-weight: 600; color: var(--success-color, #28a745);">+${archive.totalIncome.toFixed(2)} ₽</div>
         </div>
         <div>
-          <div style="color: #6c757d; font-size: 0.85em;">Конечный баланс</div>
-          <div style="font-weight: 600; color: #28a745;">${archive.finalBalance.toFixed(2)} ₽</div>
+          <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em;">Расходы</div>
+          <div style="font-weight: 600; color: var(--danger-color, #dc3545);">-${archive.totalExpenses.toFixed(2)} ₽</div>
         </div>
         <div>
-          <div style="color: #6c757d; font-size: 0.85em;">Доходы</div>
-          <div style="font-weight: 600; color: #28a745;">+${archive.totalIncome.toFixed(2)} ₽</div>
-        </div>
-        <div>
-          <div style="color: #6c757d; font-size: 0.85em;">Расходы</div>
-          <div style="font-weight: 600; color: #dc3545;">-${archive.totalExpenses.toFixed(2)} ₽</div>
-        </div>
-        <div>
-          <div style="color: #6c757d; font-size: 0.85em;">Транзакций</div>
+          <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em;">Операций</div>
           <div style="font-weight: 600;">${archive.transactions.length} шт.</div>
         </div>
       </div>
-      <div style="margin-top: 12px; text-align: center; color: #007bff; font-size: 0.9em;">
-        👆 Нажмите для просмотра деталей
-      </div>
+      
+      <button class="btn-view-archive" data-id="${archive.id}" style="
+        width: 100%; background: var(--primary-color, #007bff); color: white; 
+        border: none; border-radius: 6px; padding: 8px; cursor: pointer; font-size: 0.9em;
+      ">👁️ Просмотреть детали</button>
     `;
 
-    card.addEventListener('click', () => {
+    // Обработчик просмотра
+    const viewBtn = card.querySelector('.btn-view-archive');
+    viewBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Чтобы не срабатывал клик по карточке, если он есть
       viewArchiveDetails(archive);
+    });
+
+    // Обработчик удаления
+    const deleteBtn = card.querySelector('.btn-delete-archive');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm(`⚠️ Вы уверены, что хотите удалить архив за период ${startDate} — ${endDate}?\n\nЭто действие необратимо.`)) {
+        appData.settings.archives = appData.settings.archives.filter(a => a.id !== archive.id);
+        saveData(appData);
+        renderArchivesList();
+        alert('✅ Архив успешно удален.');
+      }
     });
 
     archivesList.appendChild(card);
@@ -1499,7 +1453,7 @@ export function renderArchivesList() {
 }
 
 /**
- * Просмотр деталей архивного периода (v2.1)
+ * Просмотр деталей архивного периода (v2.1) — с поддержкой тёмной темы
  */
 function viewArchiveDetails(archive) {
   const startDate = new Date(archive.startDate).toLocaleDateString('ru-RU');
@@ -1507,32 +1461,32 @@ function viewArchiveDetails(archive) {
 
   const detailsHtml = `
     <div style="padding: 20px;">
-      <h2> Архив периода: ${startDate} — ${endDate}</h2>
+      <h2 style="margin-top: 0; color: var(--text-primary);">📋 Архив периода: ${startDate} — ${endDate}</h2>
       
-      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-        <h3>💰 Финансовые итоги</h3>
+      <div style="background: var(--bg-secondary, #f8f9fa); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color, #dee2e6);">
+        <h3 style="margin-top: 0; color: var(--text-primary);">💰 Финансовые итоги</h3>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
           <div>
-            <div style="color: #6c757d;">Начальный баланс</div>
-            <div style="font-size: 1.2em; font-weight: 600;">${archive.initialBalance.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Начальный баланс</div>
+            <div style="font-size: 1.2em; font-weight: 600; color: var(--text-primary);">${archive.initialBalance.toFixed(2)} ₽</div>
           </div>
           <div>
-            <div style="color: #6c757d;">Конечный баланс</div>
-            <div style="font-size: 1.2em; font-weight: 600; color: #28a745;">${archive.finalBalance.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Конечный баланс</div>
+            <div style="font-size: 1.2em; font-weight: 600; color: var(--success-color, #28a745);">${archive.finalBalance.toFixed(2)} ₽</div>
           </div>
           <div>
-            <div style="color: #6c757d;">Доходы</div>
-            <div style="font-size: 1.2em; font-weight: 600; color: #28a745;">+${archive.totalIncome.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Доходы</div>
+            <div style="font-size: 1.2em; font-weight: 600; color: var(--success-color, #28a745);">+${archive.totalIncome.toFixed(2)} ₽</div>
           </div>
           <div>
-            <div style="color: #6c757d;">Расходы</div>
-            <div style="font-size: 1.2em; font-weight: 600; color: #dc3545;">-${archive.totalExpenses.toFixed(2)} ₽</div>
+            <div style="color: var(--text-secondary, #6c757d); font-size: 0.85em;">Расходы</div>
+            <div style="font-size: 1.2em; font-weight: 600; color: var(--danger-color, #dc3545);">-${archive.totalExpenses.toFixed(2)} ₽</div>
           </div>
         </div>
       </div>
 
-      <h3>📋 История операций (${archive.transactions.length})</h3>
-      <div style="max-height: 400px; overflow-y: auto;">
+      <h3 style="color: var(--text-primary);">📋 История операций (${archive.transactions.length})</h3>
+      <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color, #dee2e6); border-radius: 8px; padding: 8px;">
         ${archive.transactions
           .map((tx) => {
             const txDate = new Date(tx.date).toLocaleDateString('ru-RU');
@@ -1540,22 +1494,22 @@ function viewArchiveDetails(archive) {
             const amount = isIncome
               ? `+${tx.amount.toFixed(2)} ₽`
               : `-${tx.amount.toFixed(2)} ₽`;
-            const color = isIncome ? '#28a745' : '#dc3545';
+            const color = isIncome ? 'var(--success-color, #28a745)' : 'var(--danger-color, #dc3545)';
             return `
-            <div style="padding: 8px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between;">
+            <div style="padding: 8px; border-bottom: 1px solid var(--border-color, #dee2e6); display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="font-weight: 600;">${tx.category || 'Без категории'}</div>
-                <div style="color: #6c757d; font-size: 0.9em;">${txDate} ${tx.subcategory ? `• ${tx.subcategory}` : ''}</div>
-                ${tx.item ? `<div style="color: #6c757d; font-size: 0.85em; font-style: italic;">${tx.item}</div>` : ''}
+                <div style="font-weight: 600; color: var(--text-primary);">${tx.category || 'Без категории'}</div>
+                <div style="color: var(--text-secondary, #6c757d); font-size: 0.9em;">${txDate} ${tx.subcategory ? `• ${tx.subcategory}` : ''}</div>
+                ${tx.item ? `<div style="color: var(--text-secondary, #6c757d); font-size: 0.85em; font-style: italic;">${tx.item}</div>` : ''}
               </div>
-              <div style="font-weight: 600; color: ${color};">${amount}</div>
+              <div style="font-weight: 600; color: ${color}; white-space: nowrap; margin-left: 12px;">${amount}</div>
             </div>
           `;
           })
           .join('')}
       </div>
 
-      <button onclick="this.closest('.modal-overlay').remove()" style="margin-top: 20px; padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em;">
+      <button onclick="this.closest('.modal-overlay').remove()" style="margin-top: 20px; padding: 12px 24px; background: var(--primary-color, #007bff); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; width: 100%;">
         Закрыть
       </button>
     </div>
@@ -1576,7 +1530,7 @@ function viewArchiveDetails(archive) {
     z-index: 10000;
   `;
   modal.innerHTML = `
-    <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+    <div style="background: var(--bg-secondary, white); border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color, #dee2e6); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
       ${detailsHtml}
     </div>
   `;
