@@ -3168,3 +3168,25 @@ button[onclick*="period"] {
 #archives-section {
   margin-bottom: 0;
 }
+
+/* === Выделение вторичных кнопок в светлой теме === */
+.btn--secondary {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn--secondary:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* === Выделение красной кнопки "Удалить записи" === */
+.btn--danger {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn--danger:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
