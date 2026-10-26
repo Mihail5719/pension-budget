@@ -607,39 +607,66 @@ function isPaymentPaidToday(paymentId) {
 
 function handleMarkPaid(event) {
   const paymentId = parseInt(event.currentTarget.dataset.id);
-  const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
-  const payment = appData.fixedExpenses.find((p) => p.id === paymentId);
+
+  // ИСПРАВЛЕНИЕ 1: Используем глобальный объект, чтобы не было рассинхронизации
+  const currentAppData =
+    window.appData || JSON.parse(localStorage.getItem('pensionBudget') || '{}');
+  const payment = currentAppData.fixedExpenses.find((p) => p.id === paymentId);
   if (!payment) return;
 
   if (
     !confirm(
       `Отметить "${payment.name}" (${formatMoney(payment.amount)}) как оплаченное?`,
     )
-  )
+  ) {
     return;
+  }
 
   const today = new Date().toISOString().split('T')[0];
   const transaction = {
     id: Date.now(),
-    type: 'committed',
+    type: 'committed', // ← ИСПРАВЛЕНИЕ 2: Возвращаем 'committed', чтобы работали иконки и статистика!
     category: payment.name,
     amount: payment.amount,
     date: today,
+    accountId: payment.accountId, // ← ИСПРАВЛЕНИЕ 3: Оставляем привязку к счёту, чтобы баланс ВТБ уменьшался!
     paymentId: paymentId,
     note: 'Автоматически: фиксированный платёж',
   };
 
-  appData.transactions = appData.transactions || [];
-  appData.transactions.push(transaction);
-  localStorage.setItem('pensionBudget', JSON.stringify(appData));
+  currentAppData.transactions = currentAppData.transactions || [];
+  currentAppData.transactions.push(transaction);
 
-  renderTodayScreen(
-    appData.settings,
-    appData.fixedExpenses,
-    appData.transactions,
-  );
-  if (typeof renderTransactionList === 'function')
-    renderTransactionList(appData.transactions);
+  // Сохраняем в localStorage
+  localStorage.setItem('pensionBudget', JSON.stringify(currentAppData));
+
+  // ИСПРАВЛЕНИЕ 4: Синхронизируем глобальную переменную для мгновенного обновления UI
+  window.appData = currentAppData;
+
+  // Перерисовываем экраны
+  if (typeof renderTodayScreen === 'function') {
+    renderTodayScreen(
+      currentAppData.settings,
+      currentAppData.fixedExpenses,
+      currentAppData.transactions,
+    );
+  }
+  if (typeof renderTransactionList === 'function') {
+    renderTransactionList(currentAppData.transactions);
+  }
+  // На всякий случай обновляем и статистику, если функция доступна
+  if (typeof renderStats === 'function') {
+    renderStats(
+      currentAppData.settings,
+      currentAppData.fixedExpenses,
+      currentAppData.transactions,
+    );
+  }
+
+  // === НОВОЕ: Обновляем балансы счетов ===
+  if (typeof renderAccountsList === 'function') {
+    renderAccountsList();
+  }
 }
 
 function handlePostpone(event) {
@@ -1083,7 +1110,7 @@ function updateArchivePreview() {
 if (archiveFromInput) archiveFromInput.addEventListener('change', updateArchivePreview);
 if (archiveToInput) archiveToInput.addEventListener('change', updateArchivePreview);
 
-// Обработчик создания архива
+// Обработчик создания архива (v2.1 — АВТОМАТИЧЕСКИЙ расчёт баланса)
 if (btnCreateArchive) {
   btnCreateArchive.addEventListener('click', () => {
     const fromDateStr = archiveFromInput.value;
@@ -1096,8 +1123,8 @@ if (btnCreateArchive) {
 
     const fromDate = new Date(fromDateStr);
     const toDate = new Date(toDateStr);
-    toDate.setHours(23, 59, 59, 999); // Конец дня
-    fromDate.setHours(0, 0, 0, 0);    // Начало дня
+    toDate.setHours(23, 59, 59, 999);
+    fromDate.setHours(0, 0, 0, 0);
 
     if (fromDate > toDate) {
       alert('⚠️ Дата "От" не может быть позже даты "До".');
@@ -1107,37 +1134,147 @@ if (btnCreateArchive) {
     const appData = window.appData;
     if (!appData) return;
 
-    // 1. Фильтруем транзакции в выбранном диапазоне
-    const rangeTransactions = appData.transactions.filter(tx => {
+    const pensionAmount = appData.settings.pensionAmount || 0;
+    const pensionDay = appData.settings.pensionDay || 23;
+
+    // --- ФУНКЦИЯ: Расчёт баланса на любую дату (отмотка от currentPeriodStart) ---
+    function getBalanceAtDate(targetDate) {
+      const periodStart = new Date(appData.settings.currentPeriodStart);
+      const targetTime = targetDate.getTime();
+      const periodStartTime = periodStart.getTime();
+
+      let balance = appData.settings.initialBalance || 0;
+
+      if (targetTime < periodStartTime) {
+        // ИДЁМ НАЗАД: вычитаем доходы, прибавляем расходы, вычитаем пенсии
+        appData.transactions.forEach((tx) => {
+          const txTime = new Date(tx.date).getTime();
+          if (txTime > targetTime && txTime <= periodStartTime) {
+            if (tx.type === 'income') balance -= tx.amount;
+            else if (tx.type === 'expense') balance += Math.abs(tx.amount);
+          }
+        });
+
+        const startMonth = new Date(
+          targetDate.getFullYear(),
+          targetDate.getMonth(),
+          1,
+        );
+        const endMonth = new Date(
+          periodStart.getFullYear(),
+          periodStart.getMonth(),
+          1,
+        );
+        let checkMonth = new Date(startMonth);
+
+        while (checkMonth <= endMonth) {
+          const pensionDate = new Date(
+            checkMonth.getFullYear(),
+            checkMonth.getMonth(),
+            pensionDay,
+          );
+          if (pensionDate > targetDate && pensionDate <= periodStart) {
+            balance -= pensionAmount;
+          }
+          checkMonth.setMonth(checkMonth.getMonth() + 1);
+        }
+      } else if (targetTime > periodStartTime) {
+        // ИДЁМ ВПЕРЁД: прибавляем доходы, вычитаем расходы, прибавляем пенсии
+        appData.transactions.forEach((tx) => {
+          const txTime = new Date(tx.date).getTime();
+          if (txTime > periodStartTime && txTime <= targetTime) {
+            if (tx.type === 'income') balance += tx.amount;
+            else if (tx.type === 'expense') balance -= Math.abs(tx.amount);
+          }
+        });
+
+        const startMonth = new Date(
+          periodStart.getFullYear(),
+          periodStart.getMonth(),
+          1,
+        );
+        const endMonth = new Date(
+          targetDate.getFullYear(),
+          targetDate.getMonth(),
+          1,
+        );
+        let checkMonth = new Date(startMonth);
+
+        while (checkMonth <= endMonth) {
+          const pensionDate = new Date(
+            checkMonth.getFullYear(),
+            checkMonth.getMonth(),
+            pensionDay,
+          );
+          // ИСПРАВЛЕНО: >= вместо >
+          if (pensionDate >= periodStart && pensionDate <= targetDate) {
+            balance += pensionAmount;
+          }
+          checkMonth.setMonth(checkMonth.getMonth() + 1);
+        }
+      }
+
+      return balance;
+    }
+    // -----------------------------------------------------
+
+    // 1. Фильтруем транзакции в диапазоне
+    const rangeTransactions = appData.transactions.filter((tx) => {
       const txDate = new Date(tx.date);
       return txDate >= fromDate && txDate <= toDate;
     });
 
     if (rangeTransactions.length === 0) {
-      if (!confirm('⚠️ В выбранном периоде нет записей. Всё равно создать пустой архив?')) {
+      if (
+        !confirm(
+          '⚠️ В выбранном периоде нет записей. Всё равно создать пустой архив?',
+        )
+      ) {
         return;
       }
     }
 
-    // 2. Считаем итоги только для этого диапазона
-    let totalIncome = 0;
+    // 2. Считаем доходы и расходы по транзакциям
+    let transactionIncome = 0;
     let totalExpenses = 0;
-    rangeTransactions.forEach(tx => {
-      if (tx.type === 'income') totalIncome += tx.amount;
-      else totalExpenses += Math.abs(tx.amount);
+    rangeTransactions.forEach((tx) => {
+      if (tx.type === 'income') {
+        transactionIncome += tx.amount;
+      } else if (tx.type === 'expense') {
+        totalExpenses += Math.abs(tx.amount);
+      }
+      // transfer — НЕ считаем ни доходом, ни расходом
     });
 
-    // 3. Вычисляем начальный баланс (баланс ДО даты "От")
-    const prevTransactions = appData.transactions.filter(tx => new Date(tx.date) < fromDate);
-    let initialBalance = appData.settings.initialBalance || 0;
-    prevTransactions.forEach(tx => {
-      if (tx.type === 'income') initialBalance += tx.amount;
-      else initialBalance -= Math.abs(tx.amount);
-    });
+    // 3. Считаем пенсии в диапазоне
+    let pensionIncomeInRange = 0;
+    const earliestMonth = new Date(
+      fromDate.getFullYear(),
+      fromDate.getMonth(),
+      1,
+    );
+    const targetMonth = new Date(toDate.getFullYear(), toDate.getMonth(), 1);
+    let currentMonth = new Date(earliestMonth);
 
+    while (currentMonth <= targetMonth) {
+      const pensionDate = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth(),
+        pensionDay,
+      );
+      if (pensionDate >= fromDate && pensionDate <= toDate) {
+        pensionIncomeInRange += pensionAmount;
+      }
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+
+    const totalIncome = transactionIncome + pensionIncomeInRange;
+
+    // 4. Вычисляем балансы автоматически
+    const initialBalance = getBalanceAtDate(fromDate);
     const finalBalance = initialBalance + totalIncome - totalExpenses;
 
-    // 4. Формируем объект архива
+    // 5. Формируем архив
     const newArchive = {
       id: Date.now().toString(),
       startDate: fromDate.toISOString(),
@@ -1147,24 +1284,26 @@ if (btnCreateArchive) {
       finalBalance: Math.round(finalBalance * 100) / 100,
       totalIncome: Math.round(totalIncome * 100) / 100,
       totalExpenses: Math.round(totalExpenses * 100) / 100,
-      transactions: rangeTransactions
+      transactions: rangeTransactions,
     };
 
-    // 5. Сохраняем
+    // 6. Сохраняем
     if (!appData.settings.archives) {
       appData.settings.archives = [];
     }
     appData.settings.archives.push(newArchive);
     saveData(appData);
 
-    alert(`✅ Архив за период ${fromDate.toLocaleDateString('ru-RU')} — ${toDate.toLocaleDateString('ru-RU')} успешно создан!\n\nТекущий период и баланс не изменены.`);
-    
-    // 6. Обновляем список архивов на экране
+    alert(
+      `✅ Архив за период ${fromDate.toLocaleDateString('ru-RU')} — ${toDate.toLocaleDateString('ru-RU')} успешно создан!\n\nНачальный баланс (авто): ${initialBalance.toFixed(2)} ₽\nКонечный баланс: ${finalBalance.toFixed(2)} ₽`,
+    );
+
+    // 7. Обновляем список
     if (typeof renderArchivesList === 'function') {
       renderArchivesList();
     }
-    
-    // 7. Очищаем поля ввода
+
+    // 8. Очищаем поля
     archiveFromInput.value = '';
     archiveToInput.value = '';
     updateArchivePreview();
@@ -1453,9 +1592,12 @@ export function renderArchivesList() {
 }
 
 /**
- * Просмотр деталей архивного периода (v2.1) — компактный вид для мобильных
+ * Просмотр деталей архивного периода (v2.1) — с форматированием чисел и учётом отступов
  */
 function viewArchiveDetails(archive) {
+  // Форматтер для красивых чисел с пробелами: 24 747,33
+  const fmt = (num) => new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+
   const startDate = new Date(archive.startDate).toLocaleDateString('ru-RU');
   const endDate = new Date(archive.endDate).toLocaleDateString('ru-RU');
 
@@ -1469,43 +1611,41 @@ function viewArchiveDetails(archive) {
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           <div>
             <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Начальный</div>
-            <div style="font-size: 1em; font-weight: 600; color: var(--text-primary); white-space: nowrap;">${archive.initialBalance.toFixed(2)} ₽</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--text-primary); white-space: nowrap;">${fmt(archive.initialBalance)} ₽</div>
           </div>
           <div>
             <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Конечный</div>
-            <div style="font-size: 1em; font-weight: 600; color: var(--success-color, #28a745); white-space: nowrap;">${archive.finalBalance.toFixed(2)} ₽</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--success-color, #28a745); white-space: nowrap;">${fmt(archive.finalBalance)} ₽</div>
           </div>
           <div>
             <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Доходы</div>
-            <div style="font-size: 1em; font-weight: 600; color: var(--success-color, #28a745); white-space: nowrap;">+${archive.totalIncome.toFixed(2)} ₽</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--success-color, #28a745); white-space: nowrap;">+${fmt(archive.totalIncome)} ₽</div>
           </div>
           <div>
             <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">Расходы</div>
-            <div style="font-size: 1em; font-weight: 600; color: var(--danger-color, #dc3545); white-space: nowrap;">-${archive.totalExpenses.toFixed(2)} ₽</div>
+            <div style="font-size: 1em; font-weight: 600; color: var(--danger-color, #dc3545); white-space: nowrap;">−${fmt(archive.totalExpenses)} ₽</div>
           </div>
         </div>
       </div>
 
       <h3 style="color: var(--text-primary); white-space: nowrap; font-size: 1em; margin-bottom: 8px;">📋 Операции (${archive.transactions.length})</h3>
-      <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color, #dee2e6); border-radius: 8px; padding: 8px;">
+      <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color, #dee2e6); border-radius: 8px;">
         ${archive.transactions
           .map((tx) => {
             const txDate = new Date(tx.date).toLocaleDateString('ru-RU');
             const isIncome = tx.type === 'income';
             const amount = isIncome
-              ? `+${tx.amount.toFixed(2)} ₽`
-              : `-${tx.amount.toFixed(2)} ₽`;
-            const color = isIncome
-              ? 'var(--success-color, #28a745)'
-              : 'var(--danger-color, #dc3545)';
+              ? `+${fmt(tx.amount)} ₽`
+              : `−${fmt(tx.amount)} ₽`;
+            const color = isIncome ? 'var(--success-color, #28a745)' : 'var(--danger-color, #dc3545)';
             return `
-            <div style="padding: 8px; border-bottom: 1px solid var(--border-color, #dee2e6); display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border-color, #dee2e6); gap: 8px;">
               <div style="flex: 1; min-width: 0;">
-                <div style="font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95em;">${tx.category || 'Без категории'}</div>
-                <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap;">${txDate}${tx.subcategory ? ` • ${tx.subcategory}` : ''}</div>
+                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.category || 'Без категории'}</div>
+                <div style="color: var(--text-secondary, #6c757d); font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${txDate}${tx.subcategory ? ` • ${tx.subcategory}` : ''}</div>
                 ${tx.item ? `<div style="color: var(--text-secondary, #6c757d); font-size: 0.75em; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.item}</div>` : ''}
               </div>
-              <div style="font-weight: 600; color: ${color}; white-space: nowrap; flex-shrink: 0; font-size: 0.95em;">${amount}</div>
+              <div style="font-weight: 600; color: ${color}; white-space: nowrap; flex-shrink: 0; font-size: 0.95em; text-align: right; min-width: 90px;">${amount}</div>
             </div>
           `;
           })

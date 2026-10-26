@@ -55,9 +55,11 @@ function init() {
   window.appData = appData; // Делаем appData глобальной для ui.js
 
   // === ГАРАНТИРОВАННЫЙ ПЕРЕСЧЕТ НАЧАЛЬНОГО ОСТАТКА ПРИ ЗАПУСКЕ ===
-  appData.settings.initialBalance = appData.settings.accounts
-    .filter((a) => !a.isSavings)
-    .reduce((sum, a) => sum + (a.initialBalance || 0), 0);
+  // Теперь считаем СУММУ ВСЕХ счетов (активные + накопительные), чтобы не было путаницы
+  appData.settings.initialBalance = appData.settings.accounts.reduce(
+    (sum, a) => sum + (a.initialBalance || 0),
+    0,
+  );
   // ==================================================================
 
   // Одноразовая миграция: переименование старых имён
@@ -135,13 +137,11 @@ if ('serviceWorker' in navigator) {
 }
 
 /**
- * Пересчитывает initialBalance как сумму начальных балансов всех счетов.
+ * Пересчитывает initialBalance как сумму начальных балансов ВСЕХ счетов.
  */
-// Пересчитываем общий начальный остаток ТОЛЬКО по активным (не накопительным) счетам
 function recalculateInitialBalance() {
   const totalInitial = appData.settings.accounts
-    .filter((account) => !account.isSavings) // ← ИГНОРИРУЕМ накопительные счета
-    .reduce((sum, acc) => sum + (acc.initialBalance || 0), 0);
+    .reduce((sum, acc) => sum + (acc.initialBalance || 0), 0); // Убрали фильтр !isSavings
 
   appData.settings.initialBalance = totalInitial;
 }
@@ -520,27 +520,33 @@ function setupEventListeners() {
             : null;
 
           if (oldStart && newDate.getTime() > oldStart.getTime()) {
-            // Функция для расчёта реального баланса счёта НА ДАТУ НОВОГО ПЕРИОДА
+            // Функция для расчёта реального баланса счёта НА ДАТУ
             const getCurrentAccountBalance = (accountId, untilDate) => {
               const acc = appData.settings.accounts.find(
                 (a) => a.id === accountId,
               );
-              let balance = 0; // Начинаем с 0, считаем все транзакции с начала
+              // ИСПРАВЛЕНО: Начинаем с initialBalance этого счёта, а не с 0!
+              let balance = acc ? acc.initialBalance || 0 : 0;
+
+              const periodStart = new Date(appData.settings.currentPeriodStart);
+              const untilDateEnd = new Date(untilDate);
+              untilDateEnd.setHours(23, 59, 59, 999);
 
               appData.transactions.forEach((tx) => {
                 const txDate = new Date(tx.date);
-                // Включаем транзакции самого дня untilDate (до конца дня)
-                const untilDateEnd = new Date(untilDate);
-                untilDateEnd.setHours(23, 59, 59, 999);
-                if (txDate > untilDateEnd) return;
-
-                if (tx.type === 'expense' && tx.accountId === accountId) {
-                  balance -= tx.amount;
-                } else if (tx.type === 'income' && tx.accountId === accountId) {
-                  balance += tx.amount;
-                } else if (tx.type === 'transfer') {
-                  if (tx.fromAccountId === accountId) balance -= tx.amount;
-                  if (tx.toAccountId === accountId) balance += tx.amount;
+                // Считаем транзакции только от начала текущего периода до untilDate
+                if (txDate > periodStart && txDate <= untilDateEnd) {
+                  if (tx.type === 'expense' && tx.accountId === accountId) {
+                    balance -= tx.amount;
+                  } else if (
+                    tx.type === 'income' &&
+                    tx.accountId === accountId
+                  ) {
+                    balance += tx.amount;
+                  } else if (tx.type === 'transfer') {
+                    if (tx.fromAccountId === accountId) balance -= tx.amount;
+                    if (tx.toAccountId === accountId) balance += tx.amount;
+                  }
                 }
               });
 
