@@ -17,8 +17,8 @@ const REGULAR_INCOME_TYPES = ['Стипендия', 'Зарплата', 'Пен�
 let currentStatsAccountId = 'all';
 // ========================================================
 
-// ─── Предикаты типов операций (v2.0, коммит 2) ───
-const isIncome = (t) => t.type === 'income';
+// ─── Предикаты типов операций (v2.0, коммит 2 + проценты) ───
+const isIncome = (t) => t.type === 'income' || t.type === 'interest'; // ← ДОБАВИЛИ interest
 const isExpense = (t) => t.type === 'expense';
 const isCommitted = (t) => t.type === 'committed';
 const isMoneyOut = (t) => isExpense(t) || isCommitted(t);
@@ -1396,15 +1396,18 @@ export function renderAccountsList() {
       );
     });
 
-    let balance = accountTransactions.reduce((sum, t) => {
-      if (t.type === 'income') return sum + t.amount;
-      if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
-      if (t.type === 'transfer') {
-        if (t.fromAccountId === account.id) return sum - t.amount;
-        if (t.toAccountId === account.id) return sum + t.amount;
-      }
-      return sum;
-    }, 0);
+        let balance = accountTransactions.reduce((sum, t) => {
+          // ДОБАВЛЕНО: || t.type === 'interest'
+          if (t.type === 'income' || t.type === 'interest')
+            return sum + t.amount;
+          if (t.type === 'expense' || t.type === 'committed')
+            return sum - t.amount;
+          if (t.type === 'transfer') {
+            if (t.fromAccountId === account.id) return sum - t.amount;
+            if (t.toAccountId === account.id) return sum + t.amount;
+          }
+          return sum;
+        }, 0);
 
     // Добавляем начальный баланс этого счёта
     balance += account.initialBalance || 0;

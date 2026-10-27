@@ -58,11 +58,12 @@ export function createExpense(appData, formData) {
 /**
  * Создаёт и сохраняет новую транзакцию дохода.
  * @param {Object} appData - Глобальное состояние приложения
- * @param {Object} formData - Данные из формы { categoryId, amount }
+ * @param {Object} formData - Данные из формы { categoryId, amount, item, store, accountId, type }
  * @returns {Object} Созданная транзакция
  */
 export function createIncome(appData, formData) {
-  const { categoryId, amount, item, store, accountId } = formData; // ← Убедитесь, что store и item здесь есть
+  // Добавили 'type' в деструктуризацию
+  const { categoryId, amount, item, store, accountId, type } = formData;
 
   const category = INCOME_CATEGORIES.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
@@ -72,9 +73,10 @@ export function createIncome(appData, formData) {
     date: new Date().toISOString(),
     category: categoryName,
     amount: amount,
-    type: 'income',
-    item: item || '', // ← Убедитесь, что это есть
-    store: store || '', // ← Убедитесь, что это есть
+    // Если в форме выбран тип 'interest', сохраняем его. Иначе - обычный 'income'
+    type: type === 'interest' ? 'interest' : 'income', 
+    item: item || '', 
+    store: store || '', 
     accountId: accountId || appData.settings.defaultAccountId,
   };
 
