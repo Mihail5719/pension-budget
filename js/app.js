@@ -903,7 +903,7 @@ if (btnCancelTransfer) {
   btnCancelTransfer.addEventListener('click', closeTransferModal);
 }
 
-// Сохранение дохода (v2.3 + исправление индикатора)
+// Сохранение дохода (v2.3 + исправление индикатора + учет процентов)
 function saveIncome() {
   const categoryId = incomeCategorySelect.value;
   const amount = parseFloat(incomeAmountInput.value.replace(',', '.'));
@@ -915,7 +915,6 @@ function saveIncome() {
   const itemValue = document.getElementById('income-item')?.value.trim() || '';
   const storeValue =
     document.getElementById('income-store')?.value.trim() || '';
-  // ==================================================================================
 
   // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
@@ -924,6 +923,9 @@ function saveIncome() {
     return;
   }
 
+  // Определяем тип: если категория "Проценты по счёту" — это interest, иначе income
+  const type = categoryId === 'interest' ? 'interest' : 'income';
+
   // 2. Создаём и сохраняем транзакцию
   createIncome(appData, {
     categoryId,
@@ -931,6 +933,7 @@ function saveIncome() {
     item: itemValue,
     store: storeValue,
     accountId,
+    type, // ← ДОБАВИЛИ: передаём тип
   });
 
   // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
@@ -942,8 +945,10 @@ function saveIncome() {
 
   // 3. UI-реакция: очищаем поля, закрываем модалку и перерисовываем экраны
   incomeAmountInput.value = '';
-  document.getElementById('income-item').value = '';
-  document.getElementById('income-store').value = '';
+  if (document.getElementById('income-item'))
+    document.getElementById('income-item').value = '';
+  if (document.getElementById('income-store'))
+    document.getElementById('income-store').value = '';
 
   closeIncomeModal();
 
@@ -954,6 +959,12 @@ function saveIncome() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
+  // === НОВОЕ: Обновляем балансы счетов МГНОВЕННО ===
+  if (typeof renderAccountsList === 'function') {
+    renderAccountsList();
+  }
+  // ================================================
+
   console.log(
     '✅ Добавлен доход, категория:',
     categoryId,
@@ -961,6 +972,8 @@ function saveIncome() {
     amount,
     'счёт:',
     accountId,
+    'тип:',
+    type,
   );
 }
 
@@ -1210,6 +1223,12 @@ function saveExpense() {
     appData.transactions,
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
+
+  // === НОВОЕ: Обновляем балансы счетов ===
+  if (typeof renderAccountsList === 'function') {
+    renderAccountsList();
+  }
+  // ======================================
 
   console.log(
     '✅ Добавлен расход, категория:',

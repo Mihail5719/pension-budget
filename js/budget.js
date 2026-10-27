@@ -28,12 +28,8 @@ export function getSpentInCurrentPeriod(transactions, pensionDay) {
 
 // Главный расчёт: сколько можно потратить сегодня
 export function calculateDailyLimit(settings, fixedExpenses, transactions) {
-  const {
-    pensionAmount,
-    reserveAmount,
-    pensionDay,
-    currentPeriodStart,
-  } = settings;
+  const { pensionAmount, reserveAmount, pensionDay, currentPeriodStart } =
+    settings;
 
   // 1. Определяем даты периода
   let startDate, endDate;
@@ -74,27 +70,37 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
       if (paidIds.has(p.id)) return false;
 
       // Находим ближайшую дату этого платежа относительно сегодня
-      let nextPaymentDate = new Date(today.getFullYear(), today.getMonth(), p.day);
+      let nextPaymentDate = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        p.day,
+      );
       if (nextPaymentDate < today) {
         nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
       }
 
       // === КЛЮЧЕВАЯ ЛОГИКА ===
       // Резервируем деньги только если платеж должен пройти ДО следующей пенсии.
-      // Если платеж после пенсии (например, кредит 24-го, а пенсия 23-го), 
+      // Если платеж после пенсии (например, кредит 24-го, а пенсия 23-го),
       // он будет покрыт из новой пенсии, и вычитать его из текущего остатка не нужно!
       return nextPaymentDate < nextPensionDate;
     })
     .reduce((sum, p) => sum + p.amount, 0);
   // ============================================================
 
-  // 4. Считаем доходы и расходы (общие)
+  // 4. Считаем доходы и расходы
   const spent = periodTransactions
     .filter((t) => t.type === 'expense' || t.type === 'committed')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const income = periodTransactions
+  // Обычные доходы (ВЛИЯЮТ на дневной лимит)
+  const regularIncome = periodTransactions
     .filter((t) => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  // Проценты (НЕ влияют на лимит, но увеличивают реальный баланс)
+  const interestIncome = periodTransactions
+    .filter((t) => t.type === 'interest')
     .reduce((sum, t) => sum + t.amount, 0);
 
   // Деньги, покинувшие кошелёк: расходы + переводы ТОЛЬКО на накопительные счета
@@ -114,10 +120,13 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((account) => !account.isSavings)
     .reduce((sum, acc) => sum + (acc.initialBalance || 0), 0);
 
+  // Реальный баланс включает ВСЕ доходы (включая проценты), чтобы цифры сходились с банком
+  const totalIncomeForBalance = regularIncome + interestIncome;
+
   const currentBalance =
     totalInitialBalance +
     (currentPeriodStart ? pensionAmount : 0) +
-    income -
+    totalIncomeForBalance -
     moneyOut;
   // ============================================================
 
@@ -126,10 +135,11 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   if (settings.accounts) {
     settings.accounts.forEach((account) => {
       if (account.isSavings) {
+        // ВАЖНО: для накопительных счетов проценты тоже считаются доходом
         const accIncome = periodTransactions
           .filter(
             (t) =>
-              t.type === 'income' &&
+              (t.type === 'income' || t.type === 'interest') &&
               (t.accountId === account.id || t.toAccountId === account.id),
           )
           .reduce((sum, t) => sum + t.amount, 0);
@@ -137,7 +147,9 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
         const accMoneyOut = periodTransactions
           .filter((t) => {
             if (t.type === 'expense' || t.type === 'committed') {
-              return t.accountId === account.id || t.fromAccountId === account.id;
+              return (
+                t.accountId === account.id || t.fromAccountId === account.id
+              );
             }
             if (t.type === 'transfer') {
               return t.fromAccountId === account.id;
@@ -153,8 +165,15 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     });
   }
 
-  // 7. Свободный бюджет
-  const freeBudget = currentBalance - reserveAmount - fixedTotal;
+  // 7. Свободный бюджет (для расчёта лимита)
+  // ДЛЯ РАСЧЁТА ЛИМИТА используем workingBalance, который НЕ включает interestIncome!
+  const workingBalance =
+    totalInitialBalance +
+    (currentPeriodStart ? pensionAmount : 0) +
+    regularIncome - // <-- ТОЛЬКО обычные доходы!
+    moneyOut;
+
+  const freeBudget = workingBalance - reserveAmount - fixedTotal;
   const remaining = freeBudget;
 
   // 8. Считаем оставшиеся дни
@@ -169,7 +188,7 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     dailyLimit,
     remaining,
     spent,
-    income,
+    regularIncome,
     freeBudget,
     currentBalance,
     savingsBalance,
