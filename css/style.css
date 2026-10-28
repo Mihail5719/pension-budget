@@ -3111,6 +3111,7 @@ button[onclick*="period"] {
   padding: 6px 12px;
   font-size: 0.9em;
   box-sizing: border-box;
+  margin-right: 12px;
 }
 
 /* Мобильная адаптация: на узких экранах кнопка уходит под текст и растягивается */
