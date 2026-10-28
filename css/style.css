@@ -621,8 +621,8 @@ body.dark-theme {
 /* Кнопки действий (иконки) */
 .btn-edit,
 .btn-delete,
-.btn-delete-payment,
-.btn-delete-archive {
+.btn-delete-payment
+{
   background: none;
   border: none;
   cursor: pointer;
@@ -645,16 +645,14 @@ body.dark-theme {
 }
 
 .btn-delete,
-.btn-delete-payment,
-.btn-delete-archive {
+.btn-delete-payment {
   color: var(--color-danger, #dc3545);
   font-size: 24px;
   margin-left: 12px;
 }
 
 .btn-delete:hover,
-.btn-delete-payment:hover,
-.btn-delete-archive:hover {
+.btn-delete-payment:hover {
   background-color: rgba(198, 40, 40, 0.1);
   transform: scale(1.1);
 }
@@ -3131,42 +3129,21 @@ button[onclick*="period"] {
 
 /* === Единообразные отступы между блоками в настройках === */
 .pension-status-text,
-.archive-card,
-.delete-card,
-#archives-section {
+.delete-card {
   margin-bottom: 24px;
-}
-
-/* У самого нижнего блока (архивы) нижний отступ не нужен */
-#archives-section {
-  margin-bottom: 0;
 }
 
 /* === Единообразные отступы между блоками в настройках === */
 #period-info,
 .pension-status-text,
-.archive-card,
-.delete-card,
-#archives-section {
+.delete-card {
   margin-bottom: 24px;
-}
-
-/* У самого нижнего блока (архивы) нижний отступ не нужен */
-#archives-section {
-  margin-bottom: 0;
 }
 
 /* === Единообразные отступы между блоками в настройках === */
 .pension-period-block,
-.archive-card,
-.delete-card,
-#archives-section {
+.delete-card {
   margin-bottom: 24px;
-}
-
-/* У самого нижнего блока (архивы) нижний отступ не нужен */
-#archives-section {
-  margin-bottom: 0;
 }
 
 /* === Выделение вторичных кнопок в светлой теме === */
