@@ -2170,6 +2170,10 @@ select.settings-input:focus {
     overflow-wrap: break-word;
   }
   
+  .stat__value {
+    font-size: 22px; /* Уменьшаем с 32px до 22px */
+  }
+  
   .stat {
     padding: 12px 8px;
   }
