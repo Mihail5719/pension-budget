@@ -1836,7 +1836,10 @@ select.settings-input:focus {
 
   .app { max-width: 100%; }
   .main { padding-bottom: 100px; }
-  .today-card__amount { font-size: 40px; }
+  .today-card__amount { 
+  font-size: 32px; 
+  white-space: nowrap;
+}
   .transaction-list { grid-template-columns: 1fr; }
   .settings-group { grid-template-columns: 1fr; }
   .fixed-expenses { grid-template-columns: 1fr; }
