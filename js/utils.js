@@ -9,13 +9,14 @@ export function formatMoney(amount) {
   // 1. Сначала жестко округляем до копеек, чтобы убрать ошибки float
   const cleanAmount = Math.round(amount * 100) / 100;
 
-  // 2. Потом красиво форматируем для экрана
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
+  // 2. Форматируем число в стиле "17 866,56" (без валюты, чтобы избежать бага Android)
+  const formatted = new Intl.NumberFormat('ru-RU', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(cleanAmount);
+
+  // 3. Явно добавляем символ рубля — это работает на всех устройствах
+  return formatted + ' ₽';
 }
 
 // Получение строки даты в формате YYYY-MM-DD
