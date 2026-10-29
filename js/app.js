@@ -1033,37 +1033,24 @@ let incomeModal,
   incomeSaveBtn,
   incomeCancelBtn;
 
-// Генератор стабильного цвета для подкатегории по её названию
-function getSubcategoryColor(name) {
-  if (!name) return '#95a5a6'; // Серый по умолчанию
+function getSubcategoryColor(subcategoryName, categoryName) {
+  if (!subcategoryName) return '#95a5a6';
 
-  // === ЯРКИЕ ЦВЕТА ДЛЯ КЛЮЧЕВЫХ ПОДКАТЕГОРИЙ ===
-  const brightColors = {
-    Мясо: '#e74c3c', // Ярко-красный
-    Рыба: '#2196F3', // Ярко-синий (как вода)
-    'Овощи и фрукты': '#2ecc71', // Ярко-зелёный
-    Молочное: '#3498db', // Ярко-синий
-    'Хлеб и бакалея': '#FF9800', // Ярко-оранжевый
-    Бензин: '#9b59b6', // Фиолетовый
-    Коммуналка: '#1abc9c', // Бирюзовый
-    Лекарства: '#e91e63', // Розовый
-    Мобильный: '#00bcd4', // Голубой
-    Разное: '#95a5a6', // Серый (нейтральный)
-  };
-  // ===============================================
-
-  // Если есть явный цвет — используем его
-  if (brightColors[name]) {
-    return brightColors[name];
+  if (categoryName) {
+    if (typeof categoryConfig !== 'undefined' && categoryConfig[categoryName]) {
+      return categoryConfig[categoryName].color;
+    }
+    if (window.categoryConfig && window.categoryConfig[categoryName]) {
+      return window.categoryConfig[categoryName].color;
+    }
   }
 
-  // Иначе генерируем на основе хэша
   let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < subcategoryName.length; i++) {
+    hash = subcategoryName.charCodeAt(i) + ((hash << 5) - hash);
   }
   const hue = Math.abs(hash % 360);
-  return `hsl(${hue}, 75%, 50%)`; // Увеличили насыщенность и контраст
+  return `hsl(${hue}, 75%, 50%)`;
 }
 window.getSubcategoryColor = getSubcategoryColor;
 

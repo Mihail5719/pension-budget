@@ -372,7 +372,10 @@ export function renderTransactionList(transactions, pensionDay) {
       // === ГИБРИДНОЕ ПРЕДСТАВЛЕНИЕ: Цветной кружок подкатегории в истории ===
       let subLine = '';
       if (transaction.subcategory) {
-        const subColor = getSubcategoryColor(transaction.subcategory);
+        const subColor = getSubcategoryColor(
+          transaction.subcategory,
+          transaction.category,
+        ); // <-- ДОБАВИЛИ КАТЕГОРИЮ
         subLine = `<span class="transaction__subcategory">
                      <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${subColor}; margin-right: 6px; vertical-align: middle;"></span>
                      ${transaction.subcategory}
@@ -709,6 +712,8 @@ const categoryConfig = {
   'Помощь от детей/родственников': { emoji: '👪', color: '#8e44ad' },
 };
 
+window.categoryConfig = categoryConfig;
+
 function getCategoryStyle(name) {
   if (categoryConfig[name]) return categoryConfig[name];
   const lowerName = name.toLowerCase();
@@ -896,45 +901,48 @@ export function renderStats(settings, fixedExpenses, transactions) {
   `;
   topContainer.innerHTML = topHtml;
 
-  const renderSection = (categoriesObj) => {
-    let sectionHtml = '';
-    const cats = Object.keys(categoriesObj).sort(
-      (a, b) => categoriesObj[b].total - categoriesObj[a].total,
-    );
-    cats.forEach((cat) => {
-      const entry = categoriesObj[cat];
-      const style = getCategoryStyle(cat);
-      const catPercent =
-        totalExpenses > 0
-          ? ((entry.total / totalExpenses) * 100).toFixed(1)
-          : '0.0';
-      sectionHtml += `<div class="breakdown__card">`;
-      let accountDotHtml = '';
-      if (currentStatsAccountId !== 'all') {
-        const acc = settings.accounts?.find(
-          (a) => a.id === currentStatsAccountId,
-        );
-        if (acc && acc.color)
-          accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
-      }
-      sectionHtml += `<div class="breakdown__header"><span>${style.emoji} ${cat} ${accountDotHtml}</span><span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
-      const subs = Object.keys(entry.subs).sort(
-        (a, b) => entry.subs[b] - entry.subs[a],
+    const renderSection = (categoriesObj, isFixedSection) => {
+      let sectionHtml = '';
+      const cats = Object.keys(categoriesObj).sort(
+        (a, b) => categoriesObj[b].total - categoriesObj[a].total,
       );
-      subs.forEach((sub) => {
-        const sum = entry.subs[sub];
-        const subPercent =
-          entry.total > 0 ? ((sum / entry.total) * 100).toFixed(1) : '0.0';
-        sectionHtml += `<div class="breakdown__row"><div class="breakdown__line"><span>${sub}</span><span>${formatMoney(sum)} (${subPercent}%)</span></div><div class="breakdown__bar"><div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div></div></div>`;
+      cats.forEach((cat) => {
+        const entry = categoriesObj[cat];
+        // Если это фиксированные платежи, делаем их нейтрально-серыми
+        const style = isFixedSection
+          ? { emoji: '📋', color: '#95a5a6' }
+          : getCategoryStyle(cat);
+        const catPercent =
+          totalExpenses > 0
+            ? ((entry.total / totalExpenses) * 100).toFixed(1)
+            : '0.0';
+        sectionHtml += `<div class="breakdown__card">`;
+        let accountDotHtml = '';
+        if (currentStatsAccountId !== 'all') {
+          const acc = settings.accounts?.find(
+            (a) => a.id === currentStatsAccountId,
+          );
+          if (acc && acc.color)
+            accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
+        }
+        sectionHtml += `<div class="breakdown__header"><span>${style.emoji} ${cat} ${accountDotHtml}</span><span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
+        const subs = Object.keys(entry.subs).sort(
+          (a, b) => entry.subs[b] - entry.subs[a],
+        );
+        subs.forEach((sub) => {
+          const sum = entry.subs[sub];
+          const subPercent =
+            entry.total > 0 ? ((sum / entry.total) * 100).toFixed(1) : '0.0';
+          sectionHtml += `<div class="breakdown__row"><div class="breakdown__line"><span>${sub}</span><span>${formatMoney(sum)} (${subPercent}%)</span></div><div class="breakdown__bar"><div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div></div></div>`;
+        });
+        sectionHtml += `</div>`;
       });
-      sectionHtml += `</div>`;
-    });
-    return sectionHtml;
-  };
+      return sectionHtml;
+    };
 
-  let bottomHtml = '<h3 class="stats-breakdown-title">По подкатегориям</h3>';
-  bottomHtml += renderSection(nonFixedByCat);
-  bottomHtml += renderSection(fixedByCat);
+    let bottomHtml = '<h3 class="stats-breakdown-title">По подкатегориям</h3>';
+  bottomHtml += renderSection(nonFixedByCat, false); // Обычные расходы: яркие цвета
+  bottomHtml += renderSection(fixedByCat, true);     // Фиксированные: серый цвет
 
   if (totalExpenses === 0) {
     bottomHtml +=
