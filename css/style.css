@@ -2038,31 +2038,6 @@ select.settings-input:focus {
   }
 }
 
-
-/* --- Десктоп: принудительное выравнивание статистики (от 481px) --- */
-@media (min-width: 481px) {
-  .breakdown__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
-  }
-
-  .breakdown__line {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
-  }
-
-  #expense-chart {
-    display: block;
-    margin: 24px auto;
-    max-width: 400px;
-  }
-}
-
-
 /* --- Очень узкие экраны (до 360px) --- */
 @media (max-width: 360px) {
   .modal__buttons button {
@@ -2070,32 +2045,6 @@ select.settings-input:focus {
     padding: 8px 2px;
   }
 }
-
-/* === АДАПТАЦИЯ КАРТОЧКИ "СЕГОДНЯ" ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  .today-card {
-    max-width: 800px;
-    padding: 40px;
-  }
-
-  .today-card__amount {
-    font-size: 56px;
-  }
-
-  .today-card__amount--secondary {
-    font-size: 42px;
-  }
-
-  .today-card__indicator {
-    width: 80px;
-    height: 80px;
-  }
-
-  .today-card__label--small {
-    font-size: 18px;
-  }
-}
-/* ========================================================== */
 
 /* === СЕТКА КНОПОК НА ГЛАВНОМ ЭКРАНЕ (v2.1) === */
 .main-actions {
@@ -2113,168 +2062,6 @@ select.settings-input:focus {
   max-width: none;
 }
 
-/* На десктопе — сетка 2x2, ширина как у карточки */
-@media (min-width: 768px) {
-  .main-actions {
-    grid-template-columns: 1fr 1fr;
-    max-width: 800px;
-  }
-}
-/* ================================================== */
-
-/* === АДАПТАЦИЯ НИЖНЕЙ НАВИГАЦИИ ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  .bottom-nav {
-    border-top: none; /* Убираем линию на десктопе */
-    max-width: 100%;  /* Оставляем на всю ширину */
-    padding: 12px 20px; /* Чуть больше отступов для красоты */
-  }
-}
-/* ========================================================== */
-
-/* === АДАПТАЦИЯ БЫСТРОЙ СТАТИСТИКИ ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  .quick-stats {
-    max-width: 800px; /* Выравниваем с карточкой и кнопками */
-    gap: 20px;
-  }
-
-  .stat {
-    padding: 24px;
-    border-radius: 12px;
-  }
-
-  .stat__label {
-    font-size: 16px;
-    margin-bottom: 12px;
-  }
-
-  .stat__value {
-    font-size: 32px;
-    font-weight: 700;
-  }
-
-  .stat:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px var(--shadow, rgba(0, 0, 0, 0.1));
-  }
-}
-/* ========================================================== */
-
-@media (max-width: 767px) {
-  .stat__label {
-    font-size: 11px;
-    line-height: 1.2;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-  
-  .stat__value {
-    font-size: 20px; /* Уменьшаем, чтобы число с ₽ помещалось */
-    white-space: nowrap; /* Запрещаем перенос внутри числа */
-  }
-  
-  .stat {
-    padding: 12px 8px;
-  }
-  
-  /* Первый блок "Дней до поступления" — уже */
-  .stat:first-child {
-    flex: 0 0 40%;
-  }
-  
-  /* Второй блок "Израсходовано" — шире */
-  .stat:last-child {
-    flex: 0 0 60%;
-  }
-}
-
-/* === АДАПТАЦИЯ ТАБОВ СЧЕТОВ ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  .stats-tabs {
-    padding: 16px 24px;
-    justify-content: flex-start;
-  }
-
-  .stats-tab {
-    padding: 12px 24px;
-    font-size: 1rem;
-    border-radius: 24px;
-    transition: all 0.3s ease;
-  }
-
-  /* Hover для светлой темы */
-  body:not(.dark-theme) .stats-tab:hover:not(.active) {
-    background-color: #e8e8e8;
-    transform: translateY(-2px);
-  }
-
-  /* Hover для тёмной темы */
-  body.dark-theme .stats-tab:hover:not(.active) {
-    background-color: #3a3a3a;
-    transform: translateY(-2px);
-  }
-
-  .stats-tab.active {
-    padding: 12px 28px;
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-    transform: translateY(-2px);
-  }
-}
-/* ========================================================== */
-
-/* === АДАПТАЦИЯ ЭКРАНА СТАТИСТИКИ ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  .stats-card {
-    max-width: 800px; /* Расширяем карточку */
-    padding: 32px;
-  }
-
-  .stats-title {
-    font-size: 1.5em;
-    margin-bottom: 24px;
-  }
-
-  .stats-row {
-    font-size: 1.15em;
-  }
-
-  .stats-row.income,
-  .stats-row.expense {
-    font-size: 1.3em;
-  }
-
-  .stats-breakdown {
-    max-width: 800px; /* Расширяем блок с диаграммой */
-  }
-
-  .stats-breakdown-title {
-    font-size: 1.2em;
-  }
-
-  /* Центрируем табы на десктопе */
-  .stats-tabs {
-    justify-content: center;
-    padding: 20px 24px;
-  }
-}
-/* ========================================================== */
-
-/* === АДАПТАЦИЯ ДИАГРАММЫ ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  #stats-chart {
-    padding: 32px;
-  }
-
-  #stats-chart canvas {
-    max-width: 500px;
-    max-height: 500px;
-    width: 500px !important; /* Принудительно задаём размер */
-    height: 500px !important;
-  }
-}
-/* ========================================================== */
-
   /* Легенда под диаграммой */
   .chart-legend,
   .stats-legend {
@@ -2288,14 +2075,6 @@ select.settings-input:focus {
     margin: 8px 12px;
   }
 
-/* ========================================================== */
-
-/* === УБИРАЕМ ЛИНИЮ У ТАБОВ НА ДЕСКТОПЕ (v2.1) === */
-@media (min-width: 768px) {
-  .stats-tabs {
-    border-bottom: none; /* Убираем линию на десктопе */
-  }
-}
 /* ========================================================== */
 
 /* === ТЁМНАЯ ТЕМА ДЛЯ ЭКРАНА СТАТИСТИКИ (v2.1) === */
@@ -2355,112 +2134,6 @@ body.dark-theme .breakdown__bar-fill {
   opacity: 0.8;
 }
 /* ========================================================== */
-
-/* === АДАПТАЦИЯ ЭКРАНА СВЕРКИ ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  /* Основной контейнер экрана */
-  .screen--reconcile,
-  #screen-reconcile {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
-
-  /* Карточки статистики — делаем в 4 колонки */
-  .reconcile-summary {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-  }
-
-  .reconcile-summary__item {
-    padding: 20px;
-    border-radius: 12px;
-  }
-
-  .reconcile-summary__value {
-    font-size: 2em;
-  }
-
-  .reconcile-summary__label {
-    font-size: 0.9em;
-  }
-
-  /* Блоки способов импорта */
-  .reconcile-block {
-    padding: 32px;
-    border-radius: 16px;
-  }
-
-  .reconcile-block__title {
-    font-size: 1.3em;
-    margin-bottom: 16px;
-  }
-
-  .reconcile-block__hint {
-    font-size: 1em;
-    margin-bottom: 20px;
-  }
-
-  /* Textarea для PDF — делаем шире и выше */
-  .reconcile-textarea {
-    min-height: 250px;
-    font-size: 1em;
-    padding: 16px;
-    border-radius: 12px;
-  }
-
-  /* Кнопка "Разобрать текст" */
-  .reconcile-block button,
-  .reconcile-block .btn {
-    padding: 16px 32px;
-    font-size: 1.1em;
-    border-radius: 12px;
-  }
-
-  /* Группа результатов (Точные совпадения и т.д.) */
-  .reconcile-group {
-    padding: 24px;
-    border-radius: 16px;
-  }
-
-  .reconcile-group__title {
-    font-size: 1.15em;
-    margin-bottom: 12px;
-  }
-
-    /* Элементы списка совпадений */
-  .reconcile-item {
-    padding: 12px 0;
-    font-size: 1em;
-    gap: 16px;
-    align-items: flex-start;
-  }
-
-  .reconcile-item__description {
-    font-size: 1em;
-  }
-
-  .reconcile-item__date {
-    font-size: 0.9em;
-    flex-shrink: 0;
-    min-width: 80px;
-  }
-
-  .reconcile-item__amount {
-    font-size: 1.05em;
-    margin-right: 16px;
-  }
-
-  .reconcile-item__action {
-    padding: 8px 16px;
-    font-size: 0.95em;
-    border-radius: 8px;
-  }
-
-  .reconcile-item__info {
-    flex: 1;
-  }
-}
 
 /* === ТЁМНАЯ ТЕМА ДЛЯ ЭКРАНА СВЕРКИ (v2.1) === */
 
@@ -2568,188 +2241,6 @@ body.dark-theme .reconcile-item__action {
 
 body.dark-theme .reconcile-item__action:hover {
   background: #2980b9;
-}
-/* ========================================================== */
-
-/* === АДАПТАЦИЯ ЭКРАНА НАСТРОЕК ДЛЯ ДЕСКТОПА (v2.1) === */
-@media (min-width: 768px) {
-  /* Основной контейнер */
-  .screen--settings,
-  #screen-settings {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
-
-  /* Заголовок экрана */
-  .screen__title {
-    font-size: 28px;
-    margin-bottom: 24px;
-  }
-
-  /* Карточка "Мои счета" */
-  .accounts-section {
-    padding: 32px;
-    border-radius: 16px;
-  }
-
-  .accounts-section h2,
-  .accounts-section .accounts-title {
-    font-size: 1.4em;
-    margin-bottom: 20px;
-  }
-
-  /* Элементы списка счетов */
-  .account-item {
-    padding: 16px 20px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-  }
-
-  .account-item__name {
-    font-size: 18px;
-  }
-
-  .account-item__balance {
-    font-size: 15px;
-  }
-
-  .account-item__icon {
-    font-size: 28px;
-    width: 44px;
-  }
-
-  /* Кнопка "Добавить счёт" */
-  .btn-add-account {
-    padding: 16px 32px;
-    font-size: 1.1em;
-    border-radius: 12px;
-  }
-
-  /* Сетка настроек (Начальный остаток, Сумма поступления и т.д.) */
-  .settings-group {
-    gap: 20px;
-  }
-
-  .settings-group label,
-  .settings-label {
-    font-size: 1.05em;
-    font-weight: 600;
-  }
-
-  .settings-group input,
-  .settings-group select {
-    padding: 14px 16px;
-    font-size: 1.05em;
-    border-radius: 10px;
-  }
-
-  /* Фиксированные платежи */
-  .fixed-expenses {
-    gap: 16px;
-  }
-
-  .fixed-expense {
-    padding: 16px 20px;
-    border-radius: 12px;
-    margin-bottom: 0;
-  }
-
-  .fixed-expense__name {
-    font-size: 17px;
-  }
-
-  .fixed-expense__amount {
-    font-size: 17px;
-  }
-
-  /* Кнопка "Добавить платёж" */
-  .btn-add-expense {
-    padding: 16px 32px;
-    font-size: 1.1em;
-    border-radius: 12px;
-  }
-
-  /* Фиолетовый блок периода */
-  .period-info {
-    padding: 24px;
-    border-radius: 16px;
-  }
-
-  .period-info__row {
-    margin-bottom: 12px;
-    font-size: 1.05em;
-  }
-
-  .period-info__label {
-    font-size: 1em;
-  }
-
-  .period-info__value {
-    font-size: 1.05em;
-  }
-
-  /* Кнопки "Новый период", "Закрыть период" */
-  .btn-new-period {
-    padding: 14px 24px;
-    font-size: 1em;
-    border-radius: 10px;
-  }
-
-  /* Блок "Удалить записи за период" */
-  .delete-period-block {
-    padding: 24px;
-    border-radius: 16px;
-  }
-
-  /* Кнопки "Инструкция", "Экспорт", "Импорт" */
-  .btn-instruction,
-  .btn-export,
-  .btn-import {
-    padding: 12px 24px;
-    font-size: 1em;
-    border-radius: 10px;
-  }
-
-  /* Статусная строка "Записей: 217 | Сохранено: ..." */
-  .status-bar {
-    padding: 14px 20px;
-    font-size: 1em;
-    border-radius: 10px;
-  }
-
-  /* === СЕТКА НАСТРОЕК ДЛЯ ДЕСКТОПА === */
-  .settings-group {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    max-width: 800px;
-    margin: 0 auto 24px;
-  }
-
-  .settings-group label,
-  .settings-label {
-    font-size: 1.05em;
-    font-weight: 600;
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  .settings-group input,
-  .settings-group select,
-  .settings-input {
-    width: 100%;
-    padding: 14px 16px;
-    font-size: 1.05em;
-    border-radius: 10px;
-    box-sizing: border-box;
-  }
-
-  /* Неприкосновенный запас — на всю ширину */
-  .settings-group .settings-label:nth-child(4) {
-    grid-column: 1 / -1;
-  }
-
 }
 /* ========================================================== */
 
@@ -2921,14 +2412,6 @@ body.dark-theme .status-bar {
 /* ========================================================== */
 
 /* === ИСПРАВЛЕНИЯ ЭКРАНА НАСТРОЕК (v2.1) === */
-
-/* 1. Неприкосновенный запас — на всю ширину */
-@media (min-width: 768px) {
-  .settings-group > *:nth-child(3),
-  .settings-group > *:nth-child(4) {
-    grid-column: 1 / -1;
-  }
-}
 
 /* 2. Светлые поля readonly в тёмной теме */
 body.dark-theme input[readonly],
@@ -3205,4 +2688,447 @@ button[onclick*="period"] {
 .stat {
   min-width: 0;
   overflow: visible;
+}
+
+
+/* === ДЕСКТОП: ВСЕ СТИЛИ ДЛЯ ЭКРАНОВ ОТ 768px === */
+@media (min-width: 768px) {
+  /* === Карточка "Сегодня" === */
+  .today-card {
+    max-width: 800px;
+    padding: 40px;
+  }
+
+  .today-card__amount {
+    font-size: 56px;
+  }
+
+  .today-card__amount--secondary {
+    font-size: 42px;
+  }
+
+  .today-card__indicator {
+    width: 80px;
+    height: 80px;
+  }
+
+  .today-card__label--small {
+    font-size: 18px;
+  }
+
+  /* === Основные действия (кнопки) === */
+  .main-actions {
+    grid-template-columns: 1fr 1fr;
+    max-width: 800px;
+  }
+
+  /* === Нижняя навигация === */
+  .bottom-nav {
+    border-top: none;
+    max-width: 100%;
+    padding: 12px 20px;
+  }
+
+  /* === Быстрая статистика === */
+  .quick-stats {
+    max-width: 800px;
+    gap: 20px;
+  }
+
+  .stat {
+    padding: 24px;
+    border-radius: 12px;
+  }
+
+  .stat__label {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .stat__value {
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .stat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px var(--shadow, rgba(0, 0, 0, 0.1));
+  }
+
+  /* === Табы счетов === */
+  .stats-tabs {
+    padding: 16px 24px;
+    justify-content: flex-start;
+    border-bottom: none;
+  }
+
+  .stats-tab {
+    padding: 12px 24px;
+    font-size: 1rem;
+    border-radius: 24px;
+    transition: all 0.3s ease;
+  }
+
+  body:not(.dark-theme) .stats-tab:hover:not(.active) {
+    background-color: #e8e8e8;
+    transform: translateY(-2px);
+  }
+
+  body.dark-theme .stats-tab:hover:not(.active) {
+    background-color: #3a3a3a;
+    transform: translateY(-2px);
+  }
+
+  .stats-tab.active {
+    padding: 12px 28px;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+    transform: translateY(-2px);
+  }
+
+  /* === Экран статистики === */
+  .stats-card {
+    max-width: 800px;
+    padding: 32px;
+  }
+
+  .stats-title {
+    font-size: 1.5em;
+    margin-bottom: 24px;
+  }
+
+  .stats-row {
+    font-size: 1.15em;
+  }
+
+  .stats-row.income,
+  .stats-row.expense {
+    font-size: 1.3em;
+  }
+
+  .stats-breakdown {
+    max-width: 800px;
+  }
+
+  .stats-breakdown-title {
+    font-size: 1.2em;
+  }
+
+  .stats-tabs {
+    justify-content: center;
+    padding: 20px 24px;
+  }
+
+  /* === Диаграмма === */
+  #stats-chart {
+    padding: 32px;
+  }
+
+  #stats-chart canvas {
+    max-width: 500px;
+    max-height: 500px;
+    width: 500px !important;
+    height: 500px !important;
+  }
+
+  /* === Экран сверки === */
+  .screen--reconcile,
+  #screen-reconcile {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .reconcile-summary {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .reconcile-summary__item {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .reconcile-summary__value {
+    font-size: 2em;
+  }
+
+  .reconcile-summary__label {
+    font-size: 0.9em;
+  }
+
+  .reconcile-block {
+    padding: 32px;
+    border-radius: 16px;
+  }
+
+  .reconcile-block__title {
+    font-size: 1.3em;
+    margin-bottom: 16px;
+  }
+
+  .reconcile-block__hint {
+    font-size: 1em;
+    margin-bottom: 20px;
+  }
+
+  .reconcile-textarea {
+    min-height: 250px;
+    font-size: 1em;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .reconcile-block button,
+  .reconcile-block .btn {
+    padding: 16px 32px;
+    font-size: 1.1em;
+    border-radius: 12px;
+  }
+
+  .reconcile-group {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .reconcile-group__title {
+    font-size: 1.15em;
+    margin-bottom: 12px;
+  }
+
+  .reconcile-item {
+    padding: 12px 0;
+    font-size: 1em;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .reconcile-item__description {
+    font-size: 1em;
+  }
+
+  .reconcile-item__date {
+    font-size: 0.9em;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .reconcile-item__amount {
+    font-size: 1.05em;
+    margin-right: 16px;
+  }
+
+  .reconcile-item__action {
+    padding: 8px 16px;
+    font-size: 0.95em;
+    border-radius: 8px;
+  }
+
+  .reconcile-item__info {
+    flex: 1;
+  }
+
+  /* === Экран настроек === */
+  .screen--settings,
+  #screen-settings {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .screen__title {
+    font-size: 28px;
+    margin-bottom: 24px;
+  }
+
+  .accounts-section {
+    padding: 32px;
+    border-radius: 16px;
+  }
+
+  .accounts-section h2,
+  .accounts-section .accounts-title {
+    font-size: 1.4em;
+    margin-bottom: 20px;
+  }
+
+  .account-item {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .account-item__name {
+    font-size: 18px;
+  }
+
+  .account-item__balance {
+    font-size: 15px;
+  }
+
+  .account-item__icon {
+    font-size: 28px;
+    width: 44px;
+  }
+
+  .btn-add-account {
+    padding: 16px 32px;
+    font-size: 1.1em;
+    border-radius: 12px;
+  }
+
+  .settings-group {
+    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 800px;
+    margin: 0 auto 24px;
+  }
+
+  .settings-group label,
+  .settings-label {
+    font-size: 1.05em;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .settings-group input,
+  .settings-group select,
+  .settings-input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1.05em;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  .settings-group .settings-label:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  .fixed-expenses {
+    gap: 16px;
+  }
+
+  .fixed-expense {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 0;
+  }
+
+  .fixed-expense__name {
+    font-size: 17px;
+  }
+
+  .fixed-expense__amount {
+    font-size: 17px;
+  }
+
+  .btn-add-expense {
+    padding: 16px 32px;
+    font-size: 1.1em;
+    border-radius: 12px;
+  }
+
+  .period-info {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .period-info__row {
+    margin-bottom: 12px;
+    font-size: 1.05em;
+  }
+
+  .period-info__label {
+    font-size: 1em;
+  }
+
+  .period-info__value {
+    font-size: 1.05em;
+  }
+
+  .btn-new-period {
+    padding: 14px 24px;
+    font-size: 1em;
+    border-radius: 10px;
+  }
+
+  .delete-period-block {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .btn-instruction,
+  .btn-export,
+  .btn-import {
+    padding: 12px 24px;
+    font-size: 1em;
+    border-radius: 10px;
+  }
+
+  .status-bar {
+    padding: 14px 20px;
+    font-size: 1em;
+    border-radius: 10px;
+  }
+
+  /* === Неприкосновенный запас === */
+  .settings-group > *:nth-child(3),
+  .settings-group > *:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  /* === Выравнивание статистики === */
+  .breakdown__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .breakdown__line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  #expense-chart {
+    display: block;
+    margin: 24px auto;
+    max-width: 400px;
+  }
+}
+
+/* === МОБИЛЬНЫЕ: ВСЕ СТИЛИ ДЛЯ ЭКРАНОВ ДО 767px === */
+@media (max-width: 767px) {
+  /* === Быстрая статистика === */
+  .stat__label {
+    font-size: 11px;
+    line-height: 1.2;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .stat__value {
+    font-size: 18px;
+    white-space: normal; /* РАЗРЕШАЕМ перенос числа и ₽ */
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .stat {
+    padding: 12px 8px;
+  }
+  
+  /* Первый блок "Дней до поступления" — уже */
+  .stat:first-child {
+    flex: 0 0 38%;
+  }
+  
+  /* Второй блок "Израсходовано" — шире */
+  .stat:last-child {
+    flex: 0 0 62%;
+  }
 }
