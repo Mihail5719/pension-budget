@@ -3107,11 +3107,16 @@ button[onclick*="period"] {
 /* === МОБИЛЬНЫЕ: ВСЕ СТИЛИ ДЛЯ ЭКРАНОВ ДО 767px === */
 @media (max-width: 767px) {
   /* === Быстрая статистика === */
-  .stat__label {
+    .stat__label {
     font-size: 11px;
     line-height: 1.2;
     word-break: break-word;
     overflow-wrap: break-word;
+    min-height: 28px; /* Фиксируем высоту для выравнивания */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Центрируем текст */
+    text-align: center;
   }
   
   .stat__value {
