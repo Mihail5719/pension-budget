@@ -82,9 +82,13 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     result.dailyLimit,
   );
 
-  document.getElementById('spent-total').textContent = formatMoney(
-    result.spent,
-  );
+    let spentFormatted = formatMoney(result.spent);
+    if (!spentFormatted.includes('₽') && !spentFormatted.includes('руб')) {
+      spentFormatted += ' ₽';
+    }
+    document.getElementById('spent-total').textContent = spentFormatted;
+
+
   document.getElementById('days-left').textContent = result.daysLeft;
 
   const headerSubtitle = document.querySelector('.header__subtitle');
