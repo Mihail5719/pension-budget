@@ -2161,6 +2161,20 @@ select.settings-input:focus {
 }
 /* ========================================================== */
 
+/* === АДАПТАЦИЯ БЫСТРОЙ СТАТИСТИКИ ДЛЯ МОБИЛЬНЫХ === */
+@media (max-width: 767px) {
+  .stat__label {
+    font-size: 11px;
+    line-height: 1.2;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .stat {
+    padding: 12px 8px;
+  }
+}
+
 /* === АДАПТАЦИЯ ТАБОВ СЧЕТОВ ДЛЯ ДЕСКТОПА (v2.1) === */
 @media (min-width: 768px) {
   .stats-tabs {
