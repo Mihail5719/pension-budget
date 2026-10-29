@@ -2161,7 +2161,6 @@ select.settings-input:focus {
 }
 /* ========================================================== */
 
-/* === АДАПТАЦИЯ БЫСТРОЙ СТАТИСТИКИ ДЛЯ МОБИЛЬНЫХ === */
 @media (max-width: 767px) {
   .stat__label {
     font-size: 11px;
@@ -2171,11 +2170,22 @@ select.settings-input:focus {
   }
   
   .stat__value {
-    font-size: 22px; /* Уменьшаем с 32px до 22px */
+    font-size: 20px; /* Уменьшаем, чтобы число с ₽ помещалось */
+    white-space: nowrap; /* Запрещаем перенос внутри числа */
   }
   
   .stat {
     padding: 12px 8px;
+  }
+  
+  /* Первый блок "Дней до поступления" — уже */
+  .stat:first-child {
+    flex: 0 0 40%;
+  }
+  
+  /* Второй блок "Израсходовано" — шире */
+  .stat:last-child {
+    flex: 0 0 60%;
   }
 }
 
