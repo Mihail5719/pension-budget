@@ -81,8 +81,10 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   document.getElementById('daily-limit').textContent = formatMoney(
     result.dailyLimit,
   );
-  document.getElementById('spent-total').textContent =
-    formatMoney(result.spent) + ' ₽';
+
+  document.getElementById('spent-total').textContent = formatMoney(
+    result.spent,
+  );
   document.getElementById('days-left').textContent = result.daysLeft;
 
   const headerSubtitle = document.querySelector('.header__subtitle');
