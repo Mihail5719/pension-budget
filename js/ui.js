@@ -889,70 +889,109 @@ export function renderStats(settings, fixedExpenses, transactions) {
       : settings.accounts?.find((a) => a.id === currentStatsAccountId)?.name ||
         'Счёт';
 
-  let topHtml = `
+    const nonFixedPercent =
+      totalExpenses > 0
+        ? ((totalNonFixed / totalExpenses) * 100).toFixed(0)
+        : 0;
+    const fixedPercent =
+      totalExpenses > 0 ? ((totalFixed / totalExpenses) * 100).toFixed(0) : 0;
+
+    let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
     <div class="stats-summary-block">
       <div class="stats-row income"><span>Доходы:</span><span>+${formatMoney(totalIncome)}</span></div>
       <div class="stats-row expense"><span>Расходы:</span><span>-${formatMoney(totalExpenses)}</span></div>
       <div class="stats-divider"></div>
-      <div class="stats-row"><span>Нефиксированные:</span><span>${formatMoney(totalNonFixed)}</span></div>
-      <div class="stats-row"><span>Фиксированные:</span><span>${formatMoney(totalFixed)}</span></div>
+      <div class="stats-row"><span>Нефиксированные:</span><span>${formatMoney(totalNonFixed)} (${nonFixedPercent}%)</span></div>
+      <div class="stats-row"><span>Фиксированные:</span><span>${formatMoney(totalFixed)} (${fixedPercent}%)</span></div>
     </div>
   `;
   topContainer.innerHTML = topHtml;
 
-    const renderSection = (categoriesObj, isFixedSection) => {
-      let sectionHtml = '';
-      const cats = Object.keys(categoriesObj).sort(
-        (a, b) => categoriesObj[b].total - categoriesObj[a].total,
-      );
-      cats.forEach((cat) => {
-        const entry = categoriesObj[cat];
-        // Если это фиксированные платежи, делаем их нейтрально-серыми
-        const style = isFixedSection
-          ? { emoji: '📋', color: '#95a5a6' }
-          : getCategoryStyle(cat);
-        const catPercent =
-          totalExpenses > 0
-            ? ((entry.total / totalExpenses) * 100).toFixed(1)
-            : '0.0';
-        sectionHtml += `<div class="breakdown__card">`;
-        let accountDotHtml = '';
-        if (currentStatsAccountId !== 'all') {
-          const acc = settings.accounts?.find(
-            (a) => a.id === currentStatsAccountId,
-          );
-          if (acc && acc.color)
-            accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
-        }
-        sectionHtml += `<div class="breakdown__header"><span>${style.emoji} ${cat} ${accountDotHtml}</span><span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
-        const subs = Object.keys(entry.subs).sort(
-          (a, b) => entry.subs[b] - entry.subs[a],
-        );
-        subs.forEach((sub) => {
-          const sum = entry.subs[sub];
-          const subPercent =
-            entry.total > 0 ? ((sum / entry.total) * 100).toFixed(1) : '0.0';
-          sectionHtml += `<div class="breakdown__row"><div class="breakdown__line"><span>${sub}</span><span>${formatMoney(sum)} (${subPercent}%)</span></div><div class="breakdown__bar"><div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div></div></div>`;
-        });
-        sectionHtml += `</div>`;
-      });
-      return sectionHtml;
-    };
+       const renderSection = (categoriesObj, isFixedSection) => {
+         let sectionHtml = '';
+         const cats = Object.keys(categoriesObj).sort(
+           (a, b) => categoriesObj[b].total - categoriesObj[a].total,
+         );
 
-    let bottomHtml = '<h3 class="stats-breakdown-title">По подкатегориям</h3>';
-  bottomHtml += renderSection(nonFixedByCat, false); // Обычные расходы: яркие цвета
-  bottomHtml += renderSection(fixedByCat, true);     // Фиксированные: серый цвет
+         // База для процентов: своя для каждого блока
+         const percentBase = isFixedSection ? totalFixed : totalNonFixed;
 
-  if (totalExpenses === 0) {
-    bottomHtml +=
-      '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
-  }
-  bottomContainer.innerHTML = bottomHtml;
+         cats.forEach((cat) => {
+           const entry = categoriesObj[cat];
+           const style = isFixedSection
+             ? { emoji: '📋', color: '#95a5a6' }
+             : getCategoryStyle(cat);
+           const catPercent =
+             percentBase > 0
+               ? ((entry.total / percentBase) * 100).toFixed(1)
+               : '0.0';
+           sectionHtml += `<div class="breakdown__card">`;
+           let accountDotHtml = '';
+           if (currentStatsAccountId !== 'all') {
+             const acc = settings.accounts?.find(
+               (a) => a.id === currentStatsAccountId,
+             );
+             if (acc && acc.color)
+               accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
+           }
+           sectionHtml += `<div class="breakdown__header"><span>${style.emoji} ${cat} ${accountDotHtml}</span><span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
+           const subs = Object.keys(entry.subs).sort(
+             (a, b) => entry.subs[b] - entry.subs[a],
+           );
+           subs.forEach((sub) => {
+             const sum = entry.subs[sub];
+             const subPercent =
+               entry.total > 0 ? ((sum / entry.total) * 100).toFixed(1) : '0.0';
+             sectionHtml += `<div class="breakdown__row"><div class="breakdown__line"><span>${sub}</span><span>${formatMoney(sum)} (${subPercent}%)</span></div><div class="breakdown__bar"><div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div></div></div>`;
+           });
+           sectionHtml += `</div>`;
+         });
+         return sectionHtml;
+       };
 
+      let bottomHtml = '';
+
+      // 1. Блок нефиксированных платежей (если они есть)
+      if (Object.keys(nonFixedByCat).length > 0) {
+        bottomHtml += `<h3 class="stats-breakdown-title" style="margin-top: 20px;">Нефиксированные платежи</h3>`;
+        bottomHtml += renderSection(nonFixedByCat, false);
+      }
+
+      // 2. Блок фиксированных платежей (если они есть)
+      if (Object.keys(fixedByCat).length > 0) {
+        bottomHtml += `<h3 class="stats-breakdown-title" style="margin-top: 30px;">Фиксированные платежи</h3>`;
+        bottomHtml += renderSection(fixedByCat, true);
+      }
+
+      // 3. Если расходов вообще нет
+      if (totalExpenses === 0) {
+        bottomHtml +=
+          '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
+      }
+
+      bottomContainer.innerHTML = bottomHtml;
+
+      // === ОТРИСОВКА ДИАГРАММЫ И СПИСКОВ ===
+  
   if (totalExpenses > 0 && Object.keys(nonFixedByCat).length > 0) {
     if (emptyMsg) emptyMsg.hidden = true;
     canvas.style.display = 'block';
+
+    // 1. Заголовок НАД диаграммой (сначала удаляем старый, если есть)
+    const existingTitle = canvas.parentElement.querySelector(
+      '.chart-title-dynamic',
+    );
+    if (existingTitle) existingTitle.remove();
+
+    const chartTitle = document.createElement('h3');
+    chartTitle.className = 'stats-breakdown-title chart-title-dynamic';
+    chartTitle.textContent = 'Нефиксированные платежи';
+    chartTitle.style.cssText =
+      'margin: 20px 0 10px; font-size: 1.2em; color: var(--text-primary);';
+    canvas.parentElement.insertBefore(chartTitle, canvas);
+
+    // 2. Рисуем диаграмму
     const labels = [],
       data = [],
       backgroundColors = [];
@@ -995,10 +1034,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
             labels: {
               usePointStyle: true,
               padding: 20,
-              font: {
-                size: 14,
-                weight: '500',
-              },
+              font: { size: 14, weight: '500' },
             },
           },
           tooltip: {
@@ -1006,7 +1042,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
               label: function (context) {
                 const style = getCategoryStyle(context.label);
                 const percentage = (
-                  (context.parsed / totalExpenses) *
+                  (context.parsed / totalNonFixed) *
                   100
                 ).toFixed(1);
                 return `${style.emoji} ${context.label}: ${formatMoney(context.parsed)} (${percentage}%)`;
@@ -1016,12 +1052,32 @@ export function renderStats(settings, fixedExpenses, transactions) {
         },
       },
     });
+
+    // 3. Формируем нижние списки (заголовок уже над диаграммой, не дублируем)
+    let bottomHtml = '';
+    bottomHtml += renderSection(nonFixedByCat, false);
+
+    if (Object.keys(fixedByCat).length > 0) {
+      bottomHtml += `<h3 class="stats-breakdown-title" style="margin-top: 30px;">Фиксированные платежи</h3>`;
+      bottomHtml += renderSection(fixedByCat, true);
+    }
+
+    bottomContainer.innerHTML = bottomHtml;
   } else {
     if (emptyMsg) emptyMsg.hidden = false;
     canvas.style.display = 'none';
     if (window.expenseChartInstance) window.expenseChartInstance.destroy();
+    
+    let bottomHtml = '';
+    if (Object.keys(fixedByCat).length > 0) {
+      bottomHtml += `<h3 class="stats-breakdown-title">Фиксированные платежи</h3>`;
+      bottomHtml += renderSection(fixedByCat, true);
+    } else {
+      bottomHtml += '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
+    }
+    bottomContainer.innerHTML = bottomHtml;
   }
-}
+} // <-- Закрывающая скобка функции renderStats
 
 export function renderPensionPeriodInfo(settings) {
   const periodInfoEl = document.getElementById('period-info');
