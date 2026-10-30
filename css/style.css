@@ -3149,8 +3149,8 @@ button[onclick*="period"] {
     padding: 0 8px;
   }
   
-  .stats-row {
-    font-size: 0.75em;
+    .stats-row {
+    font-size: 0.7em;
     white-space: nowrap;
   }
 
