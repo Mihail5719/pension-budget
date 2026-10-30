@@ -3144,4 +3144,14 @@ button[onclick*="period"] {
     font-size: 1em; /* Уменьшаем заголовок на мобильных, чтобы не переносился */
   }
 
+       /* === Сводка статистики: уменьшаем шрифт, чтобы длинная строка помещалась === */
+  .stats-summary-block {
+    padding: 0 8px;
+  }
+  
+  .stats-row {
+    font-size: 0.75em;
+    white-space: nowrap;
+  }
+
 }
