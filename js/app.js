@@ -1125,6 +1125,10 @@ function openExpenseModal() {
   if (accountSelect) {
     accountSelect.innerHTML = '';
     appData.settings.accounts.forEach((account) => {
+      // === НОВОЕ: Пропускаем накопительные счета в форме расхода ===
+      if (account.isSavings) return;
+      // ============================================================
+
       const option = document.createElement('option');
       option.value = account.id;
       option.textContent = `${account.emoji || ''} ${account.name}`.trim();

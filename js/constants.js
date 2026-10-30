@@ -39,7 +39,7 @@ export const EXPENSE_CATEGORIES = [
   { id: 'clothes', name: 'Одежда', emoji: '👕' },
   { id: 'other', name: 'Разное', emoji: '📦' }, // Глобальное переименование
   { id: 'study', name: 'Учёба', emoji: '' },
-  { id: 'savings', name: 'Накопления', emoji: '' },
+  // { id: 'savings', name: 'Накопления', emoji: '' },
 ];
 
 // ─── Подкатегории для категорий расходов (v2.0) ───
