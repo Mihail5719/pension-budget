@@ -57,6 +57,43 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
   // Защищённое количество дней (для расчёта) - всегда ≥ 1
   const safeDaysLeft = Math.max(realDaysLeft, 1);
 
+  // === ЛОГИКА УМНОГО БАННЕРА СЕРЕДИНЫ ПЕРИОДА ===
+  const periodStartDate = settings.currentPeriodStart
+    ? new Date(settings.currentPeriodStart)
+    : null;
+
+  // Проверяем, наступил ли день пенсии в текущем месяце
+  const pensionDayThisMonth = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    settings.pensionDay,
+  );
+  const pensionDayPassed = today > pensionDayThisMonth;
+
+  // Середина периода: либо поступление отмечено в прошлом, либо день пенсии прошёл, но не отмечен
+  const isMidPeriod =
+    (periodStartDate && periodStartDate.getTime() < today.getTime()) ||
+    (!periodStartDate && pensionDayPassed);
+
+  // Проверяем, есть ли обычные счета с нулевым или незаданным балансом
+  const regularAccounts = settings.accounts.filter((a) => !a.isSavings);
+  const needsAccountSetup =
+    regularAccounts.length > 0 &&
+    regularAccounts.some(
+      (a) => !a.initialBalance || Number(a.initialBalance) === 0,
+    );
+
+  // Показываем баннер, если: середина периода И не закрыт И нужны настройки счетов
+  const shouldShowBanner =
+    isMidPeriod && !settings.midPeriodHintDismissed && needsAccountSetup;
+
+  const bannerEl = document.getElementById('mid-period-banner');
+  if (bannerEl) {
+    bannerEl.style.display = shouldShowBanner ? 'flex' : 'none';
+  }
+  // ================================================
+  
+
   // 2. ТОЛЬКО глобальный расчёт (убрали логику переключения счетов)
   const result = calculateDailyLimit(settings, fixedExpenses, transactions);
 
@@ -82,12 +119,11 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     result.dailyLimit,
   );
 
-    let spentFormatted = formatMoney(result.spent);
-    if (!spentFormatted.includes('₽') && !spentFormatted.includes('руб')) {
-      spentFormatted += ' ₽';
-    }
-    document.getElementById('spent-total').textContent = spentFormatted;
-
+  let spentFormatted = formatMoney(result.spent);
+  if (!spentFormatted.includes('₽') && !spentFormatted.includes('руб')) {
+    spentFormatted += ' ₽';
+  }
+  document.getElementById('spent-total').textContent = spentFormatted;
 
   document.getElementById('days-left').textContent = result.daysLeft;
 
@@ -1334,9 +1370,15 @@ export function renderAccountsList() {
   console.log('  Накопительные:', totalBalanceSavings.toFixed(2), '₽');
 }
 
-
-
-
+// Обработчик закрытия баннера середины периода
+const btnDismissMidPeriod = document.getElementById('btn-dismiss-mid-period');
+if (btnDismissMidPeriod) {
+  btnDismissMidPeriod.addEventListener('click', () => {
+    appData.settings.midPeriodHintDismissed = true;
+    saveData(appData); // Сохраняем состояние
+    renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions); // Перерисовываем
+  });
+}
 
 // === Обработчик изменения источника дохода (v2.1, Идея 1) ===
 document.addEventListener('DOMContentLoaded', () => {
