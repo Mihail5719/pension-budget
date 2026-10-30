@@ -3139,4 +3139,9 @@ button[onclick*="period"] {
   .stat:last-child {
     flex: 0 0 62%;
   }
+
+  .stats-breakdown-title {
+    font-size: 1em; /* Уменьшаем заголовок на мобильных, чтобы не переносился */
+  }
+
 }
