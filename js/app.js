@@ -1188,41 +1188,34 @@ function saveExpense() {
     // 1. Берём начальный баланс счёта
     let currentBalance = account.initialBalance || 0;
 
-    // 2. Динамически пересчитываем баланс по всем транзакциям этого счёта
-    appData.transactions.forEach((t) => {
-      if (t.accountId === accountId) {
-        if (t.type === 'income') currentBalance += t.amount;
-        else if (t.type === 'expense') currentBalance -= t.amount;
-        else if (t.type === 'transfer' && t.fromAccountId === accountId)
-          currentBalance -= t.amount;
-        else if (t.type === 'transfer' && t.toAccountId === accountId)
-          currentBalance += t.amount;
-      }
-    });
+      // 1. Инициализируем баланс начальным остатком счёта
+  let currentBalance = account.initialBalance || 0;
 
-    // 3. Сравниваем текущий баланс с суммой расхода
-    if (currentBalance < amount) {
-      alert(
-        `❌ Недостаточно средств на счёте "${account.name}"\n\nДоступно: ${formatMoney(currentBalance)}\nСумма расхода: ${formatMoney(amount)}\n\nОперация отменена.`,
-      );
-      return; // Прерываем сохранение
+  // 2. Получаем дату начала текущего периода (строка вида "2023-10-23")
+  const periodStart = appData.settings.currentPeriodStart;
+
+  // 3. Динамически пересчитываем баланс ТОЛЬКО по транзакциям текущего периода
+  appData.transactions.forEach((t) => {
+    // Если транзакция была ДО начала текущего периода — игнорируем её
+    if (periodStart && t.date < periodStart) {
+      return;
     }
-  }
-  // ==============================================
 
-  // 2. Создаём и сохраняем через модуль (передаем accountId!)
-  createExpense(appData, {
-    categoryId,
-    amount,
-    subId,
-    item: itemValue,
-    store: storeValue,
-    accountId,
+    if (t.accountId === accountId) {
+      if (t.type === 'income') currentBalance += t.amount;
+      else if (t.type === 'expense') currentBalance -= t.amount;
+      else if (t.type === 'transfer' && t.fromAccountId === accountId) currentBalance -= t.amount;
+      else if (t.type === 'transfer' && t.toAccountId === accountId) currentBalance += t.amount;
+    }
   });
 
-  // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
-  saveData(appData);
-
+  // 4. Сравниваем текущий баланс с суммой расхода
+  if (currentBalance < amount) {
+    alert(
+      `❌ Недостаточно средств на счёте "${account.name}"\n\nДоступно: ${formatMoney(currentBalance)}\nСумма расхода: ${formatMoney(amount)}\n\nОперация отменена.`,
+    );
+    return; // Прерываем сохранение
+  }
   // === ОБНОВЛЯЕМ СПИСОК СЧЕТОВ В НАСТРОЙКАХ МГНОВЕННО ===
   if (typeof renderAccountsList === 'function') renderAccountsList();
   // ======================================================
