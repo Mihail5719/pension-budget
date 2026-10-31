@@ -453,7 +453,9 @@ export function renderSettings(settings, fixedExpenses) {
   // === ИЗМЕНЕНИЕ: Делаем поле "Начальный остаток" только для чтения ===
   const initialBalanceInput = document.getElementById('input-initial-balance');
   if (initialBalanceInput) {
-    initialBalanceInput.value = settings.initialBalance || 0;
+   initialBalanceInput.value = parseFloat(
+     (settings.initialBalance || 0).toFixed(2),
+   );
     initialBalanceInput.readOnly = true; // Запрещаем ручной ввод
     initialBalanceInput.style.backgroundColor = '#f1f3f5'; // Серый фон (визуально неактивно)
     initialBalanceInput.style.cursor = 'not-allowed'; // Курсор "запрещено"
