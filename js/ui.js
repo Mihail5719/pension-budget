@@ -1380,6 +1380,25 @@ if (btnDismissMidPeriod) {
   });
 }
 
+  // === ЛОГИКА МОДАЛЬНОГО ОКНА ИНСТРУКЦИИ ===
+  const btnHowToSetup = document.getElementById('btn-how-to-setup');
+  const instructionModal = document.getElementById('instruction-modal');
+  const btnCloseInstruction = document.getElementById('btn-close-instruction');
+  const instructionOverlay = instructionModal?.querySelector('.modal__overlay');
+
+  function openInstructionModal() {
+    if (instructionModal) instructionModal.classList.add('is-open');
+  }
+
+  function closeInstructionModal() {
+    if (instructionModal) instructionModal.classList.remove('is-open');
+  }
+
+  if (btnHowToSetup) btnHowToSetup.addEventListener('click', openInstructionModal);
+  if (btnCloseInstruction) btnCloseInstruction.addEventListener('click', closeInstructionModal);
+  if (instructionOverlay) instructionOverlay.addEventListener('click', closeInstructionModal);
+  // ==========================================
+
 // === Обработчик изменения источника дохода (v2.1, Идея 1) ===
 document.addEventListener('DOMContentLoaded', () => {
   const incomeSelect = document.getElementById('select-income-type');

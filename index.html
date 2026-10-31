@@ -33,11 +33,53 @@
         <!-- Умный баннер для входа в середине периода -->
         <div id="mid-period-banner" class="mid-period-banner" style="display: none;">
             <div class="mid-period-banner__icon">💡</div>
-            <div class="mid-period-banner__text">
-                <strong>Вы начали учёт в середине периода</strong><br>
-                Укажите текущие остатки по обычным счетам в Настройках, чтобы дневной лимит был точным.
+            <div class="mid-period-banner__content">
+                <div class="mid-period-banner__text">
+                    <strong>Вы начали учёт в середине периода</strong><br>
+                    Укажите текущие остатки по обычным счетам в Настройках, чтобы дневной лимит был точным.
+                </div>
+                <button id="btn-how-to-setup" class="mid-period-banner__btn">Как настроить?</button>
             </div>
             <button id="btn-dismiss-mid-period" class="mid-period-banner__close" title="Понятно">✕</button>
+        </div>
+        
+        <!-- Модальное окно с инструкцией -->
+        <div class="modal" id="instruction-modal">
+            <div class="modal__overlay"></div>
+            <div class="modal__content">
+                <h2 class="modal__title">📋 Настройка при входе в середине периода</h2>
+        
+                <div class="instruction-text">
+                    <p>Вы установили приложение после дня пенсии. Чтобы дневной лимит был точным, сделайте 3 простых шага:</p>
+        
+                    <div class="instruction-step">
+                        <span class="step-number">1️⃣</span>
+                        <span>Укажите день пенсии и сумму поступления <em>(скорее всего, вы уже это сделали ✅)</em></span>
+                    </div>
+        
+                    <div class="instruction-step">
+                        <span class="step-number">2️⃣</span>
+                        <span>Добавьте свои счета в разделе <strong>Настройки → Мои счета</strong> (Сбербанк, Наличные и
+                            т.д.)</span>
+                    </div>
+        
+                    <div class="instruction-step">
+                        <span class="step-number">3️⃣</span>
+                        <span>Введите <strong>текущие остатки</strong> по каждому счёту (сколько денег сейчас на каждом
+                            счёте)</span>
+                    </div>
+        
+                    <p class="instruction-success">✅ Готово! Приложение само рассчитает дневной лимит на оставшиеся дни до
+                        следующей пенсии.</p>
+        
+                    <p class="instruction-tip">💡 <strong>Совет:</strong> Не нужно вводить прошлые траты. Приложение работает с
+                        текущими остатками.</p>
+                </div>
+        
+                <div class="modal__buttons">
+                    <button class="btn btn--primary" id="btn-close-instruction">Понятно, спасибо!</button>
+                </div>
+            </div>
         </div>
 
         <main class="main">
@@ -604,8 +646,7 @@
 
     <!-- 
       МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ ТРАНЗАКЦИИ
-      Используется для изменения существующих записей (расходов и доходов)
-    -->
+      Используется для изменения существующих записей (расходов и доходов)-->
     <div class="modal" id="edit-modal">
         <div class="modal__overlay"></div>
         <div class="modal__content">
