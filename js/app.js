@@ -1164,7 +1164,7 @@ function saveExpense() {
   const categoryId = expenseCategorySelect.value;
   const amount = parseFloat(expenseAmountInput.value.replace(',', '.'));
   const itemValue = document.getElementById('expense-item').value.trim();
-  const storeValue = document.getElementById('expense-store').value.trim(); // ← НОВОЕ
+  const storeValue = document.getElementById('expense-store').value.trim();
   const subId = document.getElementById('expense-subcategory').value;
   const accountId = document.getElementById('expense-account').value;
 
@@ -1181,53 +1181,67 @@ function saveExpense() {
     return;
   }
 
-  // === ПРОВЕРКА БАЛАНСА СЧЁТА ПЕРЕД РАСХОДОМ ===
+  // === ПРОВЕРКА БАЛАНСА ТОЛЬКО ДЛЯ НАЛИЧНЫХ ===
   const account = appData.settings.accounts.find((a) => a.id === accountId);
 
-  if (account) {
-    // 1. Берём начальный баланс счёта
+  // Проверяем баланс только если счёт — наличные (по названию)
+  if (account && account.name.toLowerCase().includes('наличн')) {
+    // 1. Инициализируем баланс начальным остатком
     let currentBalance = account.initialBalance || 0;
 
-      // 1. Инициализируем баланс начальным остатком счёта
-  let currentBalance = account.initialBalance || 0;
+    // 2. Получаем дату начала текущего периода
+    const periodStart = appData.settings.currentPeriodStart
+      ? new Date(appData.settings.currentPeriodStart)
+      : null;
 
-  // 2. Получаем дату начала текущего периода (строка вида "2023-10-23")
-  const periodStart = appData.settings.currentPeriodStart;
+    // 3. Считаем баланс только по транзакциям текущего периода
+    appData.transactions.forEach((t) => {
+      const transactionDate = new Date(t.date);
 
-  // 3. Динамически пересчитываем баланс ТОЛЬКО по транзакциям текущего периода
-  appData.transactions.forEach((t) => {
-    // Если транзакция была ДО начала текущего периода — игнорируем её
-    if (periodStart && t.date < periodStart) {
+      // Пропускаем транзакции ДО начала периода
+      if (periodStart && transactionDate < periodStart) {
+        return;
+      }
+
+      if (t.accountId === accountId) {
+        if (t.type === 'income') currentBalance += t.amount;
+        else if (t.type === 'expense') currentBalance -= t.amount;
+        else if (t.type === 'transfer' && t.fromAccountId === accountId)
+          currentBalance -= t.amount;
+        else if (t.type === 'transfer' && t.toAccountId === accountId)
+          currentBalance += t.amount;
+      }
+    });
+
+    // 4. Проверяем, хватает ли средств
+    if (currentBalance < amount) {
+      alert(
+        `❌ Недостаточно наличных\n\nДоступно: ${formatMoney(currentBalance)}\nСумма расхода: ${formatMoney(amount)}\n\nОперация отменена.`,
+      );
       return;
     }
+  }
+  // ==============================================
 
-    if (t.accountId === accountId) {
-      if (t.type === 'income') currentBalance += t.amount;
-      else if (t.type === 'expense') currentBalance -= t.amount;
-      else if (t.type === 'transfer' && t.fromAccountId === accountId) currentBalance -= t.amount;
-      else if (t.type === 'transfer' && t.toAccountId === accountId) currentBalance += t.amount;
-    }
+  // 2. Создаём и сохраняем через модуль
+  createExpense(appData, {
+    categoryId,
+    amount,
+    subId,
+    item: itemValue,
+    store: storeValue,
+    accountId,
   });
 
-  // 4. Сравниваем текущий баланс с суммой расхода
-  if (currentBalance < amount) {
-    alert(
-      `❌ Недостаточно средств на счёте "${account.name}"\n\nДоступно: ${formatMoney(currentBalance)}\nСумма расхода: ${formatMoney(amount)}\n\nОперация отменена.`,
-    );
-    return; // Прерываем сохранение
-  }
-  // === ОБНОВЛЯЕМ СПИСОК СЧЕТОВ В НАСТРОЙКАХ МГНОВЕННО ===
-  if (typeof renderAccountsList === 'function') renderAccountsList();
-  // ======================================================
-
+  // 3. Сохраняем в localStorage и обновляем индикатор
+  saveData(appData);
   if (typeof updateSyncIndicator === 'function') {
     updateSyncIndicator(appData.transactions, appData.lastModified);
   }
-  // ============================================================
 
-  // 3. UI-реакция
-  document.getElementById('expense-item').value = ''; // Очищаем поле
-  document.getElementById('expense-store').value = ''; // ← НОВОЕ
+  // 4. UI-реакция
+  document.getElementById('expense-item').value = '';
+  document.getElementById('expense-store').value = '';
   closeExpenseModal();
 
   renderTodayScreen(
@@ -1237,11 +1251,10 @@ function saveExpense() {
   );
   renderTransactionList(appData.transactions, appData.settings.pensionDay);
 
-  // === НОВОЕ: Обновляем балансы счетов ===
+  // 5. Обновляем балансы счетов в интерфейсе
   if (typeof renderAccountsList === 'function') {
     renderAccountsList();
   }
-  // ======================================
 
   console.log(
     '✅ Добавлен расход, категория:',
