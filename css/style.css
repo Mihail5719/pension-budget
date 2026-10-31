@@ -3213,3 +3213,84 @@ button[onclick*="period"] {
     color: #f0e6c0;
   }
 }
+
+/* === Кнопка в баннере === */
+.mid-period-banner__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+
+@media (min-width: 600px) {
+  .mid-period-banner__content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+}
+
+.mid-period-banner__btn {
+  background-color: #856404;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: flex-start;
+}
+
+.mid-period-banner__btn:hover {
+  background-color: #6d5203;
+}
+
+/* === Модальное окно инструкции === */
+.instruction-text {
+  font-size: 0.95em;
+  line-height: 1.5;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.instruction-text p {
+  margin: 0 0 12px 0;
+}
+
+.instruction-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.step-number {
+  font-size: 1.2em;
+  flex-shrink: 0;
+}
+
+.instruction-success {
+  color: #27ae60;
+  font-weight: 600;
+  margin-top: 16px !important;
+}
+
+.instruction-tip {
+  background-color: #fff3cd;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  margin-top: 12px !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .instruction-text { color: #e0e0e0; }
+  .instruction-step { background-color: #2c2c2c; }
+  .instruction-tip { background-color: #3d3418; color: #f0e6c0; }
+}
