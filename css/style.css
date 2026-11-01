@@ -12,7 +12,6 @@
  * 8. МЕДИАЗАПРОСЫ (все в одном месте!)
  * ============================================================================ */
 
-
 /* ============================================================================
  * 1. CSS-ПЕРЕМЕННЫЕ: СВЕТЛАЯ ТЕМА
  * ============================================================================ */
@@ -72,7 +71,6 @@
   --border-radius: 12px;
 }
 
-
 /* ============================================================================
  * 1.1 CSS-ПЕРЕМЕННЫЕ: ТЁМНАЯ ТЕМА
  * ============================================================================ */
@@ -110,7 +108,6 @@ body.dark-theme {
   --color-success: #4ade80;
 }
 
-
 /* ============================================================================
  * 2. СБРОС И БАЗОВЫЕ СТИЛИ
  * ============================================================================ */
@@ -121,7 +118,12 @@ body.dark-theme {
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   font-size: var(--font-size-base);
   line-height: 1.5;
   background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
@@ -143,7 +145,6 @@ body.dark-theme {
   background-color: var(--color-surface);
   touch-action: pan-y;
 }
-
 
 /* ============================================================================
  * 3. ШАПКА
@@ -190,7 +191,6 @@ body.dark-theme {
 .theme-icon {
   font-size: 20px;
 }
-
 
 /* ============================================================================
  * 4. ЭКРАНЫ И НАВИГАЦИЯ
@@ -276,7 +276,6 @@ body.dark-theme {
   text-decoration: none;
 }
 
-
 /* ============================================================================
  * 5. КОМПОНЕНТЫ: КАРТОЧКИ
  * ============================================================================ */
@@ -345,9 +344,15 @@ body.dark-theme {
   margin: 0 auto;
 }
 
-.indicator--ok { background-color: var(--color-ok); }
-.indicator--warn { background-color: var(--color-warn); }
-.indicator--danger { background-color: var(--color-danger); }
+.indicator--ok {
+  background-color: var(--color-ok);
+}
+.indicator--warn {
+  background-color: var(--color-warn);
+}
+.indicator--danger {
+  background-color: var(--color-danger);
+}
 
 /* --- Карточка транзакции --- */
 .transaction-list {
@@ -406,8 +411,12 @@ body.dark-theme {
   color: var(--text-primary);
 }
 
-.transaction__amount--income { color: var(--color-ok); }
-.transaction__amount--expense { color: var(--color-danger); }
+.transaction__amount--income {
+  color: var(--color-ok);
+}
+.transaction__amount--expense {
+  color: var(--color-danger);
+}
 
 /* Расходы красным (унификация) */
 .transaction__amount:not(.transaction__amount--income) {
@@ -518,7 +527,9 @@ body.dark-theme {
   text-align: center;
   border: 1px solid var(--border-color);
   box-shadow: 0 2px 6px var(--shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .stat:hover {
@@ -538,7 +549,6 @@ body.dark-theme {
   font-size: 24px;
   font-weight: 600;
 }
-
 
 /* ============================================================================
  * 6. КОМПОНЕНТЫ: КНОПКИ
@@ -621,8 +631,7 @@ body.dark-theme {
 /* Кнопки действий (иконки) */
 .btn-edit,
 .btn-delete,
-.btn-delete-payment
-{
+.btn-delete-payment {
   background: none;
   border: none;
   cursor: pointer;
@@ -669,12 +678,18 @@ body.dark-theme {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
   box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
 }
 
-.btn-mark-pension:hover { background-color: #219150; }
-.btn-mark-pension:active { transform: scale(0.98); }
+.btn-mark-pension:hover {
+  background-color: #219150;
+}
+.btn-mark-pension:active {
+  transform: scale(0.98);
+}
 
 /* Кнопка изменения даты пенсии */
 .btn-edit-pension {
@@ -764,10 +779,13 @@ body.dark-theme {
   transform: translateY(-1px);
 }
 
-.action-btn:active { transform: translateY(0); }
+.action-btn:active {
+  transform: translateY(0);
+}
 
-.btn-icon { font-size: 16px; }
-
+.btn-icon {
+  font-size: 16px;
+}
 
 /* ============================================================================
  * 7. КОМПОНЕНТЫ: МОДАЛЬНЫЕ ОКНА
@@ -784,7 +802,9 @@ body.dark-theme {
   z-index: 1000;
 }
 
-.modal.is-open { display: flex; }
+.modal.is-open {
+  display: flex;
+}
 
 .modal__overlay {
   position: absolute;
@@ -859,7 +879,6 @@ body.dark-theme {
   margin-top: var(--spacing-md);
 }
 
-
 /* ============================================================================
  * 8. КОМПОНЕНТЫ: НАСТРОЙКИ
  * ============================================================================ */
@@ -907,7 +926,6 @@ body.dark-theme {
   text-align: center;
 }
 
-
 /* ============================================================================
  * 9. СПЕЦИФИЧНЫЕ БЛОКИ
  * ============================================================================ */
@@ -921,7 +939,9 @@ body.dark-theme {
   padding: 20px;
 }
 
-.screen--welcome.active { display: flex; }
+.screen--welcome.active {
+  display: flex;
+}
 
 .welcome-container {
   text-align: center;
@@ -933,7 +953,10 @@ body.dark-theme {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.welcome-icon { font-size: 64px; margin-bottom: 16px; }
+.welcome-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
 
 .welcome-title {
   font-size: 28px;
@@ -962,7 +985,9 @@ body.dark-theme {
   border-bottom: 1px solid var(--border-color, #eee);
 }
 
-.welcome-step:last-child { border-bottom: none; }
+.welcome-step:last-child {
+  border-bottom: none;
+}
 
 .step-number {
   display: flex;
@@ -1073,9 +1098,15 @@ body.dark-theme .today-payments__empty {
   margin-bottom: 8px;
 }
 
-.period-info__row:last-child { margin-bottom: 0; }
-.period-info__label { opacity: 0.9; }
-.period-info__value { font-weight: 600; }
+.period-info__row:last-child {
+  margin-bottom: 0;
+}
+.period-info__label {
+  opacity: 0.9;
+}
+.period-info__value {
+  font-weight: 600;
+}
 
 .btn-new-period {
   margin-top: 12px;
@@ -1089,7 +1120,9 @@ body.dark-theme .today-payments__empty {
   transition: background 0.2s;
 }
 
-.btn-new-period:hover { background: rgba(255, 255, 255, 0.3); }
+.btn-new-period:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
 
 /* --- Предупреждение --- */
 .warning-block {
@@ -1106,9 +1139,17 @@ body.dark-theme .today-payments__empty {
   color: #e65100;
 }
 
-.warning-icon { font-size: 20px; flex-shrink: 0; }
-.warning-text { line-height: 1.4; }
-.warning-text strong { display: block; margin-bottom: 4px; }
+.warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.warning-text {
+  line-height: 1.4;
+}
+.warning-text strong {
+  display: block;
+  margin-bottom: 4px;
+}
 
 /* --- Шапка дня в истории --- */
 .day-header {
@@ -1136,9 +1177,20 @@ body.dark-theme .today-payments__empty {
   text-align: right;
 }
 
-.day-header__income { color: #27ae60; font-weight: 700; white-space: nowrap; }
-.day-header__expense { color: #e74c3c; font-weight: 700; white-space: nowrap; }
-.day-header__divider { color: var(--text-secondary, #999); font-weight: 400; }
+.day-header__income {
+  color: #27ae60;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.day-header__expense {
+  color: #e74c3c;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.day-header__divider {
+  color: var(--text-secondary, #999);
+  font-weight: 400;
+}
 
 /* --- Индикатор синхронизации --- */
 .sync-indicator {
@@ -1156,7 +1208,9 @@ body.dark-theme .today-payments__empty {
   text-align: center;
 }
 
-.sync-indicator__icon { font-size: 1.1em; }
+.sync-indicator__icon {
+  font-size: 1.1em;
+}
 
 /* --- Блок удаления за период --- */
 .delete-card {
@@ -1291,10 +1345,18 @@ body.dark-theme .today-payments__empty {
   border-left: 4px solid #ccc;
 }
 
-.reconcile-group--match { border-left-color: #27ae60; }
-.reconcile-group--mismatch { border-left-color: #f39c12; }
-.reconcile-group--missing { border-left-color: #e74c3c; }
-.reconcile-group--extra { border-left-color: #95a5a6; }
+.reconcile-group--match {
+  border-left-color: #27ae60;
+}
+.reconcile-group--mismatch {
+  border-left-color: #f39c12;
+}
+.reconcile-group--missing {
+  border-left-color: #e74c3c;
+}
+.reconcile-group--extra {
+  border-left-color: #95a5a6;
+}
 
 .reconcile-group__title {
   font-size: 1em;
@@ -1314,11 +1376,23 @@ body.dark-theme .today-payments__empty {
   font-size: 0.9em;
 }
 
-.reconcile-item:last-child { border-bottom: none; }
-.reconcile-item__info { flex: 1; }
-.reconcile-item__description { font-weight: 500; }
-.reconcile-item__date { font-size: 0.85em; color: #999; }
-.reconcile-item__amount { font-weight: 600; margin-right: 12px; }
+.reconcile-item:last-child {
+  border-bottom: none;
+}
+.reconcile-item__info {
+  flex: 1;
+}
+.reconcile-item__description {
+  font-weight: 500;
+}
+.reconcile-item__date {
+  font-size: 0.85em;
+  color: #999;
+}
+.reconcile-item__amount {
+  font-weight: 600;
+  margin-right: 12px;
+}
 
 .reconcile-item__action {
   background: #3498db;
@@ -1330,14 +1404,16 @@ body.dark-theme .today-payments__empty {
   cursor: pointer;
 }
 
-.reconcile-item__action:hover { background: #2980b9; }
+.reconcile-item__action:hover {
+  background: #2980b9;
+}
 
 /* --- Статистика --- */
 .stats-card {
   background: #ffffff;
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
   max-width: 500px;
   margin-left: auto;
@@ -1366,8 +1442,16 @@ body.dark-theme .today-payments__empty {
   font-weight: 500;
 }
 
-.stats-row.income { color: #27ae60; font-weight: 700; font-size: 1.15em; }
-.stats-row.expense { color: #e74c3c; font-weight: 700; font-size: 1.15em; }
+.stats-row.income {
+  color: #27ae60;
+  font-weight: 700;
+  font-size: 1.15em;
+}
+.stats-row.expense {
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 1.15em;
+}
 
 .stats-divider {
   height: 1px;
@@ -1455,7 +1539,6 @@ body.dark-theme .today-payments__empty {
   margin: 0 auto;
 }
 
-
 /* ============================================================================
  * 10. ТЁМНАЯ ТЕМА: ПЕРЕОПРЕДЕЛЕНИЯ
  * ============================================================================ */
@@ -1466,8 +1549,12 @@ body.dark-theme .today-card {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-body.dark-theme .stat { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
-body.dark-theme .stat:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); }
+body.dark-theme .stat {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+body.dark-theme .stat:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
 
 body.dark-theme .welcome-container {
   background: var(--card-bg);
@@ -1516,11 +1603,11 @@ body.dark-theme .btn.btn--warning {
   color: #ffb74d;
 }
 
-
 /* ============================================================================
  * 11. ФОРМЫ И ПОЛЯ ВВОДА (глобальные)
  * ============================================================================ */
-input, select {
+input,
+select {
   background-color: var(--input-bg);
   color: var(--text-primary);
   border: 1px solid var(--input-border);
@@ -1534,7 +1621,9 @@ input[type='tel'] {
   border-color: var(--input-border);
 }
 
-.btn, .action-btn, button {
+.btn,
+.action-btn,
+button {
   background-color: var(--btn-secondary-bg);
   color: var(--btn-secondary-text);
   border-color: var(--border-color);
@@ -1550,8 +1639,12 @@ input[type='tel'] {
   border-top-color: var(--border-color);
 }
 
-.nav__item { color: var(--text-secondary); }
-.nav__item--active { color: var(--btn-primary-bg); }
+.nav__item {
+  color: var(--text-secondary);
+}
+.nav__item--active {
+  color: var(--btn-primary-bg);
+}
 
 /* === Блок управления счетами (v2.1) === */
 .accounts-section {
@@ -1735,7 +1828,7 @@ input[type='tel'] {
   border-radius: 50%;
   margin-left: 6px;
   vertical-align: middle;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.1); /* Лёгкая обводка для читаемости */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1); /* Лёгкая обводка для читаемости */
 }
 
 /* Кнопка перевода между счетами (v2.5) */
@@ -1748,7 +1841,9 @@ input[type='tel'] {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
   width: 100%;
   margin-top: 12px;
 }
@@ -1769,40 +1864,40 @@ input[type='tel'] {
 
 /* Баннер цели сверки (v2.7) */
 .reconcile-target-banner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background-color: #e8f4f8; /* Светло-голубой, спокойный, но заметный */
-    border-left: 4px solid #3498db;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #e8f4f8; /* Светло-голубой, спокойный, но заметный */
+  border-left: 4px solid #3498db;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
 }
 
 .reconcile-target__icon {
-    font-size: 24px;
+  font-size: 24px;
 }
 
 .reconcile-target__text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .reconcile-account-name {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #2c3e50;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #2c3e50;
 }
 
 .reconcile-target__hint {
-    font-size: 0.85em;
-    color: #7f8c8d;
+  font-size: 0.85em;
+  color: #7f8c8d;
 }
 
 /* Стилизация select как input в настройках (v2.1) */
-.settings-input[type="text"],
-.settings-input[type="number"],
+.settings-input[type='text'],
+.settings-input[type='number'],
 select.settings-input {
   width: 100%;
   padding: 10px 12px;
@@ -1819,7 +1914,6 @@ select.settings-input:focus {
   border-color: #3498db;
 }
 
-
 /* ================================================== */
 
 /* ============================================================================
@@ -1834,15 +1928,25 @@ select.settings-input:focus {
     --btn-min-height: 56px;
   }
 
-  .app { max-width: 100%; }
-  .main { padding-bottom: 100px; }
-  .today-card__amount { 
-  font-size: 32px; 
-  white-space: nowrap;
-}
-  .transaction-list { grid-template-columns: 1fr; }
-  .settings-group { grid-template-columns: 1fr; }
-  .fixed-expenses { grid-template-columns: 1fr; }
+  .app {
+    max-width: 100%;
+  }
+  .main {
+    padding-bottom: 100px;
+  }
+  .today-card__amount {
+    font-size: 32px;
+    white-space: nowrap;
+  }
+  .transaction-list {
+    grid-template-columns: 1fr;
+  }
+  .settings-group {
+    grid-template-columns: 1fr;
+  }
+  .fixed-expenses {
+    grid-template-columns: 1fr;
+  }
 
   .bottom-nav {
     position: fixed;
@@ -1857,7 +1961,9 @@ select.settings-input:focus {
     padding: 8px 4px;
   }
 
-  .bottom-nav::-webkit-scrollbar { display: none; }
+  .bottom-nav::-webkit-scrollbar {
+    display: none;
+  }
 
   .bottom-nav__item {
     flex: 0 0 auto;
@@ -1865,15 +1971,19 @@ select.settings-input:focus {
     padding: 8px 4px;
   }
 
-  .bottom-nav__icon { font-size: 20px; }
-  .bottom-nav__label { font-size: 11px; }
+  .bottom-nav__icon {
+    font-size: 20px;
+  }
+  .bottom-nav__label {
+    font-size: 11px;
+  }
 }
-
 
 /* --- Смартфоны (до 480px) --- */
 @media (max-width: 480px) {
   /* Базовые */
-  html, body {
+  html,
+  body {
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -1897,7 +2007,9 @@ select.settings-input:focus {
     margin-bottom: 0;
   }
 
-  .bottom-nav__label { display: none; }
+  .bottom-nav__label {
+    display: none;
+  }
 
   /* Настройки в одну колонку */
   .settings-group {
@@ -1917,7 +2029,9 @@ select.settings-input:focus {
     top: 8px !important;
   }
 
-  .theme-icon { font-size: 20px; }
+  .theme-icon {
+    font-size: 20px;
+  }
 
   /* Кнопка изменения даты пенсии */
   .btn-edit-pension {
@@ -1926,7 +2040,9 @@ select.settings-input:focus {
   }
 
   /* Подпись лимита */
-  .today-card__label--small { font-size: 12px; }
+  .today-card__label--small {
+    font-size: 12px;
+  }
 
   /* Карточки транзакций */
   .transaction {
@@ -1935,13 +2051,22 @@ select.settings-input:focus {
     gap: 8px;
   }
 
-  .transaction__info { flex: 1 1 100%; }
-  .transaction__actions { margin-left: auto; }
+  .transaction__info {
+    flex: 1 1 100%;
+  }
+  .transaction__actions {
+    margin-left: auto;
+  }
 
-  .transaction__category { font-size: 15px; }
-  .transaction__amount { font-size: 15px; }
+  .transaction__category {
+    font-size: 15px;
+  }
+  .transaction__amount {
+    font-size: 15px;
+  }
 
-  .btn-edit, .btn-delete {
+  .btn-edit,
+  .btn-delete {
     font-size: 16px;
     padding: 4px 6px;
   }
@@ -1975,7 +2100,9 @@ select.settings-input:focus {
     gap: 8px 12px;
   }
 
-  .day-header__divider { display: none; }
+  .day-header__divider {
+    display: none;
+  }
 
   /* Статистика */
   .stats-card {
@@ -1996,7 +2123,9 @@ select.settings-input:focus {
   }
 
   .stats-row.income,
-  .stats-row.expense { font-size: 0.9em; }
+  .stats-row.expense {
+    font-size: 0.9em;
+  }
 
   .breakdown__header {
     flex-direction: column;
@@ -2004,8 +2133,13 @@ select.settings-input:focus {
     gap: 4px;
   }
 
-  .breakdown__header > span:first-child { font-size: 0.95em; }
-  .breakdown__header > span:last-child { font-size: 0.85em; color: #7f8c8d; }
+  .breakdown__header > span:first-child {
+    font-size: 0.95em;
+  }
+  .breakdown__header > span:last-child {
+    font-size: 0.85em;
+    color: #7f8c8d;
+  }
 
   .breakdown__line {
     flex-direction: column;
@@ -2013,16 +2147,34 @@ select.settings-input:focus {
     gap: 3px;
   }
 
-  .breakdown__line > span:first-child { font-size: 0.85em; }
-  .breakdown__line > span:last-child { font-size: 0.8em; color: #7f8c8d; }
+  .breakdown__line > span:first-child {
+    font-size: 0.85em;
+  }
+  .breakdown__line > span:last-child {
+    font-size: 0.8em;
+    color: #7f8c8d;
+  }
 
-  .breakdown__row { padding-left: 16px; }
-  .breakdown__card { padding: 10px; margin-bottom: 8px; }
+  .breakdown__row {
+    padding-left: 16px;
+  }
+  .breakdown__card {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
 
   /* Диаграмма */
-  #stats-chart { padding: 14px; }
-  #stats-chart canvas { max-width: 100%; max-height: 280px; }
-  #expense-chart { max-width: 100%; max-height: 260px; }
+  #stats-chart {
+    padding: 14px;
+  }
+  #stats-chart canvas {
+    max-width: 100%;
+    max-height: 280px;
+  }
+  #expense-chart {
+    max-width: 100%;
+    max-height: 260px;
+  }
 
   /* Модалки */
   .modal__buttons {
@@ -2065,18 +2217,18 @@ select.settings-input:focus {
   max-width: none;
 }
 
-  /* Легенда под диаграммой */
-  .chart-legend,
-  .stats-legend {
-    font-size: 14px;
-    margin-top: 24px;
-  }
+/* Легенда под диаграммой */
+.chart-legend,
+.stats-legend {
+  font-size: 14px;
+  margin-top: 24px;
+}
 
-  .chart-legend-item,
-  .legend-item {
-    font-size: 14px;
-    margin: 8px 12px;
-  }
+.chart-legend-item,
+.legend-item {
+  font-size: 14px;
+  margin: 8px 12px;
+}
 
 /* ========================================================== */
 
@@ -2372,7 +2524,7 @@ body.dark-theme .delete-period-block .delete-title {
   color: #e74c3c;
 }
 
-body.dark-theme .delete-period-block input[type="date"] {
+body.dark-theme .delete-period-block input[type='date'] {
   background: #2d2d2d;
   border-color: #404040;
   color: #e0e0e0;
@@ -2454,11 +2606,11 @@ body.dark-theme .sync-indicator {
 
 /* Адаптация блока "Общий баланс" для мобильных */
 @media (max-width: 400px) {
-  .account-item div[style*="display: grid"] span:first-child {
+  .account-item div[style*='display: grid'] span:first-child {
     font-size: 0.85em !important;
   }
-  
-  .account-item div[style*="display: grid"] span:nth-child(2) {
+
+  .account-item div[style*='display: grid'] span:nth-child(2) {
     font-size: 1em !important;
     padding-left: 12px !important;
   }
@@ -2498,7 +2650,7 @@ body.dark-theme .sync-indicator {
 }
 
 .summary-divider {
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* === Мобильная версия: текст сверху, число снизу === */
@@ -2508,7 +2660,7 @@ body.dark-theme .sync-indicator {
     align-items: flex-start;
     gap: 4px;
   }
-  
+
   .summary-value {
     align-self: flex-start;
   }
@@ -2535,7 +2687,7 @@ body.dark-theme .sync-indicator {
 }
 
 .pension-info-block .btn-change,
-.pension-info-block button[onclick*="change"],
+.pension-info-block button[onclick*='change'],
 .pension-info-block a.btn-change {
   max-width: 45% !important;
   white-space: nowrap;
@@ -2552,9 +2704,9 @@ body.dark-theme .sync-indicator {
     gap: 8px;
     padding: 12px !important;
   }
-  
+
   .pension-info-block .btn-change,
-  .pension-info-block button[onclick*="change"] {
+  .pension-info-block button[onclick*='change'] {
     max-width: 100% !important;
     margin-top: 8px;
     align-self: flex-end;
@@ -2573,7 +2725,11 @@ body.dark-theme .sync-indicator {
 .stat__value {
   word-break: break-word;
   overflow-wrap: break-word;
-  font-size: clamp(1.2em, 4vw, 1.8em); /* Адаптивный размер, не будет гигантским на телефоне */
+  font-size: clamp(
+    1.2em,
+    4vw,
+    1.8em
+  ); /* Адаптивный размер, не будет гигантским на телефоне */
 }
 
 /* === 2. Исправление зелёного блока периода и кнопки "Изменить" === */
@@ -2585,8 +2741,8 @@ body.dark-theme .sync-indicator {
 
 /* Универсальное правило для кнопки "Изменить" и похожих кнопок */
 .btn-change,
-button[onclick*="change"],
-button[onclick*="period"] {
+button[onclick*='change'],
+button[onclick*='period'] {
   max-width: 100%;
   box-sizing: border-box;
   white-space: normal; /* Разрешаем перенос текста кнопки на новую строку */
@@ -2599,7 +2755,7 @@ button[onclick*="period"] {
   #period-info {
     margin-bottom: 8px;
   }
-  
+
   /* Если кнопка лежит рядом с #period-info, растягиваем её аккуратно */
   #period-info + button,
   .btn-change {
@@ -2634,7 +2790,7 @@ button[onclick*="period"] {
     flex-direction: column;
     align-items: stretch; /* Растягиваем элементы на всю ширину */
   }
-  
+
   .btn-edit-pension {
     width: 100%;
     margin-top: 4px;
@@ -2692,7 +2848,6 @@ button[onclick*="period"] {
   min-width: 0;
   overflow: visible;
 }
-
 
 /* === ДЕСКТОП: ВСЕ СТИЛИ ДЛЯ ЭКРАНОВ ОТ 768px === */
 @media (min-width: 768px) {
@@ -2918,6 +3073,7 @@ button[onclick*="period"] {
   .reconcile-item__amount {
     font-size: 1.05em;
     margin-right: 16px;
+    white-space: nowrap; /* Запрещаем перенос суммы */
   }
 
   .reconcile-item__action {
@@ -3107,7 +3263,7 @@ button[onclick*="period"] {
 /* === МОБИЛЬНЫЕ: ВСЕ СТИЛИ ДЛЯ ЭКРАНОВ ДО 767px === */
 @media (max-width: 767px) {
   /* === Быстрая статистика === */
-    .stat__label {
+  .stat__label {
     font-size: 11px;
     line-height: 1.2;
     word-break: break-word;
@@ -3118,23 +3274,23 @@ button[onclick*="period"] {
     justify-content: center; /* Центрируем текст */
     text-align: center;
   }
-  
+
   .stat__value {
     font-size: 18px;
     white-space: normal; /* РАЗРЕШАЕМ перенос числа и ₽ */
     word-break: break-word;
     overflow-wrap: break-word;
   }
-  
+
   .stat {
     padding: 12px 8px;
   }
-  
+
   /* Первый блок "Дней до поступления" — уже */
   .stat:first-child {
     flex: 0 0 38%;
   }
-  
+
   /* Второй блок "Израсходовано" — шире */
   .stat:last-child {
     flex: 0 0 62%;
@@ -3144,16 +3300,15 @@ button[onclick*="period"] {
     font-size: 1em; /* Уменьшаем заголовок на мобильных, чтобы не переносился */
   }
 
-       /* === Сводка статистики: уменьшаем шрифт, чтобы длинная строка помещалась === */
+  /* === Сводка статистики: уменьшаем шрифт, чтобы длинная строка помещалась === */
   .stats-summary-block {
     padding: 0 8px;
   }
-  
-    .stats-row {
+
+  .stats-row {
     font-size: 0.7em;
     white-space: nowrap;
   }
-
 }
 
 /* === Умный баннер середины периода === */
@@ -3169,7 +3324,7 @@ button[onclick*="period"] {
   color: #856404;
   font-size: 0.95em;
   line-height: 1.4;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   animation: slideDown 0.3s ease-out;
 }
 
@@ -3198,8 +3353,14 @@ button[onclick*="period"] {
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Тёмная тема */
@@ -3290,7 +3451,14 @@ button[onclick*="period"] {
 }
 
 @media (prefers-color-scheme: dark) {
-  .instruction-text { color: #e0e0e0; }
-  .instruction-step { background-color: #2c2c2c; }
-  .instruction-tip { background-color: #3d3418; color: #f0e6c0; }
+  .instruction-text {
+    color: #e0e0e0;
+  }
+  .instruction-step {
+    background-color: #2c2c2c;
+  }
+  .instruction-tip {
+    background-color: #3d3418;
+    color: #f0e6c0;
+  }
 }
