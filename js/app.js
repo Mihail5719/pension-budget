@@ -1181,42 +1181,49 @@ function saveExpense() {
     return;
   }
 
-  // === ПРОВЕРКА БАЛАНСА ТОЛЬКО ДЛЯ НАЛИЧНЫХ ===
+  // === ПРОВЕРКА БАЛАНСА СЧЁТА ПЕРЕД РАСХОДОМ (для всех счетов) ===
   const account = appData.settings.accounts.find((a) => a.id === accountId);
 
-  // Проверяем баланс только если счёт — наличные (по названию)
-  if (account && account.name.toLowerCase().includes('наличн')) {
-    // 1. Инициализируем баланс начальным остатком
+  if (account) {
+    // 1. Инициализируем баланс начальным остатком счёта
     let currentBalance = account.initialBalance || 0;
 
-    // 2. Получаем дату начала текущего периода
-    const periodStart = appData.settings.currentPeriodStart
-      ? new Date(appData.settings.currentPeriodStart)
-      : null;
+    // 2. Если это счёт по умолчанию и период начат, добавляем пенсию как доход
+    if (account.id === appData.settings.defaultAccountId && appData.settings.currentPeriodStart) {
+      currentBalance += appData.settings.pensionAmount || 0;
+    }
 
-    // 3. Считаем баланс только по транзакциям текущего периода
+    // 3. Получаем дату начала текущего периода
+    const periodStartFull = appData.settings.currentPeriodStart || '';
+    const periodStart = periodStartFull.split('T')[0];
+
+    // 4. Динамически пересчитываем баланс по транзакциям текущего периода
     appData.transactions.forEach((t) => {
-      const transactionDate = new Date(t.date);
+      const transactionDate = t.date.split('T')[0];
 
-      // Пропускаем транзакции ДО начала периода
+      // Если транзакция была ДО начала текущего периода — игнорируем её
       if (periodStart && transactionDate < periodStart) {
         return;
       }
 
-      if (t.accountId === accountId) {
-        if (t.type === 'income') currentBalance += t.amount;
-        else if (t.type === 'expense') currentBalance -= t.amount;
-        else if (t.type === 'transfer' && t.fromAccountId === accountId)
-          currentBalance -= t.amount;
-        else if (t.type === 'transfer' && t.toAccountId === accountId)
-          currentBalance += t.amount;
+      // Применяем изменения баланса в зависимости от типа операции
+      if (t.type === 'income' && t.accountId === accountId) {
+        currentBalance += t.amount;
+      } else if (t.type === 'expense' && t.accountId === accountId) {
+        currentBalance -= t.amount;
+      } else if (t.type === 'committed' && t.accountId === accountId) {
+        currentBalance -= t.amount;
+      } else if (t.type === 'transfer' && t.fromAccountId === accountId) {
+        currentBalance -= t.amount;
+      } else if (t.type === 'transfer' && t.toAccountId === accountId) {
+        currentBalance += t.amount;
       }
     });
 
-    // 4. Проверяем, хватает ли средств
+    // 5. Сравниваем текущий баланс с суммой расхода
     if (currentBalance < amount) {
       alert(
-        `❌ Недостаточно наличных\n\nДоступно: ${formatMoney(currentBalance)}\nСумма расхода: ${formatMoney(amount)}\n\nОперация отменена.`,
+        `❌ Недостаточно средств на счёте "${account.name}"\n\nДоступно: ${formatMoney(currentBalance)}\nСумма расхода: ${formatMoney(amount)}\n\nОперация отменена.`,
       );
       return;
     }
