@@ -424,10 +424,9 @@ export function renderTransactionList(transactions, pensionDay) {
       const storeLine = transaction.store
         ? `<span class="transaction__store">📍 ${transaction.store}</span>`
         : '';
-      const noteLine =
-        committedFlag && transaction.note
-          ? `<span class="transaction__subcategory">${transaction.note}</span>`
-          : '';
+      const noteLine = transaction.note
+        ? `<span class="transaction__note">💬 ${transaction.note}</span>`
+        : '';
 
       itemEl.innerHTML = `
         <div class="transaction__info">
