@@ -927,13 +927,15 @@ function saveIncome() {
   const type = categoryId === 'interest' ? 'interest' : 'income';
 
   // 2. Создаём и сохраняем транзакцию
+  const noteValue = document.getElementById('income-note').value.trim();
   createIncome(appData, {
     categoryId,
     amount,
     item: itemValue,
     store: storeValue,
     accountId,
-    type, // ← ДОБАВИЛИ: передаём тип
+    type,
+    note: noteValue, // ← добавили
   });
 
   // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
@@ -949,6 +951,8 @@ function saveIncome() {
     document.getElementById('income-item').value = '';
   if (document.getElementById('income-store'))
     document.getElementById('income-store').value = '';
+  if (document.getElementById('income-note'))
+    document.getElementById('income-note').value = '';
 
   closeIncomeModal();
 
@@ -1231,6 +1235,7 @@ function saveExpense() {
   // ==============================================
 
   // 2. Создаём и сохраняем через модуль
+  const noteValue = document.getElementById('expense-note').value.trim();
   createExpense(appData, {
     categoryId,
     amount,
@@ -1238,6 +1243,7 @@ function saveExpense() {
     item: itemValue,
     store: storeValue,
     accountId,
+    note: noteValue, // ← добавили
   });
 
   // 3. Сохраняем в localStorage и обновляем индикатор
@@ -1249,6 +1255,7 @@ function saveExpense() {
   // 4. UI-реакция
   document.getElementById('expense-item').value = '';
   document.getElementById('expense-store').value = '';
+  document.getElementById('expense-note').value = '';
   closeExpenseModal();
 
   renderTodayScreen(
