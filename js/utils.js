@@ -101,3 +101,37 @@ export function getDaysLeft(pensionDay) {
   const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1; // +1 — включаем сегодня
   return Math.max(days, 1); // минимум 1 день, чтобы не делить на 0
 }
+
+/**
+ * Фильтрует массив транзакций по текстовому запросу.
+ * Ищет совпадения в: категории, подкатегории, предмете, месте, комментарии и сумме.
+ * @param {string} query - поисковый запрос
+ * @param {Array} transactions - массив объектов транзакций
+ * @returns {Array} отфильтрованный массив транзакций
+ */
+export function filterTransactions(query, transactions) {
+  // Если запрос пустой, возвращаем исходный массив без изменений
+  if (!query || query.trim() === '') {
+    return transactions;
+  }
+
+  const lowerQuery = query.toLowerCase().trim();
+
+  return transactions.filter(t => {
+    // Собираем все поля, по которым будем искать, в один массив.
+    // Используем || '' для защиты от null/undefined.
+    const fieldsToSearch = [
+      t.category || '',
+      t.subCategory || '', 
+      t.item || '',
+      t.store || '',
+      t.note || '',
+      String(t.amount || '') // Сумма тоже ищется как строка (например, "1500")
+    ];
+
+    // Проверяем, содержит ли хотя бы одно поле искомый текст
+    return fieldsToSearch.some(field => 
+      String(field).toLowerCase().includes(lowerQuery)
+    );
+  });
+}
