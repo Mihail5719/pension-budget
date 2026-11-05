@@ -3479,7 +3479,7 @@ button[onclick*='period'] {
   background: var(--bg-card, #fff);
   border: 2px solid var(--border-color, #e0e0e0);
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 8px 48px 8px 12px;  /* ← Изменили на 48px */
   transition: border-color 0.2s ease;
 }
 
@@ -3491,6 +3491,7 @@ button[onclick*='period'] {
   font-size: 18px;
   margin-right: 8px;
   opacity: 0.6;
+  flex-shrink: 0;
 }
 
 .search-input {
@@ -3501,6 +3502,7 @@ button[onclick*='period'] {
   background: transparent;
   color: var(--text-primary, #333);
   padding: 4px 0;
+  min-width: 0;
 }
 
 .search-input::placeholder {
@@ -3508,19 +3510,31 @@ button[onclick*='period'] {
 }
 
 .search-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
-  font-size: 18px;
-  color: var(--text-secondary, #999);
+  font-size: 20px;
+  line-height: 1; /* ← Добавили: убирает лишние отступы шрифта */
+  color: #e74c3c;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 0; /* ← Изменили: убрали внутренние отступы */
   border-radius: 50%;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0; /* ← Добавили: убираем внешние отступы */
 }
 
 .search-clear-btn:hover {
-  background: var(--bg-hover, #f0f0f0);
-  color: var(--text-primary, #333);
+  background: rgba(231, 76, 60, 0.15);
+  color: #c0392b;
 }
 
 .search-info {
@@ -3532,4 +3546,31 @@ button[onclick*='period'] {
 
 #search-count {
   font-weight: 500;
+}
+
+/* Тёмная тема для поиска */
+body.dark-theme .search-input-wrapper {
+  background: var(--bg-card-dark, #2d2d2d);
+  border-color: var(--border-color-dark, #444);
+}
+
+body.dark-theme .search-input {
+  color: var(--text-primary-dark, #e0e0e0);
+}
+
+body.dark-theme .search-input::placeholder {
+  color: var(--text-secondary-dark, #888);
+}
+
+body.dark-theme .search-clear-btn {
+  color: var(--text-secondary-dark, #888);
+}
+
+body.dark-theme .search-clear-btn:hover {
+  background: var(--bg-hover-dark, #3d3d3d);
+  color: var(--text-primary-dark, #e0e0e0);
+}
+
+body.dark-theme .search-info {
+  color: var(--text-secondary-dark, #888);
 }
