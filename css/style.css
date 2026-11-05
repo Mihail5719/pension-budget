@@ -3719,4 +3719,46 @@ body.dark-theme .date-filter-btn.active:hover {
 
 .date-apply-btn:hover {
   background: #2980b9;
-  border
+  border-color: #2980b9;
+}
+
+.date-reset-btn {
+  background: transparent;
+  color: var(--text-secondary, #666);
+  border-color: var(--border-color, #e0e0e0);
+}
+
+.date-reset-btn:hover {
+  background: var(--bg-hover, #f0f0f0);
+  color: var(--text-primary, #333);
+}
+
+/* Тёмная тема */
+body.dark-theme .custom-date-panel {
+  background: var(--bg-card-dark, #2d2d2d);
+  border-color: var(--border-color-dark, #444);
+}
+
+body.dark-theme .custom-date-field label {
+  color: var(--text-secondary-dark, #aaa);
+}
+
+body.dark-theme .date-input {
+  background: var(--bg-card-dark, #2d2d2d);
+  border-color: var(--border-color-dark, #444);
+  color: var(--text-primary-dark, #e0e0e0);
+}
+
+body.dark-theme .date-input:focus {
+  border-color: var(--primary-color, #3498db);
+}
+
+body.dark-theme .date-reset-btn {
+  color: var(--text-secondary-dark, #aaa);
+  border-color: var(--border-color-dark, #444);
+}
+
+body.dark-theme .date-reset-btn:hover {
+  background: var(--bg-hover-dark, #3d3d3d);
+  color: var(--text-primary-dark, #e0e0e0);
+}
