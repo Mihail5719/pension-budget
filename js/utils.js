@@ -51,7 +51,7 @@ export function formatDateTime(dateStr) {
 /**
  * Форматирует дату БЕЗ времени: "Сегодня", "Вчера" или "3 сент"
  * Используется для отображения в списке транзакций на мобильных устройствах
- * 
+ *
  * @param {string} dateStr - Строка даты в формате ISO (например, "2026-09-10T21:33:00.000Z")
  * @returns {string} - Только дата без времени
  */
@@ -110,28 +110,24 @@ export function getDaysLeft(pensionDay) {
  * @returns {Array} отфильтрованный массив транзакций
  */
 export function filterTransactions(query, transactions) {
-  // Если запрос пустой, возвращаем исходный массив без изменений
   if (!query || query.trim() === '') {
     return transactions;
   }
 
   const lowerQuery = query.toLowerCase().trim();
 
-  return transactions.filter(t => {
-    // Собираем все поля, по которым будем искать, в один массив.
-    // Используем || '' для защиты от null/undefined.
+  return transactions.filter((t) => {
     const fieldsToSearch = [
       t.category || '',
-      t.subCategory || '', 
+      t.subCategory || t.subcategory || '', // ← Исправили: проверяем оба варианта
       t.item || '',
       t.store || '',
       t.note || '',
-      String(t.amount || '') // Сумма тоже ищется как строка (например, "1500")
+      String(t.amount || ''),
     ];
 
-    // Проверяем, содержит ли хотя бы одно поле искомый текст
-    return fieldsToSearch.some(field => 
-      String(field).toLowerCase().includes(lowerQuery)
+    return fieldsToSearch.some((field) =>
+      String(field).toLowerCase().includes(lowerQuery),
     );
   });
 }
