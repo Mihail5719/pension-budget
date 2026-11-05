@@ -3574,3 +3574,67 @@ body.dark-theme .search-clear-btn:hover {
 body.dark-theme .search-info {
   color: var(--text-secondary-dark, #888);
 }
+
+/* ============================================
+   ФИЛЬТР ПО ДАТАМ (v2.2)
+   ============================================ */
+
+.date-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 0 16px;
+}
+
+.date-filter-btn {
+  padding: 8px 16px;
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 20px;
+  background: var(--bg-card, #fff);
+  color: var(--text-primary, #333);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.date-filter-btn:hover {
+  background: var(--bg-hover, #f0f0f0);
+  border-color: var(--primary-color, #3498db);
+}
+
+.date-filter-btn.active {
+  background: var(--primary-color, #3498db);
+  color: #fff;
+  border-color: var(--primary-color, #3498db);
+}
+
+.date-filter-btn.active:hover {
+  background: #2980b9;
+  border-color: #2980b9;
+}
+
+/* Тёмная тема для фильтра по датам */
+body.dark-theme .date-filter-btn {
+  background: var(--bg-card-dark, #2d2d2d);
+  border-color: var(--border-color-dark, #444);
+  color: var(--text-primary-dark, #e0e0e0);
+}
+
+body.dark-theme .date-filter-btn:hover {
+  background: var(--bg-hover-dark, #3d3d3d);
+  border-color: var(--primary-color, #3498db);
+}
+
+body.dark-theme .date-filter-btn.active {
+  background: var(--primary-color, #3498db);
+  color: #fff;
+  border-color: var(--primary-color, #3498db);
+}
+
+body.dark-theme .date-filter-btn.active:hover {
+  background: #2980b9;
+  border-color: #2980b9;
+}

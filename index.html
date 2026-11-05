@@ -298,6 +298,15 @@
                         <span id="search-count">Найдено: 0 из 0 записей</span>
                     </div>
                 </div>
+
+                <!-- Фильтр по датам (v2.2) -->
+                <div class="date-filter" id="date-filter">
+                    <button class="date-filter-btn active" data-period="all">Все</button>
+                    <button class="date-filter-btn" data-period="today">Сегодня</button>
+                    <button class="date-filter-btn" data-period="week">Неделя</button>
+                    <button class="date-filter-btn" data-period="month">Месяц</button>
+                    <button class="date-filter-btn" data-period="custom" id="date-filter-custom">📅</button>
+                </div>
             
                 <div class="transaction-list" id="transaction-list">
                     <!-- Транзакции будут добавляться сюда из JS -->
