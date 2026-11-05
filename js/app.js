@@ -14,6 +14,7 @@ import {
   getCurrentPeriod,
   formatMoney,
   filterTransactions,
+  getDateRange,
 } from './utils.js';
 import { calculateDailyLimit } from './budget.js';
 import {
@@ -2071,51 +2072,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. Инициализируем элементы фильтра по датам
   const dateFilterBtns = document.querySelectorAll('.date-filter-btn');
-  let currentDatePeriod = 'all'; // Текущий выбранный период
+  let currentDatePeriod = 'all';
+  let currentCustomRange = null;
+
+  // 4. Инициализируем элементы панели календаря
+  const customDatePanel = document.getElementById('custom-date-panel');
+  const dateFromInput = document.getElementById('date-from');
+  const dateToInput = document.getElementById('date-to');
+  const dateApplyBtn = document.getElementById('date-apply');
+  const dateResetBtn = document.getElementById('date-reset');
 
   if (searchInput && searchClearBtn) {
+    // Функция получения текущего диапазона дат
+    const getCurrentDateRange = () => {
+      if (currentDatePeriod === 'custom' && currentCustomRange) {
+        return currentCustomRange;
+      }
+      return getDateRange(currentDatePeriod);
+    };
+
+    // Функция применения обоих фильтров (поиск + дата) и перерисовки
     // Функция применения обоих фильтров (поиск + дата) и перерисовки
     const applyFilters = () => {
       const query = searchInput.value;
-
-      // ВАЖНО: замените appData.transactions на имя вашей переменной с массивом транзакций, если оно отличается!
       const allTransactions = appData.transactions || [];
+      const dateRange = getCurrentDateRange();
 
-      // Фильтруем транзакции по обоим критериям
+      // Фильтруем транзакции
       const filteredTransactions = filterTransactions(
         query,
         allTransactions,
-        currentDatePeriod,
+        dateRange,
       );
 
-      // Обновляем счётчик "Найдено: X из Y"
+      console.log('Отфильтровано:', filteredTransactions.length);
+
+      // Обновляем счётчик
       if (searchCount) {
         searchCount.textContent = `Найдено: ${filteredTransactions.length} из ${allTransactions.length} записей`;
       }
 
       // Перерисовываем список
-      // ВАЖНО: замените renderTransactionList на имя вашей функции отрисовки в ui.js, если она называется иначе (например, renderHistory)
       if (typeof renderTransactionList === 'function') {
+        console.log('Вызываем renderTransactionList...');
         renderTransactionList(filteredTransactions);
       } else {
-        console.warn(
-          'Функция renderTransactionList не найдена. Проверьте имя функции отрисовки в ui.js',
-        );
+        console.warn('Функция renderTransactionList не найдена.');
       }
     };
 
-    // Обработчик ввода с debounce (задержкой 300мс)
+    // Обработчик ввода с debounce
     let searchTimeout;
     searchInput.addEventListener('input', () => {
-      // Показываем/скрываем кнопку очистки
       searchClearBtn.style.display =
         searchInput.value.length > 0 ? 'block' : 'none';
-
-      // Очищаем предыдущий таймер и ставим новый
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
         applyFilters();
-      }, 300); // Ждём 300 мс после последнего нажатия клавиши
+      }, 300);
     });
 
     // Очистить поле при клике на ✕
@@ -2123,37 +2137,112 @@ document.addEventListener('DOMContentLoaded', () => {
       searchInput.value = '';
       searchClearBtn.style.display = 'none';
       searchInput.focus();
-
-      // Сбрасываем фильтр и перерисовываем полный список
       applyFilters();
     });
 
-    // 4. Обработчики кликов по кнопкам фильтра по датам
+    // Обработчики кликов по кнопкам фильтра по датам
     dateFilterBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
-        // Убираем класс active у всех кнопок
         dateFilterBtns.forEach((b) => b.classList.remove('active'));
-
-        // Добавляем класс active нажатой кнопке
         btn.classList.add('active');
 
-        // Получаем период из data-атрибута
         const period = btn.dataset.period;
         currentDatePeriod = period;
 
-        // Если выбран "custom" (календарь) — пока показываем alert
         if (period === 'custom') {
-          alert('Выбор произвольного диапазона дат будет реализован позже!');
-          // Возвращаем "Все" как активный период
-          currentDatePeriod = 'all';
-          document.querySelector('[data-period="all"]').classList.add('active');
-          btn.classList.remove('active');
+          if (customDatePanel.style.display === 'none') {
+            customDatePanel.style.display = 'block';
+
+            // Если есть сохранённый диапазон — показываем его, иначе — даты по умолчанию
+            if (currentCustomRange) {
+              dateFromInput.value = currentCustomRange.start
+                .toISOString()
+                .split('T')[0];
+              dateToInput.value = currentCustomRange.end
+                .toISOString()
+                .split('T')[0];
+            } else {
+              const today = new Date();
+              const lastMonth = new Date(
+                today.getFullYear(),
+                today.getMonth() - 1,
+                today.getDate(),
+              );
+              dateFromInput.value = lastMonth.toISOString().split('T')[0];
+              dateToInput.value = today.toISOString().split('T')[0];
+            }
+          } else {
+            customDatePanel.style.display = 'none';
+          }
+        } else {
+          customDatePanel.style.display = 'none';
+          currentCustomRange = null;
         }
 
-        // Применяем фильтры
         applyFilters();
       });
     });
+
+    // Обработчик кнопки "Применить"
+    if (dateApplyBtn) {
+      dateApplyBtn.addEventListener('click', () => {
+        const fromDate = dateFromInput.value;
+        const toDate = dateToInput.value;
+
+        if (!fromDate || !toDate) {
+          alert('Пожалуйста, выберите обе даты (С и По)!');
+          return;
+        }
+
+        if (new Date(fromDate) > new Date(toDate)) {
+          alert('Дата начала не может быть позже даты конца!');
+          return;
+        }
+
+        currentCustomRange = {
+          start: new Date(fromDate),
+          end: new Date(toDate + 'T23:59:59.999'),
+        };
+
+        applyFilters();
+        customDatePanel.style.display = 'none';
+      });
+    }
+
+    // Обработчик кнопки "Сбросить"
+    if (dateResetBtn) {
+      dateResetBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Предотвращаем возможный submit формы
+
+        // Очищаем поля ввода
+        dateFromInput.value = '';
+        dateToInput.value = '';
+
+        // Сбрасываем кастомный диапазон
+        currentCustomRange = null;
+
+        // Переключаемся на период "Все"
+        currentDatePeriod = 'all';
+        dateFilterBtns.forEach((b) => b.classList.remove('active'));
+        const allBtn = document.querySelector('[data-period="all"]');
+        if (allBtn) {
+          allBtn.classList.add('active');
+        }
+
+        // Скрываем панель
+        customDatePanel.style.display = 'none';
+
+        // Применяем фильтры (должен показать все записи)
+        applyFilters();
+
+        console.log(
+          'Сброс выполнен: период =',
+          currentDatePeriod,
+          'range =',
+          currentCustomRange,
+        );
+      });
+    }
   }
 });
 

@@ -104,38 +104,32 @@ export function getDaysLeft(pensionDay) {
 
 /**
  * Возвращает диапазон дат для заданного периода.
- * @param {string} period - 'all' | 'today' | 'week' | 'month' | 'custom'
+ * @param {string} period - 'all' | 'today' | 'week' | 'month'
  * @returns {{start: Date, end: Date}} диапазон дат
  */
 export function getDateRange(period) {
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Начало сегодняшнего дня (00:00)
-  const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1); // Конец сегодняшнего дня (23:59:59.999)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1);
 
   switch (period) {
     case 'today':
       return { start: today, end: endOfDay };
 
     case 'week':
-      // Последние 7 дней (включая сегодня)
       const weekStart = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
       return { start: weekStart, end: endOfDay };
 
     case 'month':
-      // С 1-го числа текущего месяца по сегодня
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       return { start: monthStart, end: endOfDay };
 
-    case 'custom':
-      // Пока возвращаем "все" — календарь реализуем позже
-      return { start: new Date(0), end: new Date(8640000000000000) };
-
     case 'all':
     default:
-      // Без ограничений
       return { start: new Date(0), end: new Date(8640000000000000) };
   }
 }
+
 
 /**
  * Проверяет, попадает ли дата транзакции в заданный диапазон.
@@ -156,16 +150,20 @@ export function isDateInRange(transactionDate, start, end) {
  * @param {string} [datePeriod='all'] - период фильтрации
  * @returns {Array} отфильтрованный массив транзакций
  */
-export function filterTransactions(query, transactions, datePeriod = 'all') {
-  // 1. Получаем диапазон дат
-  const { start, end } = getDateRange(datePeriod);
-
-  // 2. Фильтруем по дате
+/**
+ * Фильтрует массив транзакций по текстовому запросу и диапазону дат.
+ * @param {string} query - поисковый запрос
+ * @param {Array} transactions - массив объектов транзакций
+ * @param {{start: Date, end: Date}} dateRange - диапазон дат
+ * @returns {Array} отфильтрованный массив транзакций
+ */
+export function filterTransactions(query, transactions, dateRange) {
+  // 1. Фильтруем по дате
   let filtered = transactions.filter(t => 
-    isDateInRange(t.date, start, end)
+    isDateInRange(t.date, dateRange.start, dateRange.end)
   );
 
-  // 3. Если есть текстовый запрос — фильтруем дополнительно
+  // 2. Если есть текстовый запрос — фильтруем дополнительно
   if (query && query.trim() !== '') {
     const lowerQuery = query.toLowerCase().trim();
 

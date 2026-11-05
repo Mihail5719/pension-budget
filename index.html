@@ -307,6 +307,24 @@
                     <button class="date-filter-btn" data-period="month">Месяц</button>
                     <button class="date-filter-btn" data-period="custom" id="date-filter-custom">📅</button>
                 </div>
+
+                <!-- Панель произвольного диапазона дат (v2.2) -->
+                <div class="custom-date-panel" id="custom-date-panel" style="display: none;">
+                    <div class="custom-date-inputs">
+                        <div class="custom-date-field">
+                            <label for="date-from">С:</label>
+                            <input type="date" id="date-from" class="date-input">
+                        </div>
+                        <div class="custom-date-field">
+                            <label for="date-to">По:</label>
+                            <input type="date" id="date-to" class="date-input">
+                        </div>
+                    </div>
+                    <div class="custom-date-actions">
+                        <button id="date-apply" class="date-apply-btn">Применить</button>
+                        <button id="date-reset" class="date-reset-btn" title="Сбросить фильтр и показать все записи">Сбросить</button>
+                    </div>
+                </div>
             
                 <div class="transaction-list" id="transaction-list">
                     <!-- Транзакции будут добавляться сюда из JS -->
