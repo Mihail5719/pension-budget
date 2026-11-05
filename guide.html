@@ -1,117 +1,280 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Инструкция - Пенсионный Бюджет</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Руководство пользователя — Мой бюджет (v2.1)</title>
     <style>
-    body { 
-        font-family: system-ui, -apple-system, sans-serif; 
-        line-height: 1.6; 
-        padding: 20px; 
-        max-width: 800px; 
-        margin: 0 auto; 
-        background: #f9f9f9; 
-        color: #333;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-    .guide-container { 
-        background: #fff; 
-        padding: 24px; 
-        border-radius: 12px; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        max-width: 100%;
-    }
-    h1 { 
-        color: #2c3e50; 
-        border-bottom: 2px solid #3498db; 
-        padding-bottom: 10px;
-        font-size: clamp(24px, 5vw, 32px);
-        word-break: break-word;
-        overflow-wrap: break-word;
-        hyphens: auto;
-    }
-    h2 { 
-        color: #34495e; 
-        margin-top: 24px;
-        font-size: clamp(20px, 4vw, 24px);
-        word-break: break-word;
-    }
-    ul { padding-left: 20px; }
-    li { margin-bottom: 8px; }
-    .back-btn { 
-        display: inline-block; 
-        margin-top: 30px; 
-        padding: 12px 24px; 
-        background: #3498db; 
-        color: white; 
-        text-decoration: none; 
-        border-radius: 8px; 
-        font-weight: bold; 
-        transition: background 0.2s;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-    .back-btn:hover { background: #2980b9; }
-    .tip { 
-        background: #e8f4f8; 
-        border-left: 4px solid #3498db; 
-        padding: 12px; 
-        margin: 16px 0; 
-        border-radius: 4px;
-        word-break: break-word;
-    }
-    
-    /* Адаптация для смартфонов */
-    @media (max-width: 480px) {
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --color-primary: #3498db;
+            --color-success: #2ecc71;
+            --color-warning: #f39c12;
+            --color-danger: #e74c3c;
+            --border-radius: 12px;
+        }
+
         body {
-            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
         }
-        .guide-container {
-            padding: 16px;
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
+
         h1 {
-            font-size: 24px;
+            text-align: center;
+            color: var(--color-primary);
+            margin-bottom: 10px;
         }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--color-success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
         h2 {
-            font-size: 18px;
+            border-bottom: 2px solid var(--bg-primary);
+            padding-bottom: 8px;
+            margin-top: 30px;
+            color: var(--text-primary);
         }
-    }
-</style>
+
+        h3 {
+            color: var(--color-primary);
+            margin-top: 20px;
+        }
+
+        p,
+        li {
+            color: var(--text-secondary);
+        }
+
+        ul,
+        ol {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .tip {
+            background-color: #e8f4f8;
+            border-left: 4px solid var(--color-primary);
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .warning {
+            background-color: #fdf2e9;
+            border-left: 4px solid var(--color-warning);
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .screenshot {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            border: 2px solid var(--bg-primary);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .screenshot-caption {
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+
+        .screenshot-placeholder {
+            background: #f1f3f5;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #7f8c8d;
+            margin: 20px 0;
+        }
+
+        .screenshot-placeholder strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            padding: 12px;
+            background: var(--color-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+        }
+
+        .back-link:hover {
+            opacity: 0.9;
+        }
+    </style>
 </head>
+
 <body>
-    <div class="guide-container">
-        <h1>📖 Инструкция по использованию</h1>
-        
-        <h2>1. Начальная настройка</h2>
+
+    <div class="container">
+        <h1>📘 Руководство пользователя</h1>
+        <div class="version-badge">Актуально для версии 2.1</div>
+
+        <h2>1. Начало работы</h2>
+        <p>При первом запуске приложение предложит вам пройти краткую настройку. Если вы пропустили этот шаг, вы всегда
+            можете настроить всё вручную в разделе <strong>«Настройки»</strong>.</p>
+        <div class="tip">💡 <strong>Совет:</strong> Для корректного расчёта дневного лимита важно указать реалистичную
+            сумму неприкосновенного запаса (НЗ). Эти деньги приложение будет автоматически резервировать и не включит их
+            в доступный для трат остаток.</div>
+
+<div class="warning">
+    ⚠️ <strong>Умный баннер (новая функция v2.1):</strong> Если вы начали учёт в середине периода (после дня получения
+    дохода), приложение автоматически покажет баннер с пошаговой инструкцией. Следуйте ей, чтобы корректно настроить
+    начальные остатки по счетам.
+</div>
+
+        <h2>2. Настройка приложения</h2>
+        <p>Перейдите на вкладку <strong>«Настройки»</strong> (шестерёнка внизу экрана):</p>
+
+        <img src="docs/screenshots/screen-settings.png" class="screenshot" alt="Экран настроек">
+        <p class="screenshot-caption">Рис. 1. Экран настроек с управлением счетами</p>
+
         <ul>
-            <li>Перейдите во вкладку <strong>«Настройки»</strong>.</li>
-            <li>Укажите размер вашей ежемесячной пенсии.</li>
-            <li>Укажите день месяца, когда приходит пенсия.</li>
-            <li>Укажите сумму неприкосновенного запаса (резерва).</li>
-            <li>Нажмите <strong>«Сохранить настройки»</strong>.</li>
+            <li><strong>Источник дохода:</strong> Выберите «Пенсия», «Зарплата», «Стипендия» или «Свой вариант». Для
+                регулярных доходов появится поле «День получения».</li>
+            <li><strong>Сумма поступления и день:</strong> Укажите размер дохода и число месяца, когда он приходит.</li>
+            <li><strong>Неприкосновенный запас (НЗ):</strong> Сумма, которая всегда должна оставаться на счету на
+                экстренный случай.</li>
+            <li><strong>Управление счетами (Многоконточность):</strong> Нажмите «+ Добавить счёт». Приложение
+                автоматически распознает популярные банки (Сбербанк 🏦, Тинькофф 🏦, ВТБ 🏦) и подставит им фирменные
+                цвета.</li>
+
+                <li><strong>Накопительные счета:</strong> Эти счета исключены из формы обычного расхода — их можно пополнять только
+                    через переводы. Это защищает ваши сбережения от случайных трат.</li>
+
+            <li><strong>Фиксированные платежи:</strong> Добавьте регулярные траты (ЖКХ, интернет, кредиты) с указанием
+                суммы и дня месяца.</li>
         </ul>
 
-        <h2>2. Обязательные платежи</h2>
+        <h2>3. Главный экран и начало периода</h2>
+        <p>На главном экране вы видите ваш <strong>дневной лимит</strong> и цветовой индикатор:</p>
+
+        <img src="docs/screenshots/screen-today.png" class="screenshot" alt="Главный экран">
+        <p class="screenshot-caption">Рис. 2. Главный экран с дневным лимитом и индикатором поступления</p>
+
         <ul>
-            <li>Там же, в настройках, нажмите <strong>«Добавить платёж»</strong>.</li>
-            <li>Введите название (например, "ЖКХ" или "Лекарства") и сумму.</li>
-            <li>Эти суммы будут автоматически вычитаться из вашего свободного бюджета.</li>
+            <li>🟢 <strong>Зелёный:</strong> Вы тратите в пределах безопасного лимита.</li>
+            <li>🟡 <strong>Жёлтый:</strong> Внимание, темп расходов выше рекомендуемого.</li>
+            <li>🔴 <strong>Красный:</strong> Осторожно, свободный бюджет на исходе.</li>
         </ul>
 
-        <h2>3. Ежедневные траты</h2>
-        <ul>
-            <li>На главном экране <strong>«Сегодня»</strong> вы видите ваш безопасный лимит трат на день.</li>
-            <li>Чтобы записать расход, нажмите <strong>«Добавить расход»</strong>, выберите категорию и введите сумму.</li>
-        </ul>
+        <div class="tip">💡 <strong>Важно:</strong> Когда вы фактически получите деньги, нажмите кнопку <strong>«✅
+                Поступление: [Доход]»</strong>. Это запустит текущий период и перенесёт нераспределённый остаток с
+            прошлого месяца.</div>
+
+        <h2>4. Учёт операций</h2>
+        <h3>📝 Запись расхода</h3>
+        <p>Нажмите <strong>«Записать расход»</strong>. Выберите категорию, а затем подкатегорию.</p>
 
         <div class="tip">
-            💡 <strong>Совет:</strong> Регулярно используйте кнопки «Экспорт» и «Импорт» внизу страницы настроек, чтобы сохранять резервную копию ваших данных в файл.
+            🛡️ <strong>Защита от перерасхода (v2.1):</strong> Приложение автоматически проверяет баланс выбранного счёта перед
+            сохранением расхода. Если средств недостаточно, операция будет заблокирована. Это работает для всех счетов:
+            Сбербанк, ВТБ, Тинькофф и Наличные.
         </div>
 
-        <a href="index.html" class="back-btn">← Вернуться в приложение</a>
+        <img src="docs/screenshots/screen-expense-modal.png" class="screenshot" alt="Модалка расхода">
+        <p class="screenshot-caption">Рис. 3. Форма добавления расхода с цветным индикатором подкатегории</p>
+
+        <div class="tip">🎨 <strong>Цветные индикаторы (новая функция v2.1):</strong> При выборе подкатегории (например,
+            «Мясо» или «Овощи») справа от списка появится маленький цветной кружок. Эти же кружки отображаются в истории
+            операций, позволяя мгновенно считывать структуру трат.</div>
+
+        <p>Вы также можете указать <em>Предмет покупки</em> (например, "Молоко") и <em>Место</em> (например,
+            "Пятёрочка"), а также выбрать конкретный счёт, с которого была произведена оплата.</p>
+
+        <h3>💰 Запись дохода и Переводы</h3>
+        <ul>
+            <li><strong>Доход:</strong> Используйте для любых дополнительных поступлений (подработка, возврат долга,
+                подарки).</li>
+            <li><strong>Перевод:</strong> Используйте для перемещения денег между вашими счетами. Переводы <strong>не
+                    считаются</strong> ни доходом, ни расходом и не влияют на общий дневной лимит.</li>
+        </ul>
+
+        <h2>5. История операций</h2>
+        <p>Во вкладке <strong>«История»</strong> все операции сгруппированы по дням. Вы можете редактировать или удалять
+            любую запись.</p>
+
+        <img src="docs/screenshots/screen-history.png" class="screenshot" alt="История операций">
+        <p class="screenshot-caption">Рис. 4. История операций с группировкой по дням</p>
+
+        <h2>6. Статистика и сверка</h2>
+        <h3>📊 Статистика</h3>
+        <p>Во вкладке <strong>«Статистика»</strong> вы увидите круговую диаграмму расходов по категориям и детализацию
+            по подкатегориям.</p>
+
+        <img src="docs/screenshots/screen-stats.png" class="screenshot" alt="Статистика">
+        <p class="screenshot-caption">Рис. 5. Круговая диаграмма расходов</p>
+
+        <h3>🔄 Сверка с банком</h3>
+        <p>Функция сверки помогает сопоставить ваши записи с выпиской из банка. Алгоритм автоматически находит
+            совпадения и помечает расхождения.</p>
+
+        <img src="docs/screenshots/screen-reconcile.png" class="screenshot" alt="Сверка с банком">
+        <p class="screenshot-caption">Рис. 6. Экран сверки операций с банковской выпиской</p>
+
+        <h2>7. Резервное копирование</h2>
+        <p>Все данные хранятся локально в вашем браузере. Чтобы не потерять их:</p>
+        <ul>
+            <li>Регулярно нажимайте <strong>«Экспорт данных»</strong> в настройках.</li>
+            <li>Для восстановления нажмите <strong>«Импорт данных»</strong> и выберите сохранённый файл.</li>
+        </ul>
+
+        <h2>8. Дополнительные возможности</h2>
+        <ul>
+            <li>🌙 <strong>Тёмная тема:</strong> Переключается кнопкой в правом верхнем углу главного экрана.</li>
+            <li>📱 <strong>Установка на телефон:</strong> В браузере Chrome/Safari нажмите «Поделиться» → «На экран
+                "Домой"». Приложение будет работать как нативное, даже без интернета (PWA).</li>
+        </ul>
+
+        <a href="index.html" class="back-link">← Вернуться в приложение</a>
     </div>
+
 </body>
+
 </html>

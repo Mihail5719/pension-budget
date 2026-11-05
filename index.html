@@ -3,14 +3,22 @@
 
 <head>
     <meta charset="UTF-8">
+    <link rel="manifest" href="./manifest.json?v=2.1">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Бюджет">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мой бюджет</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E💰%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/style.css">
     <!-- Chart.js для графиков -->
     <script src="js/chart.min.js"></script>
 </head>
 
 <body>
+
     <div class="app">
         <header class="header">
             <h1 class="header__title">Мой бюджет</h1>
@@ -21,6 +29,66 @@
                 <span class="theme-icon">🌙</span>
             </button>
         </header>
+
+        <!-- Умный баннер для входа в середине периода -->
+        <div id="mid-period-banner" class="mid-period-banner" style="display: none;">
+            <div class="mid-period-banner__icon">💡</div>
+            <div class="mid-period-banner__content">
+                <div class="mid-period-banner__text">
+                    <strong>Вы начали учёт в середине периода</strong><br>
+                    Укажите текущие остатки по обычным счетам в Настройках, чтобы дневной лимит был точным.
+                </div>
+                <button id="btn-how-to-setup" class="mid-period-banner__btn">Как настроить?</button>
+            </div>
+            <button id="btn-dismiss-mid-period" class="mid-period-banner__close" title="Понятно">✕</button>
+        </div>
+        
+        <!-- Модальное окно с инструкцией -->
+        <div class="modal" id="instruction-modal">
+            <div class="modal__overlay"></div>
+            <div class="modal__content">
+                <h2 class="modal__title">📋 Настройка при входе в середине периода</h2>
+        
+                <div class="instruction-text">
+                    <p>Вы установили приложение после дня получения регулярного ежемесячного дохода. Чтобы дневной лимит был
+                        точным, сделайте 4 простых шага:</p>
+        
+                    <div class="instruction-step">
+                        <span class="step-number">1️⃣</span>
+                        <span>Укажите <strong>день поступления</strong> и <strong>сумму дохода</strong> <em>(скорее всего, вы
+                                уже это сделали ✅)</em></span>
+                    </div>
+        
+                    <div class="instruction-step">
+                        <span class="step-number">2️⃣</span>
+                        <span>В поле <strong>Источник дохода</strong> выберите вид вашего регулярного дохода (Пенсия, Зарплата,
+                            Стипендия и т.д.)</span>
+                    </div>
+        
+                    <div class="instruction-step">
+                        <span class="step-number">3️⃣</span>
+                        <span>Добавьте свои счета в разделе <strong>Настройки → Мои счета</strong> (Сбербанк, Наличные и
+                            т.д.)</span>
+                    </div>
+        
+                    <div class="instruction-step">
+                        <span class="step-number">4️⃣</span>
+                        <span>Введите <strong>текущие остатки</strong> по каждому счёту (сколько денег сейчас на каждом
+                            счёте)</span>
+                    </div>
+        
+                    <p class="instruction-success">✅ Готово! Приложение само рассчитает дневной лимит на оставшиеся дни до
+                        следующего поступления.</p>
+        
+                    <p class="instruction-tip">💡 <strong>Совет:</strong> Не нужно вводить прошлые траты. Приложение работает с
+                        текущими остатками.</p>
+                </div>
+        
+                <div class="modal__buttons">
+                    <button class="btn btn--primary" id="btn-close-instruction">Понятно, спасибо!</button>
+                </div>
+            </div>
+        </div>
 
         <main class="main">
             <!-- Приветственный экран -->
@@ -54,27 +122,118 @@
                     <button class="btn btn--primary btn--large welcome-btn" id="btn-start-setup">
                         Начать настройку
                     </button>
+
+                    <button id="btn-about"
+                        style="background: transparent; border: 1px solid #ccc; color: #666; padding: 10px 20px; border-radius: 8px; margin-top: 15px; cursor: pointer;">
+                        ℹ️ О приложении
+                    </button>
+
                 </div>
             </section>
+
+            <!-- Экран "О приложении" -->
+            <section id="screen-about" class="screen">
+                <div class="container">
+                    <div class="header">
+                        <button class="btn-back" onclick="window.location.hash = '#screen-welcome'">← Назад</button>
+                        <h2>О приложении</h2>
+                    </div>
+
+                    <div class="about-content">
+                        <p class="about-intro">Добро пожаловать в ваш персональный финансовый помощник! Это приложение
+                            создано,
+                            чтобы вы всегда точно знали, сколько денег у вас есть, куда они уходят и сколько можно
+                            тратить каждый
+                            день без риска для бюджета.</p>
+
+                        <h3>👵 Для кого это приложение?</h3>
+                        <p>Для людей с фиксированным и регулярным доходом. В настройках вы можете выбрать основной
+                            источник
+                            поступлений (например, пенсию или зарплату) и указать дату получения. Приложение
+                            автоматически подстроит
+                            все расчеты и лимиты под ваш личный график.</p>
+
+                        <h3> Что умеет приложение:</h3>
+                        <ul>
+                            <li><strong>💰 Точный расчет доступных средств («Осталось»)</strong><br>Приложение
+                                автоматически считает
+                                ваш реальный доступный бюджет до следующего поступления. Оно учитывает начальный
+                                остаток, все
+                                доходы, расходы и ваш неприкосновенный запас (НЗ).</li>
+                            <li><strong>🏦 Управление несколькими счетами</strong><br>Ведите учет по всем вашим картам и счетам (Сбербанк, ВТБ,
+                                Тинькофф и др.) в одном месте. Приложение автоматически рассчитывает актуальный баланс по каждому из них.
+                                Поддерживается также учёт наличных денег.</li>
+                            <li><strong> Надежная «Копилка» (Накопительные счета)</strong><br>Вы можете пометить любой
+                                счет как
+                                «Накопительный». Деньги на нем продолжают учитываться в вашем общем богатстве, но
+                                <strong>не
+                                    участвуют</strong> в расчете ежедневного лимита. Это защищает ваши сбережения от
+                                случайных трат.
+                            </li>
+                            <li><strong>🔄 Умный учет переводов</strong><br>Переводы между вашими основными счетами не
+                                уменьшают ваш
+                                бюджет, так как деньги просто меняют «карман». А вот перевод на накопительный счет
+                                честно уменьшит
+                                доступный остаток, «заморозив» эти средства.</li>
+                            <li><strong> Прозрачная финансовая сводка</strong><br>В разделе «Настройки» вы всегда видите
+                                контрольную
+                                сумму: Общий баланс, Активные счета и Накопительные счета. Это гарантирует, что цифры в
+                                приложении
+                                всегда сходятся с реальностью до копейки.</li>
+                            <li><strong> Учет фиксированных платежей и дневной лимит</strong><br>Приложение знает о ваших
+                                фиксированных
+                                расходах (кредиты, коммунальные услуги) и заранее вычитает их из бюджета. На основе
+                                оставшейся суммы
+                                оно рассчитывает безопасный <strong>дневной лимит</strong>, чтобы вы могли спокойно
+                                планировать свои
+                                покупки.</li>
+                            <li><strong>🛡️ Защита от перерасхода (v2.1)</strong><br>Приложение автоматически проверяет баланс выбранного счёта
+                                перед записью расхода. Если средств недостаточно, операция будет заблокирована. Это гарантирует, что вы не уйдёте в
+                                минус ни по одному из своих счетов.</li>
+                            <li><strong>💡 Умный старт в середине периода (v2.1)</strong><br>Если вы начали вести учёт не с первого дня месяца,
+                                приложение это распознает и покажет баннер с простой инструкцией по вводу текущих остатков, чтобы сразу рассчитать
+                                точный дневной лимит.</li>
+                        </ul>
+
+                        <h3> Ваши гарантии:</h3>
+                        <ul>
+                            <li><strong>🔐 Абсолютная конфиденциальность.</strong> Ваши финансовые данные принадлежат
+                                только вам.
+                                Приложение не требует регистрации, не отправляет информацию в облако и не передает её
+                                третьим лицам.
+                                Всё хранится локально на вашем устройстве.</li>
+                            <li><strong> Работает без интернета.</strong> Приложение можно установить на главный экран
+                                смартфона как
+                                обычное (нативное) приложение. После установки оно работает мгновенно и не требует
+                                подключения к
+                                сети — ваши финансы под контролем даже в самолете, в метро или за городом.</li>
+                        </ul>
+
+                        <p class="about-footer"><strong>Ваш финансовый контроль начинается здесь. Планируйте уверенно,
+                                тратьте
+                                осознанно, накапливайте стабильно!</strong></p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Экран 1: Сегодня -->
             <section class="screen screen--today" id="screen-today">
                 <h2 class="screen__title screen__title--hidden">Главный экран</h2>
-
                 <div class="today-card">
-                    <div class="today-card__label">Осталось до пенсии</div>
+                    <span id="remaining-label">Осталось до следующего поступления</span>
                     <div class="today-card__amount" id="remaining-amount">0 ₽</div>
                     <div class="today-card__indicator" id="indicator"></div>
                     <div class="today-card__label today-card__label--small">Безопасный дневной лимит</div>
                     <div class="today-card__amount today-card__amount--secondary" id="daily-limit">0 ₽</div>
-                    <div class="today-card__hint">чтобы хватило до пенсии</div>
+                    <span id="daily-limit-hint">чтобы хватило до следующего поступления</span>
                     <!-- Кнопка отметки пенсии (показывается, если пенсия еще не отмечена) -->
                     <button id="btn-mark-pension" class="btn-mark-pension" style="display: none;">
-                        🟢 Отметить поступление пенсии
+                        🟢 Отметить поступление дохода
                     </button>
                     <!-- Текст статуса (показывается, когда пенсия уже отмечена) -->
                     <div id="pension-status-text" class="pension-status-text" style="display: none;">
                         <span id="pension-date-display"></span>
-                        <button id="btn-edit-pension-date" class="btn-edit-pension">✏️ Изменить</button>
+                        <button id="btn-edit-pension-date" class="btn-edit-pension">✎ Изменить</button>
                     </div>
 
                 </div>
@@ -91,34 +250,41 @@
                 <!-- Блок "Сегодня к оплате" (внутри секции, сразу после карточки) -->
                 <div id="today-payments-container" class="today-payments"></div>
 
-                <button class="btn btn--primary btn--large" id="btn-add-expense">
-                    Записать расход
-                </button>
-
-                <button class="btn btn--success btn--large" id="btn-add-income">
-                    Добавить доход
-                </button>
-
-                <!-- Кнопка "Использовать НЗ" -->
-                <button id="btn-use-reserve" class="btn btn--warning" style="display: none;">
-                    🔓 Использовать НЗ
-                </button>
+                <div class="main-actions">
+                    <button class="btn btn--primary btn--large" id="btn-add-expense">
+                        Записать расход
+                    </button>
+                
+                    <button class="btn btn--success btn--large" id="btn-add-income">
+                        Добавить доход
+                    </button>
+                
+                    <!-- Кнопка перевода между счетами (НОВОЕ, v2.5) -->
+                    <button class="btn btn--transfer btn--large" id="btn-add-transfer">
+                        ⇄ Перевод между счетами
+                    </button>
+                
+                    <!-- Кнопка "Использовать НЗ" -->
+                    <button id="btn-use-reserve" class="btn btn--warning" style="display: none;">
+                        🔓 Использовать НЗ
+                    </button>
+                </div>
 
                 <div class="quick-stats">
                     <div class="stat">
-                        <span class="stat__label">Дней осталось</span>
+                        <span class="stat__label">Дней до поступления</span>
                         <span class="stat__value" id="days-left">0</span>
                     </div>
                     <div class="stat">
-                        <span class="stat__label">Потрачено</span>
-                        <span class="stat__value" id="spent-total">0 ₽</span>
+                        <span class="stat__label">Израсходовано</span>
+                        <span class="stat__value" id="spent-total">0</span>
                     </div>
                 </div>
             </section>
 
             <!-- Экран 2: История -->
             <section class="screen screen--history" id="screen-history">
-                <h2 class="screen__title">История расходов</h2>
+                <h2 class="screen__title">История операций</h2>
                 <div class="transaction-list" id="transaction-list">
                     <!-- Транзакции будут добавляться сюда из JS -->
                 </div>
@@ -128,18 +294,63 @@
             <section class="screen screen--settings" id="screen-settings">
                 <h2 class="screen__title">Настройки</h2>
 
+                <!-- === БЛОК УПРАВЛЕНИЯ СЧЕТАМИ (v2.1) === -->
+                <div class="accounts-section">
+                    <h3 class="settings-subtitle">💳 Мои счета</h3>
 
+                    <div class="accounts-list" id="accounts-list">
+                        <!-- Счета будут добавляться сюда через JavaScript -->
+                    </div>
+
+                    <button class="btn btn--secondary" id="btn-add-account" style="margin-top: 16px;">
+                        ➕ Добавить счёт
+                    </button>
+                </div>
+                <!-- === КОНЕЦ БЛОКА === -->
 
                 <div class="settings-group">
                     <label class="settings-label">
                         <span class="settings-label__text">💰 Начальный остаток</span>
-                        <input type="number" class="settings-input" id="input-initial-balance" placeholder="0.00"
-                            inputmode="decimal" min="0" step="0.01">
+                        <input type="text" class="settings-input money-field" id="input-initial-balance"
+                            data-field="initialBalance" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
+
+                    <!-- === НОВОЕ ПОЛЕ: Источник дохода (v2.1, Идея 1) === -->
                     <label class="settings-label">
-                        <span class="settings-label__text">Размер пенсии</span>
-                        <input type="number" class="settings-input" id="input-pension" placeholder="0.00"
-                            inputmode="decimal" min="0" step="0.01">
+                        <span class="settings-label__text">Источник дохода</span>
+                        <select class="settings-input" id="select-income-type" data-field="incomeName">
+                            <optgroup label="Регулярные поступления (жизненный цикл)">
+                                <option value="Стипендия">🎓 Стипендия</option>
+                                <option value="Зарплата">💼 Зарплата</option>
+                                <option value="Аванс">💵 Аванс</option>
+                                <option value="Пенсия">🏦 Пенсия</option>
+                            </optgroup>
+                            <optgroup label="Нерегулярные поступления">
+                                <option value="Фриланс">💻 Фриланс / Подработка</option>
+                                <option value="Сдача в аренду">🏠 Сдача в аренду</option>
+                                <option value="Больничный"> Больничный</option>
+                                <option value="Премия">🏆 Премия</option>
+                                <option value="Дивиденды">📈 Дивиденды</option>
+                                <option value="Алименты">‍👧 Алименты</option>
+                            </optgroup>
+                            <optgroup label="Другое">
+                                <option value="custom">️ Свой вариант...</option>
+                            </optgroup>
+                        </select>
+                    </label>
+
+                    <!-- Поле для своего варианта (скрыто по умолчанию) -->
+                    <label class="settings-label" id="custom-income-label" style="display: none;">
+                        <span class="settings-label__text">Укажите свой вариант</span>
+                        <input type="text" class="settings-input" id="input-custom-income"
+                            placeholder="Например: Дивиденды" maxlength="30">
+                    </label>
+                    <!-- ============================================ -->
+
+                    <label class="settings-label">
+                        <span class="settings-label__text" id="income-amount-label">Размер пенсии</span>
+                        <input type="text" class="settings-input money-field" id="input-pension"
+                            data-field="pensionAmount" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
 
                     <label class="settings-label">
@@ -149,8 +360,8 @@
 
                     <label class="settings-label">
                         <span class="settings-label__text">Неприкосновенный запас</span>
-                        <input type="number" class="settings-input" id="input-reserve" placeholder="0.00"
-                            inputmode="decimal" min="0" step="0.01">
+                        <input type="text" class="settings-input money-field" id="input-reserve"
+                            data-field="reserveAmount" placeholder="0,00 ₽" inputmode="decimal">
                     </label>
                 </div>
 
@@ -163,9 +374,17 @@
                 <button class="btn btn--secondary" id="btn-add-payment">
                     Добавить платёж
                 </button>
+
+
+                <!-- ✅ ИНДИКАТОР СИНХРОНИЗАЦИИ -->
+                <div class="sync-indicator" id="sync-indicator">
+                    <span class="sync-indicator__icon">💾</span>
+                    <span class="sync-indicator__text" id="sync-indicator-text">Загрузка...</span>
+                </div>
+
                 <!-- ✅ Кнопки инструкции, экспорта и импорта -->
                 <div class="menu__actions">
-                    <a href="guide.html" class="action-btn" target="_blank" title="Открыть инструкцию">
+                    <a href="guide.html" class="action-btn" title="Открыть инструкцию">
                         <span class="btn-icon">📖</span>
                         <span class="btn-text">Инструкция</span>
                     </a>
@@ -182,13 +401,14 @@
                 </div>
                 <!-- ✅ БЛОК ТЕКУЩЕГО ПЕРИОДА ПЕНСИИ  -->
                 <div class="pension-period-block">
-                    <h3>📅 Текущий период пенсии</h3>
+                    <h3 id="current-period-label">📅 Текущий период пенсии</h3>
                     <div id="period-info" class="period-info">
                         <!-- Сюда будет подставляться информация из JS -->
                     </div>
                 </div>
+
                 <div class="delete-card">
-                    <h3 class="delete-card__title">🗑 Удалить записи за период</h3>
+                    <h3 class="delete-card__title">✕ Удалить записи за период</h3>
                     <div class="delete-card__row">
                         <label class="delete-card__label">От:
                             <input type="date" id="delete-from" class="delete-card__input">
@@ -200,24 +420,74 @@
                     <p id="delete-preview" class="delete-card__preview">Укажите обе даты</p>
                     <button id="delete-range-btn" class="btn btn--danger">Удалить записи</button>
                 </div>
+
+            </section>
+
+            <!-- Экран 5: Сверка с банком -->
+            <section class="screen screen--reconcile" id="screen-reconcile">
+                <h2 class="screen__title">Сверка с банком</h2>
+
+                <!-- БАННЕР: Явное указание счёта для сверки -->
+                <div class="reconcile-target-banner">
+                    <div class="reconcile-target__text">
+                        <strong id="reconcile-account-name" class="reconcile-account-name" style="color: #2c3e50;">Счёт
+                            по умолчанию</strong>
+                        <div class="reconcile-target__hint">⚠️ Вставьте выписку или операции только от этого банка</div>
+                    </div>
+                </div>
+
+                <div class="reconcile-block">
+                    <h3 class="reconcile-block__title">📋 Способ 1: Вставить текст из PDF</h3>
+                    <p class="reconcile-block__hint">
+                        Откройте PDF-выписку → Ctrl+A (выделить всё) → Ctrl+C (копировать) → вставьте ниже
+                    </p>
+                    <textarea id="reconcile-raw-text" class="reconcile-textarea"
+                        placeholder="Вставьте сюда текст из PDF-выписки..."></textarea>
+                    <button class="btn btn--primary" id="reconcile-parse-btn">
+                        🔍 Разобрать текст
+                    </button>
+                </div>
+
+                <div class="reconcile-block">
+                    <h3 class="reconcile-block__title"> Способ 2: Загрузить CSV-файл</h3>
+                    <p class="reconcile-block__hint">
+                        Формат CSV: <code>Дата;Сумма;Описание</code><br>
+                        Расходы со знаком минус (-59.00), доходы с плюсом (+1500.00)
+                    </p>
+                    <input type="file" id="reconcile-file" accept=".csv" hidden>
+                    <button class="btn btn--secondary" id="reconcile-upload-btn">
+                        📁 Выбрать CSV-файл
+                    </button>
+                </div>
+
+                <div id="reconcile-results" class="reconcile-results" style="display: none;">
+                    <!-- Сюда будут выводиться результаты сверки -->
+                </div>
             </section>
 
             <!-- Экран 4: Статистика -->
             <section class="screen screen--stats" id="screen-stats">
-                <h2 class="screen__title" style="text-align: center;">Статистика расходов</h2>
-                <div class="stats-card">
-                    <div id="stats-period-summary"
-                        style="text-align: center; margin-bottom: 16px; font-size: 1.1em; line-height: 1.6;"></div>
+                <!-- Горизонтальные табы счетов (v2.4) -->
+                <div id="stats-tabs-container" class="stats-tabs"></div>
+                <!-- Верхняя карточка: заголовок + суммы -->
+                <div id="stats-top" class="stats-card"></div>
+
+                <!-- Средняя карточка: диаграмма -->
+                <div id="stats-chart" class="stats-card">
+                    <p id="stats-empty" hidden style="text-align: center; color: #7f8c8d; padding: 20px;">Нет данных за
+                        текущий
+                        период</p>
                     <canvas id="expense-chart"></canvas>
-                    <p id="stats-empty" class="stats-empty" hidden>Нет расходов за этот период</p>
-                    <div id="subcategory-breakdown" class="stats-breakdown"></div>
                 </div>
+
+                <!-- Нижняя карточка: список подкатегорий -->
+                <div id="stats-bottom" class="stats-card"></div>
             </section>
         </main>
 
         <nav class="bottom-nav">
             <button class="bottom-nav__item" data-screen="screen-today">
-                <span class="bottom-nav__icon">🏠</span>
+                <span class="bottom-nav__icon"></span>
                 <span class="bottom-nav__label">Сегодня</span>
             </button>
             <button class="bottom-nav__item" data-screen="screen-history">
@@ -227,6 +497,10 @@
             <button class="bottom-nav__item" data-screen="screen-stats">
                 <span class="bottom-nav__icon">📊</span>
                 <span class="bottom-nav__label">Статистика</span>
+            </button>
+            <button class="bottom-nav__item" data-screen="screen-reconcile">
+                <span class="bottom-nav__icon">🔄</span>
+                <span class="bottom-nav__label">Сверка</span>
             </button>
             <button class="bottom-nav__item" data-screen="screen-settings">
                 <span class="bottom-nav__icon">⚙️</span>
@@ -255,10 +529,35 @@
                 </select>
             </label>
 
+            <!-- === ВСТАВИТЬ СЮДА: Выбор счёта (v2.1) === -->
+            <label class="modal__label">
+                <span class="modal__label-text">Счёт:</span>
+                <select class="modal__select" id="expense-account">
+                    <!-- Счета будут добавляться через JavaScript -->
+                </select>
+            </label>
+            <!-- === КОНЕЦ БЛОКА === -->
+
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
                 <input type="number" class="modal__input" id="expense-amount" placeholder="0.00" inputmode="decimal"
                     min="0" step="0.01">
+            </label>
+
+            <label class="modal__label">
+                <span class="modal__label-text">Предмет покупки (необязательно)</span>
+                <input type="text" class="modal__input" id="expense-item" placeholder="Например: Молоко, Бензин АИ-95">
+            </label>
+
+            <!-- Поле места покупки (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Место покупки (необязательно):</span>
+                <input type="text" class="modal__input" id="expense-store" placeholder="Например: Пятёрочка, Магнит">
+            </label>
+
+            <label class="modal__label">
+                <span class="modal__label-text">Комментарий (необязательно):</span>
+                <input type="text" id="expense-note" class="modal__input" placeholder="Например: Автоплатёж, регулярный платёж">
             </label>
 
             <div class="modal__buttons">
@@ -273,15 +572,43 @@
         <div class="modal__overlay"></div>
         <div class="modal__content">
             <h2 class="modal__title">Добавить доход</h2>
+
             <label class="modal__label">
                 <span class="modal__label-text">Тип дохода</span>
                 <select class="modal__select" id="income-category"></select>
             </label>
+
+            <!-- Выбор счёта -->
+            <label class="modal__label">
+                <span class="modal__label-text">Счёт:</span>
+                <select class="modal__select" id="income-account">
+                    <!-- Счета будут добавляться через JavaScript -->
+                </select>
+            </label>
+
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽)</span>
                 <input type="number" class="modal__input" id="income-amount" placeholder="0.00" inputmode="decimal"
                     min="0" step="0.01">
             </label>
+
+            <!-- Поле предмета (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Предмет (необязательно):</span>
+                <input type="text" class="modal__input" id="income-item" placeholder="Например: Зарплата, Подарок">
+            </label>
+
+            <!-- Поле источника (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Источник (необязательно):</span>
+                <input type="text" class="modal__input" id="income-store" placeholder="Например: ООО Ромашка, Иван И.">
+            </label>
+
+            <label class="modal__label">
+                <span class="modal__label-text">Комментарий (необязательно):</span>
+                <input type="text" id="income-note" class="modal__input" placeholder="Например: Зарплата, подарок">
+            </label>
+
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-income">Отмена</button>
                 <button class="btn btn--success" id="btn-save-income">Добавить</button>
@@ -289,27 +616,64 @@
         </div>
     </div>
 
-    <!-- 
-      МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ ТРАНЗАКЦИИ
-      Используется для изменения существующих записей (расходов и доходов)
-    -->
-    <div class="modal" id="edit-modal">
-        <!-- Затемнённый фон (оверлей) -->
+    <!-- Модальное окно для перевода между счетами (v2.5) -->
+    <div class="modal" id="transfer-modal">
         <div class="modal__overlay"></div>
-
-        <!-- Содержимое модального окна -->
         <div class="modal__content">
-            <h3 class="modal__title">Редактировать запись</h3>
+            <h2 class="modal__title">Перевод между счетами</h2>
 
-            <!-- Выпадающий список категорий -->
+            <!-- Откуда -->
             <label class="modal__label">
-                <span class="modal__label-text">Категория:</span>
-                <select class="modal__select" id="edit-category">
-                    <!-- Категории заполняются через JavaScript -->
+                <span class="modal__label-text">Откуда:</span>
+                <select class="modal__select" id="transfer-from-account">
+                    <!-- Счета заполняются через JavaScript -->
                 </select>
             </label>
 
-            <!-- Выпадающий список подкатегорий (только для расходов) -->
+            <!-- Куда -->
+            <label class="modal__label">
+                <span class="modal__label-text">Куда:</span>
+                <select class="modal__select" id="transfer-to-account">
+                    <!-- Счета заполняются через JavaScript -->
+                </select>
+            </label>
+
+            <!-- Сумма -->
+            <label class="modal__label">
+                <span class="modal__label-text">Сумма (₽):</span>
+                <input type="number" class="modal__input" id="transfer-amount" placeholder="0.00" inputmode="decimal"
+                    min="0" step="0.01">
+            </label>
+
+            <!-- Комментарий (опционально) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Комментарий (необязательно):</span>
+                <input type="text" class="modal__input" id="transfer-note" placeholder="Например: На продукты">
+            </label>
+
+            <!-- Кнопки -->
+            <div class="modal__buttons">
+                <button class="btn btn--secondary" id="btn-cancel-transfer">Отмена</button>
+                <button class="btn btn--primary" id="btn-save-transfer">Перевести</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+      МОДАЛЬНОЕ ОКНО ДЛЯ РЕДАКТИРОВАНИЯ ТРАНЗАКЦИИ
+      Используется для изменения существующих записей (расходов и доходов)-->
+    <div class="modal" id="edit-modal">
+        <div class="modal__overlay"></div>
+        <div class="modal__content">
+            <h3 class="modal__title">Редактировать запись</h3>
+
+            <!-- Категория -->
+            <label class="modal__label">
+                <span class="modal__label-text">Категория:</span>
+                <select class="modal__select" id="edit-category"></select>
+            </label>
+
+            <!-- Подкатегория (только для расходов) -->
             <label class="modal__label" id="edit-subcategory-label" style="display: none;">
                 <span class="modal__label-text">Подкатегория:</span>
                 <select class="modal__select" id="edit-subcategory">
@@ -317,32 +681,132 @@
                 </select>
             </label>
 
-            <!-- Поле ввода суммы -->
+            <!-- Сумма -->
             <label class="modal__label">
                 <span class="modal__label-text">Сумма (₽):</span>
                 <input type="number" class="modal__input" id="edit-amount" placeholder="0" inputmode="numeric" min="1">
             </label>
 
-            <!-- Поле выбора даты -->
+            <!-- Предмет покупки -->
+            <label class="modal__label">
+                <span class="modal__label-text">Предмет покупки (необязательно):</span>
+                <input type="text" class="modal__input" id="edit-item" placeholder="Например: Молоко, Хлеб">
+            </label>
+
+            <!-- Место покупки -->
+            <label class="modal__label">
+                <span class="modal__label-text">Место покупки (необязательно):</span>
+                <input type="text" class="modal__input" id="edit-store" placeholder="Например: Пятёрочка, Магнит">
+            </label>
+
+            <!-- Счёт (только для обычных транзакций) -->
+            <label class="modal__label" id="edit-account-label">
+                <span class="modal__label-text">Счёт:</span>
+                <select class="modal__select" id="edit-account"></select>
+            </label>
+
+            <!-- Откуда (только для переводов) -->
+            <label class="modal__label" id="edit-transfer-from-label" style="display: none;">
+                <span class="modal__label-text">Откуда:</span>
+                <select class="modal__select" id="edit-transfer-from"></select>
+            </label>
+
+            <!-- Куда (только для переводов) -->
+            <label class="modal__label" id="edit-transfer-to-label" style="display: none;">
+                <span class="modal__label-text">Куда:</span>
+                <select class="modal__select" id="edit-transfer-to"></select>
+            </label>
+
+            <!-- Дата -->
             <label class="modal__label">
                 <span class="modal__label-text">Дата:</span>
                 <input type="date" class="modal__input" id="edit-date"
                     style="font-size: 18px; font-weight: 400; text-align: left;">
             </label>
 
-            <!-- Кнопки подтверждения и отмены -->
+            <!-- Комментарий (НОВОЕ) -->
+            <label class="modal__label">
+                <span class="modal__label-text">Комментарий (необязательно):</span>
+                <input type="text" class="modal__input" id="edit-note" placeholder="Например: На продукты">
+            </label>
+
+            <!-- Кнопки -->
             <div class="modal__buttons">
-                <button class="btn btn--primary" id="btn-save-edit">
-                    Сохранить
-                </button>
-                <button class="btn btn--secondary" id="btn-cancel-edit">
-                    Отмена
-                </button>
+                <button class="btn btn--secondary" id="btn-cancel-edit">Отмена</button>
+                <button class="btn btn--primary" id="btn-save-edit">Сохранить</button>    
+            </div>
+        </div>
+    </div>
+    <!-- Модальное окно для добавления/редактирования счёта (v2.1) -->
+    <div class="modal" id="account-modal">
+        <div class="modal__overlay"></div>
+        <div class="modal__content">
+            <h2 class="modal__title" id="account-modal-title">Добавить счёт</h2>
+
+            <label class="modal__label">
+                <span class="modal__label-text">Название счёта</span>
+                <input type="text" class="modal__input" id="account-name" placeholder="Например: Тинькофф, Наличные">
+            </label>
+
+            <div class="modal__label">
+                <span>Начальный баланс на начало периода:</span>
+                <input type="number" id="account-balance" placeholder="0.00" step="0.01" min="0">
+            </div>
+
+            <div class="modal__label">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="account-is-savings" style="width: 18px; height: 18px;">
+                    <span> Это накопительный счёт</span>
+                </label>
+            </div>
+
+            <div class="modal__buttons">
+                <button class="btn btn--secondary" id="btn-cancel-account">Отмена</button>
+                <button class="btn btn--primary" id="btn-save-account">Сохранить</button>
             </div>
         </div>
     </div>
 
+        <!-- Модальное окно для добавления фиксированного платежа -->
+        <div class="modal" id="fixed-expense-modal">
+            <div class="modal__overlay"></div>
+            <div class="modal__content">
+                <h2 class="modal__title" id="fixed-expense-modal-title">Добавить фиксированный платёж</h2>
+        
+                <label class="modal__label">
+                    <span class="modal__label-text">Название (например: Кредит ВТБ)</span>
+                    <input type="text" class="modal__input" id="fixed-expense-name" placeholder="Название платежа">
+                </label>
+        
+                <label class="modal__label">
+                    <span class="modal__label-text">Сумма (₽)</span>
+                    <input type="number" class="modal__input" id="fixed-expense-amount" placeholder="0.00" inputmode="decimal"
+                        min="0" step="0.01">
+                </label>
+        
+                <label class="modal__label">
+                    <span class="modal__label-text">День месяца (1-28)</span>
+                    <input type="number" class="modal__input" id="fixed-expense-day" placeholder="5" min="1" max="28">
+                </label>
+        
+                <!-- Выбор счёта для списания -->
+                <label class="modal__label">
+                    <span class="modal__label-text">Списать со счёта:</span>
+                    <select class="modal__select" id="fixed-expense-account">
+                        <!-- Счета будут добавляться через JavaScript -->
+                    </select>
+                </label>
+        
+                <div class="modal__buttons">
+                    <button class="btn btn--secondary" id="btn-cancel-fixed-expense">Отмена</button>
+                    <button class="btn btn--primary" id="btn-save-fixed-expense">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
     <script type="module" src="js/app.js"></script>
+    <!-- Hammer.js для свайп-навигации -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 </body>
 
 </html>
