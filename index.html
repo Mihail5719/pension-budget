@@ -285,6 +285,20 @@
             <!-- Экран 2: История -->
             <section class="screen screen--history" id="screen-history">
                 <h2 class="screen__title">История операций</h2>
+            
+                <!-- Поиск по истории операций (v2.2) -->
+                <div class="search-container" id="search-container">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-input" class="search-input"
+                            placeholder="Поиск по категории, предмету, месту, комментарию..." autocomplete="off">
+                        <button id="search-clear" class="search-clear-btn" style="display: none;" title="Очистить поиск">✕</button>
+                    </div>
+                    <div class="search-info" id="search-info">
+                        <span id="search-count">Найдено: 0 из 0 записей</span>
+                    </div>
+                </div>
+            
                 <div class="transaction-list" id="transaction-list">
                     <!-- Транзакции будут добавляться сюда из JS -->
                 </div>

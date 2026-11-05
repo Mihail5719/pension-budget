@@ -9,7 +9,12 @@ import {
   updateSyncIndicator,
   renderAccountsList,
 } from './ui.js';
-import { formatDateKey, getCurrentPeriod, formatMoney } from './utils.js';
+import {
+  formatDateKey,
+  getCurrentPeriod,
+  formatMoney,
+  filterTransactions,
+} from './utils.js';
 import { calculateDailyLimit } from './budget.js';
 import {
   isIncome,
@@ -2055,8 +2060,67 @@ function processImportedFile(event) {
   event.target.value = '';
 }
 
-// Запускаем приложение после загрузки DOM
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Запускаем основную инициализацию приложения
+  init();
+
+  // 2. Инициализируем элементы поиска
+  const searchInput = document.getElementById('search-input');
+  const searchClearBtn = document.getElementById('search-clear');
+  const searchCount = document.getElementById('search-count');
+
+  if (searchInput && searchClearBtn) {
+    // Функция применения фильтра и перерисовки
+    const applySearchFilter = () => {
+      const query = searchInput.value;
+
+      // ВАЖНО: замените appData.transactions на имя вашей переменной с массивом транзакций, если оно отличается!
+      const allTransactions = appData.transactions || [];
+
+      // Фильтруем транзакции
+      const filteredTransactions = filterTransactions(query, allTransactions);
+
+      // Обновляем счётчик "Найдено: X из Y"
+      if (searchCount) {
+        searchCount.textContent = `Найдено: ${filteredTransactions.length} из ${allTransactions.length} записей`;
+      }
+
+      // Перерисовываем список
+      // ВАЖНО: замените renderTransactionList на имя вашей функции отрисовки в ui.js, если она называется иначе (например, renderHistory)
+      if (typeof renderTransactionList === 'function') {
+        renderTransactionList(filteredTransactions);
+      } else {
+        console.warn(
+          'Функция renderTransactionList не найдена. Проверьте имя функции отрисовки в ui.js',
+        );
+      }
+    };
+
+    // Обработчик ввода с debounce (задержкой 300мс)
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      // Показываем/скрываем кнопку очистки
+      searchClearBtn.style.display =
+        searchInput.value.length > 0 ? 'block' : 'none';
+
+      // Очищаем предыдущий таймер и ставим новый
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        applySearchFilter();
+      }, 300); // Ждём 300 мс после последнего нажатия клавиши
+    });
+
+    // Очистить поле при клике на ✕
+    searchClearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClearBtn.style.display = 'none';
+      searchInput.focus();
+
+      // Сбрасываем фильтр и перерисовываем полный список
+      applySearchFilter();
+    });
+  }
+});
 
 // Привязываем обработку файла к скрытому полю импорта
 const importFileInput = document.getElementById('import-file');
