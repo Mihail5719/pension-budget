@@ -103,31 +103,87 @@ export function getDaysLeft(pensionDay) {
 }
 
 /**
- * Фильтрует массив транзакций по текстовому запросу.
- * Ищет совпадения в: категории, подкатегории, предмете, месте, комментарии и сумме.
+ * Возвращает диапазон дат для заданного периода.
+ * @param {string} period - 'all' | 'today' | 'week' | 'month' | 'custom'
+ * @returns {{start: Date, end: Date}} диапазон дат
+ */
+export function getDateRange(period) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Начало сегодняшнего дня (00:00)
+  const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1); // Конец сегодняшнего дня (23:59:59.999)
+
+  switch (period) {
+    case 'today':
+      return { start: today, end: endOfDay };
+
+    case 'week':
+      // Последние 7 дней (включая сегодня)
+      const weekStart = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+      return { start: weekStart, end: endOfDay };
+
+    case 'month':
+      // С 1-го числа текущего месяца по сегодня
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { start: monthStart, end: endOfDay };
+
+    case 'custom':
+      // Пока возвращаем "все" — календарь реализуем позже
+      return { start: new Date(0), end: new Date(8640000000000000) };
+
+    case 'all':
+    default:
+      // Без ограничений
+      return { start: new Date(0), end: new Date(8640000000000000) };
+  }
+}
+
+/**
+ * Проверяет, попадает ли дата транзакции в заданный диапазон.
+ * @param {string|Date} transactionDate - дата транзакции (ISO-строка или Date)
+ * @param {Date} start - начало диапазона
+ * @param {Date} end - конец диапазона
+ * @returns {boolean}
+ */
+export function isDateInRange(transactionDate, start, end) {
+  const date = new Date(transactionDate);
+  return date >= start && date <= end;
+}
+
+/**
+ * Фильтрует массив транзакций по текстовому запросу и периоду.
  * @param {string} query - поисковый запрос
  * @param {Array} transactions - массив объектов транзакций
+ * @param {string} [datePeriod='all'] - период фильтрации
  * @returns {Array} отфильтрованный массив транзакций
  */
-export function filterTransactions(query, transactions) {
-  if (!query || query.trim() === '') {
-    return transactions;
+export function filterTransactions(query, transactions, datePeriod = 'all') {
+  // 1. Получаем диапазон дат
+  const { start, end } = getDateRange(datePeriod);
+
+  // 2. Фильтруем по дате
+  let filtered = transactions.filter(t => 
+    isDateInRange(t.date, start, end)
+  );
+
+  // 3. Если есть текстовый запрос — фильтруем дополнительно
+  if (query && query.trim() !== '') {
+    const lowerQuery = query.toLowerCase().trim();
+
+    filtered = filtered.filter(t => {
+      const fieldsToSearch = [
+        t.category || '',
+        t.subCategory || t.subcategory || '',
+        t.item || '',
+        t.store || '',
+        t.note || '',
+        String(t.amount || '')
+      ];
+
+      return fieldsToSearch.some(field => 
+        String(field).toLowerCase().includes(lowerQuery)
+      );
+    });
   }
 
-  const lowerQuery = query.toLowerCase().trim();
-
-  return transactions.filter((t) => {
-    const fieldsToSearch = [
-      t.category || '',
-      t.subCategory || t.subcategory || '', // ← Исправили: проверяем оба варианта
-      t.item || '',
-      t.store || '',
-      t.note || '',
-      String(t.amount || ''),
-    ];
-
-    return fieldsToSearch.some((field) =>
-      String(field).toLowerCase().includes(lowerQuery),
-    );
-  });
+  return filtered;
 }

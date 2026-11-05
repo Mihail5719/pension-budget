@@ -2069,16 +2069,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchClearBtn = document.getElementById('search-clear');
   const searchCount = document.getElementById('search-count');
 
+  // 3. Инициализируем элементы фильтра по датам
+  const dateFilterBtns = document.querySelectorAll('.date-filter-btn');
+  let currentDatePeriod = 'all'; // Текущий выбранный период
+
   if (searchInput && searchClearBtn) {
-    // Функция применения фильтра и перерисовки
-    const applySearchFilter = () => {
+    // Функция применения обоих фильтров (поиск + дата) и перерисовки
+    const applyFilters = () => {
       const query = searchInput.value;
 
       // ВАЖНО: замените appData.transactions на имя вашей переменной с массивом транзакций, если оно отличается!
       const allTransactions = appData.transactions || [];
 
-      // Фильтруем транзакции
-      const filteredTransactions = filterTransactions(query, allTransactions);
+      // Фильтруем транзакции по обоим критериям
+      const filteredTransactions = filterTransactions(
+        query,
+        allTransactions,
+        currentDatePeriod,
+      );
 
       // Обновляем счётчик "Найдено: X из Y"
       if (searchCount) {
@@ -2106,7 +2114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Очищаем предыдущий таймер и ставим новый
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
-        applySearchFilter();
+        applyFilters();
       }, 300); // Ждём 300 мс после последнего нажатия клавиши
     });
 
@@ -2117,7 +2125,34 @@ document.addEventListener('DOMContentLoaded', () => {
       searchInput.focus();
 
       // Сбрасываем фильтр и перерисовываем полный список
-      applySearchFilter();
+      applyFilters();
+    });
+
+    // 4. Обработчики кликов по кнопкам фильтра по датам
+    dateFilterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        // Убираем класс active у всех кнопок
+        dateFilterBtns.forEach((b) => b.classList.remove('active'));
+
+        // Добавляем класс active нажатой кнопке
+        btn.classList.add('active');
+
+        // Получаем период из data-атрибута
+        const period = btn.dataset.period;
+        currentDatePeriod = period;
+
+        // Если выбран "custom" (календарь) — пока показываем alert
+        if (period === 'custom') {
+          alert('Выбор произвольного диапазона дат будет реализован позже!');
+          // Возвращаем "Все" как активный период
+          currentDatePeriod = 'all';
+          document.querySelector('[data-period="all"]').classList.add('active');
+          btn.classList.remove('active');
+        }
+
+        // Применяем фильтры
+        applyFilters();
+      });
     });
   }
 });
