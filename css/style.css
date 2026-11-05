@@ -3563,12 +3563,12 @@ body.dark-theme .search-input::placeholder {
 }
 
 body.dark-theme .search-clear-btn {
-  color: var(--text-secondary-dark, #888);
+  color: #e74c3c; /* ← Добавили: красный цвет как в светлой теме */
 }
 
 body.dark-theme .search-clear-btn:hover {
-  background: var(--bg-hover-dark, #3d3d3d);
-  color: var(--text-primary-dark, #e0e0e0);
+  background: rgba(231, 76, 60, 0.15); /* ← Добавили: розовый кружок */
+  color: #c0392b;
 }
 
 body.dark-theme .search-info {
