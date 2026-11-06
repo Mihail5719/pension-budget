@@ -3733,6 +3733,38 @@ body.dark-theme .date-filter-btn.active:hover {
   color: var(--text-primary, #333);
 }
 
+/* Кнопка Архив */
+.date-archive-btn {
+  padding: 8px 16px;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  background: #f39c12; /* Оранжевый цвет */
+  color: #fff;
+  border-color: #f39c12;
+}
+
+.date-archive-btn:hover {
+  background: #e67e22; /* Тёмно-оранжевый при наведении */
+  border-color: #e67e22;
+}
+
+/* Тёмная тема для кнопки Архив */
+body.dark-theme .date-archive-btn {
+  background: #f39c12;
+  color: #fff;
+  border-color: #f39c12;
+}
+
+body.dark-theme .date-archive-btn:hover {
+  background: #e67e22;
+  border-color: #e67e22;
+}
+
 /* Тёмная тема */
 body.dark-theme .custom-date-panel {
   background: var(--bg-card-dark, #2d2d2d);

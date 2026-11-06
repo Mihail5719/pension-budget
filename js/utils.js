@@ -144,24 +144,23 @@ export function isDateInRange(transactionDate, start, end) {
 }
 
 /**
- * Фильтрует массив транзакций по текстовому запросу и периоду.
- * @param {string} query - поисковый запрос
- * @param {Array} transactions - массив объектов транзакций
- * @param {string} [datePeriod='all'] - период фильтрации
- * @returns {Array} отфильтрованный массив транзакций
- */
-/**
  * Фильтрует массив транзакций по текстовому запросу и диапазону дат.
+ * Исключает архивные записи по умолчанию.
  * @param {string} query - поисковый запрос
  * @param {Array} transactions - массив объектов транзакций
  * @param {{start: Date, end: Date}} dateRange - диапазон дат
+ * @param {boolean} [includeArchived=false] - показывать ли архивные
  * @returns {Array} отфильтрованный массив транзакций
  */
-export function filterTransactions(query, transactions, dateRange) {
-  // 1. Фильтруем по дате
-  let filtered = transactions.filter(t => 
-    isDateInRange(t.date, dateRange.start, dateRange.end)
-  );
+export function filterTransactions(query, transactions, dateRange, includeArchived = false) {
+  // 1. Фильтруем по дате и архивации
+  let filtered = transactions.filter(t => {
+    // Исключаем архивные, если не запрошены явно
+    if (!includeArchived && t.isArchived) {
+      return false;
+    }
+    return isDateInRange(t.date, dateRange.start, dateRange.end);
+  });
 
   // 2. Если есть текстовый запрос — фильтруем дополнительно
   if (query && query.trim() !== '') {
