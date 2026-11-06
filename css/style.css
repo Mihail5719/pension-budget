@@ -3854,3 +3854,27 @@ body.dark-theme .transaction.archived {
 .btn-restore:hover {
   background: rgba(52, 152, 219, 0.2);
 }
+
+/* ============================================
+   МОБИЛЬНАЯ АДАПТАЦИЯ ПАНЕЛИ КАЛЕНДАРЯ (v2.2)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .custom-date-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .date-apply-btn,
+  .date-archive-btn,
+  .date-reset-btn {
+    flex: 1 1 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+
+  .date-filter-btn[data-period="custom"] {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
