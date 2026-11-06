@@ -2082,7 +2082,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateToInput = document.getElementById('date-to');
   const dateApplyBtn = document.getElementById('date-apply');
   const dateResetBtn = document.getElementById('date-reset');
-  const dateArchiveBtn = document.getElementById('date-archive'); 
+  const dateArchiveBtn = document.getElementById('date-archive');
+
+  const toggleArchiveBtn = document.getElementById('toggle-archive-btn');
+  let showArchived = false; // По умолчанию архив скрыт
 
   if (searchInput && searchClearBtn) {
     // Функция получения текущего диапазона дат
@@ -2104,9 +2107,8 @@ document.addEventListener('DOMContentLoaded', () => {
         query,
         allTransactions,
         dateRange,
+        showArchived,
       );
-
-      console.log('Отфильтровано:', filteredTransactions.length);
 
       // Обновляем счётчик
       if (searchCount) {
@@ -2115,12 +2117,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Перерисовываем список
       if (typeof renderTransactionList === 'function') {
-        console.log('Вызываем renderTransactionList...');
         renderTransactionList(filteredTransactions);
       } else {
         console.warn('Функция renderTransactionList не найдена.');
       }
     };
+
+    // Обработчик кнопки "Показать архив"
+    if (toggleArchiveBtn) {
+      toggleArchiveBtn.addEventListener('click', () => {
+        showArchived = !showArchived; // Переключаем состояние
+
+        if (showArchived) {
+          toggleArchiveBtn.textContent = '🙈 Скрыть архив';
+          toggleArchiveBtn.classList.add('active');
+        } else {
+          toggleArchiveBtn.textContent = '👁️ Показать архив';
+          toggleArchiveBtn.classList.remove('active');
+        }
+
+        applyFilters(); // Перерисовываем список с новым флагом
+      });
+    }
+
+    // Обработчик кнопки "Восстановить" (делегирование событий)
+    const transactionList = document.getElementById('transaction-list');
+    if (transactionList) {
+      transactionList.addEventListener('click', (e) => {
+        const restoreBtn = e.target.closest(
+          '[data-action="restore-transaction"]',
+        );
+        if (restoreBtn) {
+          const transactionId = Number(restoreBtn.dataset.id);
+
+          const allTransactions = appData.transactions || [];
+          const transaction = allTransactions.find(
+            (t) => t.id === transactionId,
+          );
+
+          if (!transaction) {
+            alert('Транзакция не найдена!');
+            return;
+          }
+
+          if (
+            !confirm(`Восстановить запись "${transaction.category}" из архива?`)
+          ) {
+            return;
+          }
+
+          transaction.isArchived = false;
+          delete transaction.archivedAt;
+
+          const currentData = JSON.parse(
+            localStorage.getItem('pensionBudget') || '{}',
+          );
+          if (currentData.transactions) {
+            const index = currentData.transactions.findIndex(
+              (t) => t.id === transactionId,
+            );
+            if (index !== -1) {
+              currentData.transactions[index].isArchived = false;
+              delete currentData.transactions[index].archivedAt;
+            }
+          }
+          localStorage.setItem('pensionBudget', JSON.stringify(currentData));
+
+          if (window.appData) {
+            window.appData.transactions = currentData.transactions;
+          }
+
+          applyFilters();
+          alert('✅ Запись восстановлена!');
+        }
+      });
+    }
 
     // Обработчик ввода с debounce
     let searchTimeout;

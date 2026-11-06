@@ -349,7 +349,10 @@ export function renderTransactionList(transactions, pensionDay) {
 
     group.transactions.forEach((transaction) => {
       const itemEl = document.createElement('div');
-      itemEl.className = 'transaction';
+            itemEl.className = 'transaction';
+            if (transaction.isArchived) {
+              itemEl.classList.add('archived'); // Добавляем класс для стилей
+            }
       itemEl.dataset.id = transaction.id;
       if (transaction.type === 'reserve') {
         itemEl.classList.add('transaction--reserve');
@@ -373,9 +376,13 @@ export function renderTransactionList(transactions, pensionDay) {
           </div>
           <div class="transaction__right">
               <span class="transaction__amount transaction__amount--transfer">${formatMoney(transaction.amount)}</span>
-              <div class="transaction__actions">
-                  <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
-                  <button class="btn-delete" data-action="delete-transaction" data-id="${transaction.id}" title="Удалить">✕</button>
+                            <div class="transaction__actions">
+                  ${
+                    transaction.isArchived
+                      ? `<button class="btn-restore" data-action="restore-transaction" data-id="${transaction.id}" title="Восстановить">↩️</button>`
+                      : `<button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>`
+                  }
+                  <button class="btn-delete" data-action="delete-transaction" data-id="${transaction.id}" title="${transaction.isArchived ? 'Удалить навсегда' : 'Удалить'}">✕</button>
               </div>
           </div>
         `;
@@ -436,9 +443,13 @@ export function renderTransactionList(transactions, pensionDay) {
         </div>
         <div class="transaction__right">
             <span class="transaction__amount ${amountClass}">${amountPrefix}${formatMoney(transaction.amount)}</span>
-            <div class="transaction__actions">
-                <button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>
-                <button class="btn-delete" data-action="${deleteAction}" data-id="${transaction.id}" title="Удалить">✕</button>
+                        <div class="transaction__actions">
+                ${
+                  transaction.isArchived
+                    ? `<button class="btn-restore" data-action="restore-transaction" data-id="${transaction.id}" title="Восстановить">↩️</button>`
+                    : `<button class="btn-edit" data-action="edit-transaction" data-id="${transaction.id}" title="Редактировать">✎</button>`
+                }
+                <button class="btn-delete" data-action="${transaction.isArchived ? 'delete-transaction' : deleteAction}" data-id="${transaction.id}" title="${transaction.isArchived ? 'Удалить навсегда' : 'Удалить'}">✕</button>
             </div>
         </div>
       `;
