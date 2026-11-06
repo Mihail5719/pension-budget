@@ -3794,3 +3794,63 @@ body.dark-theme .date-reset-btn:hover {
   background: var(--bg-hover-dark, #3d3d3d);
   color: var(--text-primary-dark, #e0e0e0);
 }
+
+/* ============================================
+   КНОПКА ПОКАЗА АРХИВА (v2.2)
+   ============================================ */
+
+.toggle-archive-btn {
+  display: block;
+  margin: 8px 16px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px dashed var(--border-color, #ccc);
+  border-radius: 8px;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: calc(100% - 32px);
+  text-align: center;
+}
+
+.toggle-archive-btn:hover {
+  border-color: var(--primary-color, #3498db);
+  color: var(--primary-color, #3498db);
+  background: rgba(52, 152, 219, 0.05);
+}
+
+.toggle-archive-btn.active {
+  border-style: solid;
+  background: var(--primary-color, #3498db);
+  color: #fff;
+  border-color: var(--primary-color, #3498db);
+}
+
+/* Визуальное отличие архивных записей в списке */
+.transaction.archived {
+  opacity: 0.6;
+  background: var(--bg-card-secondary, #f9f9f9);
+  border-left: 4px solid #95a5a6; /* Серая полоска слева */
+}
+
+body.dark-theme .transaction.archived {
+  background: #222;
+  border-left: 4px solid #555;
+}
+
+/* Кнопка восстановления */
+.btn-restore {
+  background: transparent;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-restore:hover {
+  background: rgba(52, 152, 219, 0.2);
+}
