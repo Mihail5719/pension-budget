@@ -15,6 +15,7 @@ import {
   formatMoney,
   filterTransactions,
   getDateRange,
+  isDateInRange,
 } from './utils.js';
 import { calculateDailyLimit } from './budget.js';
 import {
@@ -2081,6 +2082,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateToInput = document.getElementById('date-to');
   const dateApplyBtn = document.getElementById('date-apply');
   const dateResetBtn = document.getElementById('date-reset');
+  const dateArchiveBtn = document.getElementById('date-archive'); 
 
   if (searchInput && searchClearBtn) {
     // Функция получения текущего диапазона дат
@@ -2091,7 +2093,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return getDateRange(currentDatePeriod);
     };
 
-    // Функция применения обоих фильтров (поиск + дата) и перерисовки
     // Функция применения обоих фильтров (поиск + дата) и перерисовки
     const applyFilters = () => {
       const query = searchInput.value;
@@ -2241,6 +2242,95 @@ document.addEventListener('DOMContentLoaded', () => {
           'range =',
           currentCustomRange,
         );
+      });
+    }
+
+    // Обработчик кнопки "Архив"
+    if (dateArchiveBtn) {
+      dateArchiveBtn.addEventListener('click', () => {
+        const fromDate = dateFromInput.value;
+        const toDate = dateToInput.value;
+
+        // Валидация: обе даты должны быть заполнены
+        if (!fromDate || !toDate) {
+          alert('Пожалуйста, выберите обе даты (С и По) перед архивацией!');
+          return;
+        }
+
+        // Валидация: дата начала не должна быть позже даты конца
+        if (new Date(fromDate) > new Date(toDate)) {
+          alert('Дата начала не может быть позже даты конца!');
+          return;
+        }
+
+        // Получаем диапазон дат
+        const archiveRange = {
+          start: new Date(fromDate),
+          end: new Date(toDate + 'T23:59:59.999'),
+        };
+
+        // Считаем количество транзакций, которые будут архивированы
+        const allTransactions = appData.transactions || [];
+        const toArchive = allTransactions.filter(
+          (t) =>
+            isDateInRange(t.date, archiveRange.start, archiveRange.end) &&
+            !t.isArchived,
+        );
+
+        if (toArchive.length === 0) {
+          alert('Нет записей для архивации за выбранный период.');
+          return;
+        }
+
+        // Подтверждение действия
+        const confirmMessage = `Вы собираетесь архивировать ${toArchive.length} записей за период с ${fromDate} по ${toDate}.\n\nАрхивные записи не будут отображаться в истории, но останутся в файле данных.\n\nПродолжить?`;
+
+        if (!confirm(confirmMessage)) {
+          return; // Пользователь отменил
+        }
+
+        // Архивируем транзакции
+        toArchive.forEach((t) => {
+          t.isArchived = true;
+          t.archivedAt = new Date().toISOString(); // Дата архивации
+        });
+
+        // === СОХРАНЕНИЕ ДАННЫХ (Исправлено под вашу архитектуру) ===
+        const currentData = JSON.parse(
+          localStorage.getItem('pensionBudget') || '{}',
+        );
+
+        // Обновляем статус транзакций в объекте данных по их ID
+        if (currentData.transactions) {
+          toArchive.forEach((archivedItem) => {
+            const index = currentData.transactions.findIndex(
+              (t) => t.id === archivedItem.id,
+            );
+            if (index !== -1) {
+              currentData.transactions[index].isArchived = true;
+              currentData.transactions[index].archivedAt =
+                new Date().toISOString();
+            }
+          });
+        }
+
+        // Сохраняем обновленный объект обратно в localStorage
+        localStorage.setItem('pensionBudget', JSON.stringify(currentData));
+
+        // Синхронизируем с глобальной переменной, если она существует
+        if (window.appData) {
+          window.appData.transactions = currentData.transactions;
+        }
+        // ============================================================
+
+        // Перерисовываем список (архивные не будут показаны)
+        applyFilters();
+
+        // Скрываем панель календаря
+        customDatePanel.style.display = 'none';
+
+        // Уведомление об успехе
+        alert(`✅ Успешно архивировано ${toArchive.length} записей.`);
       });
     }
   }
