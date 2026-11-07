@@ -3855,3 +3855,44 @@ body.dark-theme .transaction.archived {
     font-size: 12px;
   }
 }
+
+/* Кнопка "Восстановить всё" */
+.restore-all-btn {
+  display: block;
+  margin: 8px 16px;
+  padding: 10px 16px;
+  background: #27ae60; /* Зелёный — цвет восстановления */
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: calc(100% - 32px);
+  text-align: center;
+}
+
+.restore-all-btn:hover {
+  background: #219a52;
+  border-color: #219a52;
+}
+
+body.dark-theme .restore-all-btn {
+  background: #27ae60;
+  color: #fff;
+  border-color: #27ae60;
+}
+
+body.dark-theme .restore-all-btn:hover {
+  background: #219a52;
+  border-color: #219a52;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 480px) {
+  .restore-all-btn {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+}
