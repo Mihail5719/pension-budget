@@ -184,3 +184,16 @@ export function filterTransactions(query, transactions, dateRange, includeArchiv
 
   return filtered;
 }
+
+/**
+ * Возвращает фактический день платежа с учётом длины месяца.
+ * Если запрошенный день больше, чем дней в месяце — возвращает последний день месяца.
+ * @param {number} requestedDay - запрошенный день (1-31)
+ * @param {number} year - год
+ * @param {number} month - месяц (0-11, как в JS Date)
+ * @returns {number} фактический день платежа
+ */
+export function getActualPaymentDay(requestedDay, year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  return Math.min(requestedDay, daysInMonth);
+}
