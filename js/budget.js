@@ -1,4 +1,8 @@
-import { getCurrentPeriod, formatDateKey } from './utils.js';
+import {
+  getCurrentPeriod,
+  formatDateKey,
+  getActualPaymentDay,
+} from './utils.js';
 
 // ─── Предикаты типов операций (v2.0, коммит 2) ───
 const isIncome = (t) => t.type === 'income';
@@ -211,20 +215,27 @@ export function getIndicatorState(dailyLimit, freeBudget) {
 }
 
 /**
- * Возвращает список обязательных платежей, которые нужно оплатить сегодня
- * Исключает отложенные до завтра
+ * Возвращает список обязательных платежей, которые нужно оплатить сегодня.
+ * Учитывает "умный перенос" для дней 29, 30, 31 в короткие месяцы.
+ * Исключает отложенные до завтра.
  */
 export function getTodayPayments(fixedExpenses) {
-  const today = new Date().getDate();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayDate = new Date();
+  const today = todayDate.getDate();
+  const year = todayDate.getFullYear();
+  const month = todayDate.getMonth(); // 0-11
+  const todayStr = todayDate.toISOString().split('T')[0];
 
   // Получаем отложенные платежи
   const appData = JSON.parse(localStorage.getItem('pensionBudget') || '{}');
   const postponed = appData.postponedPayments || {};
 
   return fixedExpenses.filter((expense) => {
-    // Платёж должен быть на сегодня
-    if (expense.day !== today) return false;
+    // Умный перенос: вычисляем фактический день оплаты для текущего месяца
+    const actualPaymentDay = getActualPaymentDay(expense.day, year, month);
+
+    // Платёж должен быть на сегодня (с учётом умного переноса)
+    if (actualPaymentDay !== today) return false;
 
     // Платёж не должен быть отложен на сегодня
     if (postponed[expense.id] === todayStr) return false;

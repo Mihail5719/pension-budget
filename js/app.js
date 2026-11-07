@@ -344,8 +344,8 @@ function setupEventListeners() {
         return;
       }
       const day = parseInt(dayStr);
-      if (isNaN(day) || day < 1 || day > 28) {
-        alert('Введите день от 1 до 28');
+      if (isNaN(day) || day < 1 || day > 31) {
+        alert('Введите день от 1 до 31');
         return;
       }
 
