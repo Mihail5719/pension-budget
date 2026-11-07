@@ -147,8 +147,10 @@ if ('serviceWorker' in navigator) {
  * Пересчитывает initialBalance как сумму начальных балансов ВСЕХ счетов.
  */
 function recalculateInitialBalance() {
-  const totalInitial = appData.settings.accounts
-    .reduce((sum, acc) => sum + (acc.initialBalance || 0), 0); // Убрали фильтр !isSavings
+  const totalInitial = appData.settings.accounts.reduce(
+    (sum, acc) => sum + (acc.initialBalance || 0),
+    0,
+  ); // Убрали фильтр !isSavings
 
   appData.settings.initialBalance = totalInitial;
 }
@@ -1200,7 +1202,10 @@ function saveExpense() {
     let currentBalance = account.initialBalance || 0;
 
     // 2. Если это счёт по умолчанию и период начат, добавляем пенсию как доход
-    if (account.id === appData.settings.defaultAccountId && appData.settings.currentPeriodStart) {
+    if (
+      account.id === appData.settings.defaultAccountId &&
+      appData.settings.currentPeriodStart
+    ) {
       currentBalance += appData.settings.pensionAmount || 0;
     }
 
@@ -1446,17 +1451,17 @@ function handleSettingsChange() {
 function handleAddPayment() {
   const modal = document.getElementById('fixed-expense-modal');
   const accountSelect = document.getElementById('fixed-expense-account');
-  
+
   // 1. Очищаем и заполняем список активных счетов
   accountSelect.innerHTML = '';
-  const accounts = appData.settings.accounts.filter(acc => !acc.isSavings); // Кредиты обычно платят с активных
-  
+  const accounts = appData.settings.accounts.filter((acc) => !acc.isSavings); // Кредиты обычно платят с активных
+
   if (accounts.length === 0) {
     alert('Сначала добавьте хотя бы один активный счёт в настройках!');
     return;
   }
 
-  accounts.forEach(acc => {
+  accounts.forEach((acc) => {
     const option = document.createElement('option');
     option.value = acc.id;
     option.textContent = `${acc.emoji || '💼'} ${acc.name}`;
@@ -1467,7 +1472,7 @@ function handleAddPayment() {
   document.getElementById('fixed-expense-name').value = '';
   document.getElementById('fixed-expense-amount').value = '';
   document.getElementById('fixed-expense-day').value = '';
-  
+
   // 3. Показываем модальное окно
   modal.classList.add('is-open');
 }
@@ -2081,11 +2086,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateFromInput = document.getElementById('date-from');
   const dateToInput = document.getElementById('date-to');
   const dateApplyBtn = document.getElementById('date-apply');
-  const dateResetBtn = document.getElementById('date-reset');
   const dateArchiveBtn = document.getElementById('date-archive');
 
   const toggleArchiveBtn = document.getElementById('toggle-archive-btn');
-  let showArchived = false; // По умолчанию архив скрыт
+  const restoreAllBtn = document.getElementById('restore-all-btn'); 
+  let showArchived = false;
 
   if (searchInput && searchClearBtn) {
     // Функция получения текущего диапазона дат
@@ -2126,17 +2131,83 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обработчик кнопки "Показать архив"
     if (toggleArchiveBtn) {
       toggleArchiveBtn.addEventListener('click', () => {
-        showArchived = !showArchived; // Переключаем состояние
+        showArchived = !showArchived;
 
         if (showArchived) {
           toggleArchiveBtn.textContent = '🙈 Скрыть архив';
           toggleArchiveBtn.classList.add('active');
+          // Показываем кнопку "Восстановить всё"
+          if (restoreAllBtn) {
+            restoreAllBtn.style.display = 'block';
+          }
         } else {
           toggleArchiveBtn.textContent = '👁️ Показать архив';
           toggleArchiveBtn.classList.remove('active');
+          // Скрываем кнопку "Восстановить всё"
+          if (restoreAllBtn) {
+            restoreAllBtn.style.display = 'none';
+          }
         }
 
-        applyFilters(); // Перерисовываем список с новым флагом
+        applyFilters();
+      });
+    }
+
+    // Обработчик кнопки "Восстановить всё"
+    if (restoreAllBtn) {
+      restoreAllBtn.addEventListener('click', () => {
+        const allTransactions = appData.transactions || [];
+        const archivedTransactions = allTransactions.filter(
+          (t) => t.isArchived,
+        );
+
+        if (archivedTransactions.length === 0) {
+          alert('Архив пуст. Нечего восстанавливать.');
+          return;
+        }
+
+        // Подтверждение с указанием количества
+        const confirmMessage = `Вы собираетесь восстановить все ${archivedTransactions.length} архивных записей.\n\nВсе они вернутся в обычную историю.\n\nПродолжить?`;
+
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+
+        // Восстанавливаем все архивные записи
+        archivedTransactions.forEach((t) => {
+          t.isArchived = false;
+          delete t.archivedAt;
+        });
+
+        // Сохраняем в localStorage
+        const currentData = JSON.parse(
+          localStorage.getItem('pensionBudget') || '{}',
+        );
+        if (currentData.transactions) {
+          currentData.transactions.forEach((t) => {
+            if (t.isArchived) {
+              t.isArchived = false;
+              delete t.archivedAt;
+            }
+          });
+        }
+        localStorage.setItem('pensionBudget', JSON.stringify(currentData));
+
+        // Синхронизируем с window.appData
+        if (window.appData) {
+          window.appData.transactions = currentData.transactions;
+        }
+
+        // Скрываем режим просмотра архива
+        showArchived = false;
+        toggleArchiveBtn.textContent = '👁️ Показать архив';
+        toggleArchiveBtn.classList.remove('active');
+        restoreAllBtn.style.display = 'none';
+
+        // Перерисовываем список
+        applyFilters();
+
+        alert(`✅ Восстановлено ${archivedTransactions.length} записей.`);
       });
     }
 
@@ -2278,41 +2349,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         applyFilters();
         customDatePanel.style.display = 'none';
-      });
-    }
-
-    // Обработчик кнопки "Сбросить"
-    if (dateResetBtn) {
-      dateResetBtn.addEventListener('click', (e) => {
-        e.preventDefault(); // Предотвращаем возможный submit формы
-
-        // Очищаем поля ввода
-        dateFromInput.value = '';
-        dateToInput.value = '';
-
-        // Сбрасываем кастомный диапазон
-        currentCustomRange = null;
-
-        // Переключаемся на период "Все"
-        currentDatePeriod = 'all';
-        dateFilterBtns.forEach((b) => b.classList.remove('active'));
-        const allBtn = document.querySelector('[data-period="all"]');
-        if (allBtn) {
-          allBtn.classList.add('active');
-        }
-
-        // Скрываем панель
-        customDatePanel.style.display = 'none';
-
-        // Применяем фильтры (должен показать все записи)
-        applyFilters();
-
-        console.log(
-          'Сброс выполнен: период =',
-          currentDatePeriod,
-          'range =',
-          currentCustomRange,
-        );
       });
     }
 
@@ -2735,10 +2771,10 @@ if (document.readyState === 'loading') {
   updateTodayIcon();
 }
 
-  // Обработчик кнопки "О приложении"
-  const btnAbout = document.getElementById('btn-about');
-  if (btnAbout) {
-    btnAbout.addEventListener('click', () => {
-      window.location.hash = '#screen-about';
-    });
-  }
+// Обработчик кнопки "О приложении"
+const btnAbout = document.getElementById('btn-about');
+if (btnAbout) {
+  btnAbout.addEventListener('click', () => {
+    window.location.hash = '#screen-about';
+  });
+}
