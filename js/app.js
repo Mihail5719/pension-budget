@@ -2081,7 +2081,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateFromInput = document.getElementById('date-from');
   const dateToInput = document.getElementById('date-to');
   const dateApplyBtn = document.getElementById('date-apply');
-  const dateResetBtn = document.getElementById('date-reset');
   const dateArchiveBtn = document.getElementById('date-archive');
 
   const toggleArchiveBtn = document.getElementById('toggle-archive-btn');
@@ -2281,41 +2280,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Обработчик кнопки "Сбросить"
-    if (dateResetBtn) {
-      dateResetBtn.addEventListener('click', (e) => {
-        e.preventDefault(); // Предотвращаем возможный submit формы
-
-        // Очищаем поля ввода
-        dateFromInput.value = '';
-        dateToInput.value = '';
-
-        // Сбрасываем кастомный диапазон
-        currentCustomRange = null;
-
-        // Переключаемся на период "Все"
-        currentDatePeriod = 'all';
-        dateFilterBtns.forEach((b) => b.classList.remove('active'));
-        const allBtn = document.querySelector('[data-period="all"]');
-        if (allBtn) {
-          allBtn.classList.add('active');
-        }
-
-        // Скрываем панель
-        customDatePanel.style.display = 'none';
-
-        // Применяем фильтры (должен показать все записи)
-        applyFilters();
-
-        console.log(
-          'Сброс выполнен: период =',
-          currentDatePeriod,
-          'range =',
-          currentCustomRange,
-        );
-      });
-    }
-
+  
     // Обработчик кнопки "Архив"
     if (dateArchiveBtn) {
       dateArchiveBtn.addEventListener('click', () => {

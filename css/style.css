@@ -3699,8 +3699,7 @@ body.dark-theme .date-filter-btn.active:hover {
   justify-content: flex-end;
 }
 
-.date-apply-btn,
-.date-reset-btn {
+.date-apply-btn {
   padding: 8px 16px;
   border: 2px solid transparent;
   border-radius: 20px;
@@ -3720,17 +3719,6 @@ body.dark-theme .date-filter-btn.active:hover {
 .date-apply-btn:hover {
   background: #2980b9;
   border-color: #2980b9;
-}
-
-.date-reset-btn {
-  background: transparent;
-  color: var(--text-secondary, #666);
-  border-color: var(--border-color, #e0e0e0);
-}
-
-.date-reset-btn:hover {
-  background: var(--bg-hover, #f0f0f0);
-  color: var(--text-primary, #333);
 }
 
 /* Кнопка Архив */
@@ -3783,16 +3771,6 @@ body.dark-theme .date-input {
 
 body.dark-theme .date-input:focus {
   border-color: var(--primary-color, #3498db);
-}
-
-body.dark-theme .date-reset-btn {
-  color: var(--text-secondary-dark, #aaa);
-  border-color: var(--border-color-dark, #444);
-}
-
-body.dark-theme .date-reset-btn:hover {
-  background: var(--bg-hover-dark, #3d3d3d);
-  color: var(--text-primary-dark, #e0e0e0);
 }
 
 /* ============================================
@@ -3866,8 +3844,7 @@ body.dark-theme .transaction.archived {
   }
 
   .date-apply-btn,
-  .date-archive-btn,
-  .date-reset-btn {
+  .date-archive-btn {
     flex: 1 1 100%;
     padding: 12px 16px;
     font-size: 16px;
