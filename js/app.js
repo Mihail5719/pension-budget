@@ -2153,6 +2153,51 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // === Обработчики для Drill-down в статистике (v2.2) ===
+    const statsBottomContainer = document.getElementById('stats-bottom');
+    const statsBackBtn = document.getElementById('stats-back-btn');
+
+    // Клик по кнопке "Назад"
+    if (statsBackBtn) {
+      statsBackBtn.addEventListener('click', () => {
+        window.currentStatsCategoryId = null; // Сбрасываем выбор категории
+
+        // Перерисовываем статистику в обычном режиме
+        if (typeof renderStats === 'function' && window.appData) {
+          renderStats(
+            window.appData.settings,
+            window.appData.fixedExpenses,
+            window.appData.transactions,
+          );
+        }
+      });
+    }
+
+    // Клик по категории (делегирование событий)
+    if (statsBottomContainer) {
+      statsBottomContainer.addEventListener('click', (e) => {
+        // Ищем ближайший элемент с классом category-clickable
+        const clickableHeader = e.target.closest('.category-clickable');
+
+        if (clickableHeader) {
+          const category = clickableHeader.dataset.category;
+          if (category) {
+            window.currentStatsCategoryId = category; // Запоминаем выбранную категорию
+
+            // Перерисовываем статистику (она увидит currentStatsCategoryId и покажет список)
+            if (typeof renderStats === 'function' && window.appData) {
+              renderStats(
+                window.appData.settings,
+                window.appData.fixedExpenses,
+                window.appData.transactions,
+              );
+            }
+          }
+        }
+      });
+    }
+    // ========================================================
+
     // Обработчик кнопки "Восстановить всё"
     if (restoreAllBtn) {
       restoreAllBtn.addEventListener('click', () => {
