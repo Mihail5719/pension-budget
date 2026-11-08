@@ -896,10 +896,30 @@ export function renderStats(settings, fixedExpenses, transactions) {
   const backBtn = document.getElementById('stats-back-btn');
   if (backBtn) backBtn.style.display = 'none';
 
-  const startDate = settings.currentPeriodStart
-    ? new Date(settings.currentPeriodStart)
-    : getCurrentPeriod(settings.pensionDay).startDate;
-  const { endDate } = getCurrentPeriod(settings.pensionDay);
+  // === УМНЫЙ ВЫБОР ПЕРИОДА ДЛЯ СТАТИСТИКИ ===
+  let startDate, endDate;
+
+  // Приоритет 1: Пользовательский фильтр из экрана "История"
+  if (settings.customFilterStart && settings.customFilterEnd) {
+    startDate = new Date(settings.customFilterStart);
+    endDate = new Date(settings.customFilterEnd + 'T23:59:59.999');
+  }
+  // Приоритет 2: Стандартный период пенсии
+  else {
+    startDate = settings.currentPeriodStart
+      ? new Date(settings.currentPeriodStart)
+      : getCurrentPeriod(settings.pensionDay).startDate;
+    endDate = getCurrentPeriod(settings.pensionDay).endDate;
+  }
+  // ============================================
+
+  console.log(' renderStats: Период для статистики:', {
+    customFilterStart: settings.customFilterStart,
+    customFilterEnd: settings.customFilterEnd,
+    startDate: startDate,
+    endDate: endDate,
+    fallback: !settings.customFilterStart,
+  });
 
   // === ПРОВЕРКА: РЕЖИМ ДЕТАЛИЗАЦИИ КАТЕГОРИИ (Drill-down) ===
   if (window.currentStatsCategoryId) {
@@ -1098,7 +1118,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
 
   bottomContainer.innerHTML = bottomHtml;
 
-    // === ОТРИСОВКА ДИАГРАММЫ И СПИСКОВ ===
+  // === ОТРИСОВКА ДИАГРАММЫ И СПИСКОВ ===
 
   // 1. Убеждаемся, что контейнер диаграммы виден в обычном режиме
   const chartContainer = document.getElementById('stats-chart');
@@ -1109,17 +1129,22 @@ export function renderStats(settings, fixedExpenses, transactions) {
     if (emptyMsg) emptyMsg.hidden = true;
 
     // 1. Заголовок НАД диаграммой (сначала удаляем старый, если есть)
-    const existingTitle = canvas.parentElement.querySelector('.chart-title-dynamic');
+    const existingTitle = canvas.parentElement.querySelector(
+      '.chart-title-dynamic',
+    );
     if (existingTitle) existingTitle.remove();
 
     const chartTitle = document.createElement('h3');
     chartTitle.className = 'stats-breakdown-title chart-title-dynamic';
     chartTitle.textContent = 'Нефиксированные платежи';
-    chartTitle.style.cssText = 'margin: 20px 0 10px; font-size: 1.2em; color: var(--text-primary);';
+    chartTitle.style.cssText =
+      'margin: 20px 0 10px; font-size: 1.2em; color: var(--text-primary);';
     canvas.parentElement.insertBefore(chartTitle, canvas);
 
     // 2. Рисуем диаграмму
-    const labels = [], data = [], backgroundColors = [];
+    const labels = [],
+      data = [],
+      backgroundColors = [];
     Object.keys(nonFixedByCat).forEach((cat) => {
       const style = getCategoryStyle(cat);
       labels.push(cat);
@@ -1166,7 +1191,10 @@ export function renderStats(settings, fixedExpenses, transactions) {
             callbacks: {
               label: function (context) {
                 const style = getCategoryStyle(context.label);
-                const percentage = ((context.parsed / totalNonFixed) * 100).toFixed(1);
+                const percentage = (
+                  (context.parsed / totalNonFixed) *
+                  100
+                ).toFixed(1);
                 return `${style.emoji} ${context.label}: ${formatMoney(context.parsed)} (${percentage}%)`;
               },
             },
@@ -1185,26 +1213,26 @@ export function renderStats(settings, fixedExpenses, transactions) {
     }
 
     bottomContainer.innerHTML = bottomHtml;
-
   } else {
     // Если нефиксированных расходов нет, проверяем фиксированные
     const hasAnyExpenses = Object.keys(fixedByCat).length > 0;
-    
+
     if (emptyMsg) emptyMsg.hidden = hasAnyExpenses; // Скрываем "нет данных", если есть фиксированные
-    
+
     if (!hasAnyExpenses) {
       canvas.style.display = 'none';
       if (chartContainer) chartContainer.style.display = 'none';
       if (window.expenseChartInstance) window.expenseChartInstance.destroy();
-      
-      let bottomHtml = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
+
+      let bottomHtml =
+        '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
       bottomContainer.innerHTML = bottomHtml;
     } else {
       // Есть только фиксированные платежи
       canvas.style.display = 'none';
       if (chartContainer) chartContainer.style.display = 'none';
       if (window.expenseChartInstance) window.expenseChartInstance.destroy();
-      
+
       let bottomHtml = '';
       bottomHtml += `<h3 class="stats-breakdown-title">Фиксированные платежи</h3>`;
       bottomHtml += renderSection(fixedByCat, true);

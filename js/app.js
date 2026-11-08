@@ -2089,45 +2089,132 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateArchiveBtn = document.getElementById('date-archive');
 
   const toggleArchiveBtn = document.getElementById('toggle-archive-btn');
-  const restoreAllBtn = document.getElementById('restore-all-btn'); 
+  const restoreAllBtn = document.getElementById('restore-all-btn');
   let showArchived = false;
 
-  if (searchInput && searchClearBtn) {
-    // Функция получения текущего диапазона дат
-    const getCurrentDateRange = () => {
-      if (currentDatePeriod === 'custom' && currentCustomRange) {
-        return currentCustomRange;
-      }
-      return getDateRange(currentDatePeriod);
-    };
+  // === ВЫНОСИМ ФИЛЬТРАЦИЮ НА УРОВЕНЬ DOMContentLoaded, ЧТОБЫ ОНА БЫЛА ВИДНА ВЕЗДЕ ===
+  const getCurrentDateRange = () => {
+    if (currentDatePeriod === 'custom' && currentCustomRange) {
+      return currentCustomRange;
+    }
+    return typeof getDateRange === 'function'
+      ? getDateRange(currentDatePeriod)
+      : null;
+  };
 
-    // Функция применения обоих фильтров (поиск + дата) и перерисовки
-    const applyFilters = () => {
-      const query = searchInput.value;
-      const allTransactions = appData.transactions || [];
-      const dateRange = getCurrentDateRange();
+  const applyFilters = () => {
+    const query = searchInput ? searchInput.value : '';
+    const allTransactions = window.appData?.transactions || [];
+    const dateRange = getCurrentDateRange();
 
-      // Фильтруем транзакции
-      const filteredTransactions = filterTransactions(
-        query,
-        allTransactions,
-        dateRange,
-        showArchived,
+    const filteredTransactions = filterTransactions(
+      query,
+      allTransactions,
+      dateRange,
+      showArchived,
+    );
+
+    if (searchCount) {
+      searchCount.textContent = `Найдено: ${filteredTransactions.length} из ${allTransactions.length} записей`;
+    }
+
+    if (typeof renderTransactionList === 'function') {
+      renderTransactionList(
+        filteredTransactions,
+        window.appData?.settings?.pensionDay,
       );
+    }
+  };
+  // ==================================================================================
 
-      // Обновляем счётчик
-      if (searchCount) {
-        searchCount.textContent = `Найдено: ${filteredTransactions.length} из ${allTransactions.length} записей`;
+  // ==========================================
+  // Обработчик кнопки "Применить" (Дата)
+  // ==========================================
+  if (dateApplyBtn) {
+    dateApplyBtn.addEventListener('click', () => {
+      const fromDate = dateFromInput.value;
+      const toDate = dateToInput.value;
+
+      if (!fromDate || !toDate) {
+        alert('Пожалуйста, выберите обе даты (С и По)!');
+        return;
       }
 
-      // Перерисовываем список
-      if (typeof renderTransactionList === 'function') {
-        renderTransactionList(filteredTransactions);
+      if (new Date(fromDate) > new Date(toDate)) {
+        alert('Дата начала не может быть позже даты конца!');
+        return;
+      }
+
+      currentCustomRange = {
+        start: new Date(fromDate),
+        end: new Date(toDate + 'T23:59:59.999'),
+      };
+
+      // === НОВОЕ: Сохраняем пользовательский период в настройки ===
+      console.log('🔍 ПРОВЕРКА ПЕРЕД СОХРАНЕНИЕМ:');
+      console.log('  window.appData:', window.appData);
+      console.log('  window.appData.settings:', window.appData?.settings);
+      console.log('  fromDate:', fromDate);
+      console.log('  toDate:', toDate);
+
+      if (window.appData && window.appData.settings) {
+        window.appData.settings.customFilterStart = fromDate;
+        window.appData.settings.customFilterEnd = toDate;
+        console.log('✅ Сохраняем в settings:', {
+          customFilterStart: fromDate,
+          customFilterEnd: toDate,
+        });
+        localStorage.setItem('pensionBudget', JSON.stringify(window.appData));
+
+        // Проверяем, что сохранилось
+        const saved = JSON.parse(localStorage.getItem('pensionBudget'));
+        console.log('📦 После сохранения в localStorage:', {
+          customFilterStart: saved.settings.customFilterStart,
+          customFilterEnd: saved.settings.customFilterEnd,
+        });
       } else {
-        console.warn('Функция renderTransactionList не найдена.');
+        console.error(
+          '❌ ОШИБКА: window.appData или window.appData.settings отсутствует!',
+        );
       }
-    };
+      // ============================================================
 
+      applyFilters();
+      customDatePanel.style.display = 'none';
+    });
+  }
+
+  // ==========================================
+  // Обработчик кнопки "Архив" (Дата)
+  // ==========================================
+  if (dateArchiveBtn) {
+    dateArchiveBtn.addEventListener('click', () => {
+      const fromDate = dateFromInput.value;
+      const toDate = dateToInput.value;
+
+      if (!fromDate || !toDate) {
+        alert('Пожалуйста, выберите обе даты (С и По) перед архивацией!');
+        return;
+      }
+
+      if (new Date(fromDate) > new Date(toDate)) {
+        alert('Дата начала не может быть позже даты конца!');
+        return;
+      }
+
+      // Вызываем функцию архивации (она уже должна быть у вас в коде)
+      if (typeof archiveTransactionsByDate === 'function') {
+        archiveTransactionsByDate(fromDate, toDate);
+      } else {
+        console.warn('Функция archiveTransactionsByDate не найдена');
+      }
+
+      customDatePanel.style.display = 'none';
+    });
+  }
+
+  if (searchInput && searchClearBtn) {
+  
     // Обработчик кнопки "Показать архив"
     if (toggleArchiveBtn) {
       toggleArchiveBtn.addEventListener('click', () => {
@@ -2340,62 +2427,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (period === 'custom') {
           if (customDatePanel.style.display === 'none') {
             customDatePanel.style.display = 'block';
-
-            // Если есть сохранённый диапазон — показываем его, иначе — даты по умолчанию
-            if (currentCustomRange) {
-              dateFromInput.value = currentCustomRange.start
-                .toISOString()
-                .split('T')[0];
-              dateToInput.value = currentCustomRange.end
-                .toISOString()
-                .split('T')[0];
-            } else {
-              const today = new Date();
-              const lastMonth = new Date(
-                today.getFullYear(),
-                today.getMonth() - 1,
-                today.getDate(),
-              );
-              dateFromInput.value = lastMonth.toISOString().split('T')[0];
-              dateToInput.value = today.toISOString().split('T')[0];
-            }
           } else {
             customDatePanel.style.display = 'none';
+            currentCustomRange = null;
+
+            // === НОВОЕ: Очищаем пользовательский период при сбросе фильтра дат ===
+            if (window.appData && window.appData.settings) {
+              delete window.appData.settings.customFilterStart;
+              delete window.appData.settings.customFilterEnd;
+              localStorage.setItem(
+                'pensionBudget',
+                JSON.stringify(window.appData),
+              );
+            }
+            // =====================================================================
           }
-        } else {
-          customDatePanel.style.display = 'none';
-          currentCustomRange = null;
-        }
+        } // <-- Закрываем if (period === 'custom')
 
         applyFilters();
-      });
-    });
-
-    // Обработчик кнопки "Применить"
-    if (dateApplyBtn) {
-      dateApplyBtn.addEventListener('click', () => {
-        const fromDate = dateFromInput.value;
-        const toDate = dateToInput.value;
-
-        if (!fromDate || !toDate) {
-          alert('Пожалуйста, выберите обе даты (С и По)!');
-          return;
-        }
-
-        if (new Date(fromDate) > new Date(toDate)) {
-          alert('Дата начала не может быть позже даты конца!');
-          return;
-        }
-
-        currentCustomRange = {
-          start: new Date(fromDate),
-          end: new Date(toDate + 'T23:59:59.999'),
-        };
-
-        applyFilters();
-        customDatePanel.style.display = 'none';
-      });
-    }
+      }); // <-- Закрываем addEventListener
+    }); // <-- Закрываем forEach
 
     // Обработчик кнопки "Архив"
     if (dateArchiveBtn) {
@@ -2823,3 +2874,4 @@ if (btnAbout) {
     window.location.hash = '#screen-about';
   });
 }
+
