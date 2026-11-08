@@ -17,6 +17,8 @@ const REGULAR_INCOME_TYPES = ['Стипендия', 'Зарплата', 'Пен�
 let currentStatsAccountId = 'all';
 // ========================================================
 
+window.currentStatsCategoryId = null; 
+
 // ─── Предикаты типов операций (v2.0, коммит 2 + проценты) ───
 const isIncome = (t) => t.type === 'income' || t.type === 'interest'; // ← ДОБАВИЛИ interest
 const isExpense = (t) => t.type === 'expense';
@@ -247,9 +249,14 @@ function renderHistoryTabs() {
 }
 
 // Отрисовка списка транзакций с группировкой по дням и раздельными итогами
-export function renderTransactionList(transactions, pensionDay) {
-  const listEl = document.getElementById('transaction-list');
+export function renderTransactionList(
+  transactions,
+  pensionDay,
+  targetElementId = 'transaction-list',
+) {
+  const listEl = document.getElementById(targetElementId);
   if (!listEl) return;
+
 
   // === ВАЖНО: Полностью очищаем список перед новой отрисовкой ===
   listEl.innerHTML = '';
@@ -349,10 +356,10 @@ export function renderTransactionList(transactions, pensionDay) {
 
     group.transactions.forEach((transaction) => {
       const itemEl = document.createElement('div');
-            itemEl.className = 'transaction';
-            if (transaction.isArchived) {
-              itemEl.classList.add('archived'); // Добавляем класс для стилей
-            }
+      itemEl.className = 'transaction';
+      if (transaction.isArchived) {
+        itemEl.classList.add('archived'); // Добавляем класс для стилей
+      }
       itemEl.dataset.id = transaction.id;
       if (transaction.type === 'reserve') {
         itemEl.classList.add('transaction--reserve');
@@ -885,10 +892,83 @@ export function renderStats(settings, fixedExpenses, transactions) {
 
   renderStatsTabs(settings.accounts || []);
 
+  // Скрываем кнопку "Назад" по умолчанию (покажем только если выбрана категория)
+  const backBtn = document.getElementById('stats-back-btn');
+  if (backBtn) backBtn.style.display = 'none';
+
   const startDate = settings.currentPeriodStart
     ? new Date(settings.currentPeriodStart)
     : getCurrentPeriod(settings.pensionDay).startDate;
   const { endDate } = getCurrentPeriod(settings.pensionDay);
+
+  // === ПРОВЕРКА: РЕЖИМ ДЕТАЛИЗАЦИИ КАТЕГОРИИ (Drill-down) ===
+  if (window.currentStatsCategoryId) {
+    // 1. Показываем кнопку "Назад"
+    const backBtn = document.getElementById('stats-back-btn');
+    if (backBtn) backBtn.style.display = 'block';
+
+    // 2. Фильтруем транзакции: по дате, счёту и категории
+    const filteredTransactions = transactions.filter((t) => {
+      const tDate = new Date(t.date);
+      const isMatchCategory = t.category === window.currentStatsCategoryId;
+      const isMatchAccount =
+        currentStatsAccountId === 'all' ||
+        t.accountId === currentStatsAccountId;
+      // Показываем только расходы и фиксированные платежи этой категории
+      const isExpenseType = isExpense(t) || isCommitted(t);
+
+      return (
+        tDate >= startDate &&
+        tDate <= endDate &&
+        isMatchCategory &&
+        isMatchAccount &&
+        isExpenseType
+      );
+    });
+
+    // 3. Считаем общую сумму расходов за период
+    const totalCategoryExpenses = filteredTransactions.reduce(
+      (sum, t) => sum + t.amount,
+      0,
+    );
+
+    // 4. Отрисовываем верхнюю карточку (заголовок + сумма)
+    topContainer.innerHTML = `
+      <h2 class="stats-title">Расходы: ${window.currentStatsCategoryId}</h2>
+      <p style="text-align: center; color: var(--text-secondary); margin-top: -10px;">
+        За выбранный период (${formatDateOnly(startDate)} – ${formatDateOnly(endDate)})
+      </p>
+      <p style="text-align: center; color: var(--danger-color, #e74c3c); font-size: 1.3em; font-weight: 700; margin-top: 10px;">
+        Итого: ${formatMoney(totalCategoryExpenses)}
+      </p>
+    `;
+
+    // 4. Скрываем диаграмму и сообщение "нет данных"
+    // Скрываем весь контейнер диаграммы, а не только canvas
+    const chartContainer = document.getElementById('stats-chart');
+    if (chartContainer) chartContainer.style.display = 'none';
+    canvas.style.display = 'none';
+    if (window.expenseChartInstance) window.expenseChartInstance.destroy();
+    if (emptyMsg) emptyMsg.hidden = true;
+
+    // 5. Рисуем список транзакций в нижнем контейнере
+    // Мы создадим временный ID или используем stats-bottom, но renderTransactionList
+    // ожидает конкретную структуру. Давайте просто вызовем её, указав targetElementId.
+    // Но сначала очистим stats-bottom и добавим туда элемент с нужным ID.
+    // Полностью очищаем нижний контейнер перед отрисовкой drill-down
+    bottomContainer.innerHTML = '';
+    const listWrapper = document.createElement('div');
+    listWrapper.id = 'stats-transaction-list';
+    bottomContainer.appendChild(listWrapper);
+    renderTransactionList(
+      filteredTransactions,
+      settings.pensionDay,
+      'stats-transaction-list',
+    );
+
+    return; // ЗАВЕРШАЕМ ФУНКЦИЮ ЗДЕСЬ, чтобы не рисовать обычную статистику
+  }
+  // ==========================================================
 
   // Пенсия учитывается только для "Все счета" или счёта по умолчанию
   const isDefaultOrAll =
@@ -937,14 +1017,12 @@ export function renderStats(settings, fixedExpenses, transactions) {
       : settings.accounts?.find((a) => a.id === currentStatsAccountId)?.name ||
         'Счёт';
 
-    const nonFixedPercent =
-      totalExpenses > 0
-        ? ((totalNonFixed / totalExpenses) * 100).toFixed(0)
-        : 0;
-    const fixedPercent =
-      totalExpenses > 0 ? ((totalFixed / totalExpenses) * 100).toFixed(0) : 0;
+  const nonFixedPercent =
+    totalExpenses > 0 ? ((totalNonFixed / totalExpenses) * 100).toFixed(0) : 0;
+  const fixedPercent =
+    totalExpenses > 0 ? ((totalFixed / totalExpenses) * 100).toFixed(0) : 0;
 
-    let topHtml = `
+  let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
     <div class="stats-summary-block">
       <div class="stats-row income"><span>Доходы:</span><span>+${formatMoney(totalIncome)}</span></div>
@@ -956,93 +1034,92 @@ export function renderStats(settings, fixedExpenses, transactions) {
   `;
   topContainer.innerHTML = topHtml;
 
-       const renderSection = (categoriesObj, isFixedSection) => {
-         let sectionHtml = '';
-         const cats = Object.keys(categoriesObj).sort(
-           (a, b) => categoriesObj[b].total - categoriesObj[a].total,
-         );
+  const renderSection = (categoriesObj, isFixedSection) => {
+    let sectionHtml = '';
+    const cats = Object.keys(categoriesObj).sort(
+      (a, b) => categoriesObj[b].total - categoriesObj[a].total,
+    );
 
-         // База для процентов: своя для каждого блока
-         const percentBase = isFixedSection ? totalFixed : totalNonFixed;
+    // База для процентов: своя для каждого блока
+    const percentBase = isFixedSection ? totalFixed : totalNonFixed;
 
-         cats.forEach((cat) => {
-           const entry = categoriesObj[cat];
-           const style = isFixedSection
-             ? { emoji: '📋', color: '#95a5a6' }
-             : getCategoryStyle(cat);
-           const catPercent =
-             percentBase > 0
-               ? ((entry.total / percentBase) * 100).toFixed(1)
-               : '0.0';
-           sectionHtml += `<div class="breakdown__card">`;
-           let accountDotHtml = '';
-           if (currentStatsAccountId !== 'all') {
-             const acc = settings.accounts?.find(
-               (a) => a.id === currentStatsAccountId,
-             );
-             if (acc && acc.color)
-               accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
-           }
-           sectionHtml += `<div class="breakdown__header"><span>${style.emoji} ${cat} ${accountDotHtml}</span><span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
-           const subs = Object.keys(entry.subs).sort(
-             (a, b) => entry.subs[b] - entry.subs[a],
-           );
-           subs.forEach((sub) => {
-             const sum = entry.subs[sub];
-             const subPercent =
-               entry.total > 0 ? ((sum / entry.total) * 100).toFixed(1) : '0.0';
-             sectionHtml += `<div class="breakdown__row"><div class="breakdown__line"><span>${sub}</span><span>${formatMoney(sum)} (${subPercent}%)</span></div><div class="breakdown__bar"><div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div></div></div>`;
-           });
-           sectionHtml += `</div>`;
-         });
-         return sectionHtml;
-       };
-
-      let bottomHtml = '';
-
-      // 1. Блок нефиксированных платежей (если они есть)
-      if (Object.keys(nonFixedByCat).length > 0) {
-        bottomHtml += `<h3 class="stats-breakdown-title" style="margin-top: 20px;">Нефиксированные платежи</h3>`;
-        bottomHtml += renderSection(nonFixedByCat, false);
+    cats.forEach((cat) => {
+      const entry = categoriesObj[cat];
+      const style = isFixedSection
+        ? { emoji: '📋', color: '#95a5a6' }
+        : getCategoryStyle(cat);
+      const catPercent =
+        percentBase > 0
+          ? ((entry.total / percentBase) * 100).toFixed(1)
+          : '0.0';
+      sectionHtml += `<div class="breakdown__card">`;
+      let accountDotHtml = '';
+      if (currentStatsAccountId !== 'all') {
+        const acc = settings.accounts?.find(
+          (a) => a.id === currentStatsAccountId,
+        );
+        if (acc && acc.color)
+          accountDotHtml = `<span class="stats-account-dot" style="background-color: ${acc.color};" title="${acc.name}"></span>`;
       }
+      sectionHtml += `<div class="breakdown__header category-clickable" data-category="${cat}" data-is-fixed="${isFixedSection}"><span>${style.emoji} ${cat} ${accountDotHtml}</span><span>${formatMoney(entry.total)} (${catPercent}%)</span></div>`;
+      const subs = Object.keys(entry.subs).sort(
+        (a, b) => entry.subs[b] - entry.subs[a],
+      );
+      subs.forEach((sub) => {
+        const sum = entry.subs[sub];
+        const subPercent =
+          entry.total > 0 ? ((sum / entry.total) * 100).toFixed(1) : '0.0';
+        sectionHtml += `<div class="breakdown__row"><div class="breakdown__line"><span>${sub}</span><span>${formatMoney(sum)} (${subPercent}%)</span></div><div class="breakdown__bar"><div class="breakdown__bar-fill" style="width:${subPercent}%;background:${style.color}"></div></div></div>`;
+      });
+      sectionHtml += `</div>`;
+    });
+    return sectionHtml;
+  };
 
-      // 2. Блок фиксированных платежей (если они есть)
-      if (Object.keys(fixedByCat).length > 0) {
-        bottomHtml += `<h3 class="stats-breakdown-title" style="margin-top: 30px;">Фиксированные платежи</h3>`;
-        bottomHtml += renderSection(fixedByCat, true);
-      }
+  let bottomHtml = '';
 
-      // 3. Если расходов вообще нет
-      if (totalExpenses === 0) {
-        bottomHtml +=
-          '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
-      }
+  // 1. Блок нефиксированных платежей (если они есть)
+  if (Object.keys(nonFixedByCat).length > 0) {
+    bottomHtml += `<h3 class="stats-breakdown-title" style="margin-top: 20px;">Нефиксированные платежи</h3>`;
+    bottomHtml += renderSection(nonFixedByCat, false);
+  }
 
-      bottomContainer.innerHTML = bottomHtml;
+  // 2. Блок фиксированных платежей (если они есть)
+  if (Object.keys(fixedByCat).length > 0) {
+    bottomHtml += `<h3 class="stats-breakdown-title" style="margin-top: 30px;">Фиксированные платежи</h3>`;
+    bottomHtml += renderSection(fixedByCat, true);
+  }
 
-      // === ОТРИСОВКА ДИАГРАММЫ И СПИСКОВ ===
-  
+  // 3. Если расходов вообще нет
+  if (totalExpenses === 0) {
+    bottomHtml +=
+      '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
+  }
+
+  bottomContainer.innerHTML = bottomHtml;
+
+    // === ОТРИСОВКА ДИАГРАММЫ И СПИСКОВ ===
+
+  // 1. Убеждаемся, что контейнер диаграммы виден в обычном режиме
+  const chartContainer = document.getElementById('stats-chart');
+  if (chartContainer) chartContainer.style.display = 'block';
+  if (canvas) canvas.style.display = 'block';
+
   if (totalExpenses > 0 && Object.keys(nonFixedByCat).length > 0) {
     if (emptyMsg) emptyMsg.hidden = true;
-    canvas.style.display = 'block';
 
     // 1. Заголовок НАД диаграммой (сначала удаляем старый, если есть)
-    const existingTitle = canvas.parentElement.querySelector(
-      '.chart-title-dynamic',
-    );
+    const existingTitle = canvas.parentElement.querySelector('.chart-title-dynamic');
     if (existingTitle) existingTitle.remove();
 
     const chartTitle = document.createElement('h3');
     chartTitle.className = 'stats-breakdown-title chart-title-dynamic';
     chartTitle.textContent = 'Нефиксированные платежи';
-    chartTitle.style.cssText =
-      'margin: 20px 0 10px; font-size: 1.2em; color: var(--text-primary);';
+    chartTitle.style.cssText = 'margin: 20px 0 10px; font-size: 1.2em; color: var(--text-primary);';
     canvas.parentElement.insertBefore(chartTitle, canvas);
 
     // 2. Рисуем диаграмму
-    const labels = [],
-      data = [],
-      backgroundColors = [];
+    const labels = [], data = [], backgroundColors = [];
     Object.keys(nonFixedByCat).forEach((cat) => {
       const style = getCategoryStyle(cat);
       labels.push(cat);
@@ -1089,10 +1166,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
             callbacks: {
               label: function (context) {
                 const style = getCategoryStyle(context.label);
-                const percentage = (
-                  (context.parsed / totalNonFixed) *
-                  100
-                ).toFixed(1);
+                const percentage = ((context.parsed / totalNonFixed) * 100).toFixed(1);
                 return `${style.emoji} ${context.label}: ${formatMoney(context.parsed)} (${percentage}%)`;
               },
             },
@@ -1101,7 +1175,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
       },
     });
 
-    // 3. Формируем нижние списки (заголовок уже над диаграммой, не дублируем)
+    // 3. Формируем нижние списки
     let bottomHtml = '';
     bottomHtml += renderSection(nonFixedByCat, false);
 
@@ -1111,21 +1185,33 @@ export function renderStats(settings, fixedExpenses, transactions) {
     }
 
     bottomContainer.innerHTML = bottomHtml;
+
   } else {
-    if (emptyMsg) emptyMsg.hidden = false;
-    canvas.style.display = 'none';
-    if (window.expenseChartInstance) window.expenseChartInstance.destroy();
+    // Если нефиксированных расходов нет, проверяем фиксированные
+    const hasAnyExpenses = Object.keys(fixedByCat).length > 0;
     
-    let bottomHtml = '';
-    if (Object.keys(fixedByCat).length > 0) {
+    if (emptyMsg) emptyMsg.hidden = hasAnyExpenses; // Скрываем "нет данных", если есть фиксированные
+    
+    if (!hasAnyExpenses) {
+      canvas.style.display = 'none';
+      if (chartContainer) chartContainer.style.display = 'none';
+      if (window.expenseChartInstance) window.expenseChartInstance.destroy();
+      
+      let bottomHtml = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
+      bottomContainer.innerHTML = bottomHtml;
+    } else {
+      // Есть только фиксированные платежи
+      canvas.style.display = 'none';
+      if (chartContainer) chartContainer.style.display = 'none';
+      if (window.expenseChartInstance) window.expenseChartInstance.destroy();
+      
+      let bottomHtml = '';
       bottomHtml += `<h3 class="stats-breakdown-title">Фиксированные платежи</h3>`;
       bottomHtml += renderSection(fixedByCat, true);
-    } else {
-      bottomHtml += '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет расходов за этот период</p>';
+      bottomContainer.innerHTML = bottomHtml;
     }
-    bottomContainer.innerHTML = bottomHtml;
   }
-} // <-- Закрывающая скобка функции renderStats
+} // <-- Эта скобка закрывает функцию renderStats
 
 export function renderPensionPeriodInfo(settings) {
   const periodInfoEl = document.getElementById('period-info');

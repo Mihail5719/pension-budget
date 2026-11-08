@@ -3896,3 +3896,72 @@ body.dark-theme .restore-all-btn:hover {
     font-size: 16px;
   }
 }
+
+/* Кнопка "Назад" на экране статистики (v2.2) — улучшенный стиль */
+.stats-back-btn {
+  display: block;
+  margin: 16px auto; /* Центрируем */
+  padding: 12px 24px;
+  background: var(--bg-secondary, #f8f9fa);
+  border: 2px solid var(--primary-color, #3498db);
+  border-radius: 12px;
+  color: var(--primary-color, #3498db);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+}
+
+.stats-back-btn:hover {
+  background: var(--primary-color, #3498db);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.stats-back-btn:active {
+  transform: translateY(0);
+}
+
+body.dark-theme .stats-back-btn {
+  background: #2a2a2a;
+  color: #5dade2;
+  border-color: #5dade2;
+}
+
+body.dark-theme .stats-back-btn:hover {
+  background: #5dade2;
+  color: #fff;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 480px) {
+  .stats-back-btn {
+    padding: 14px 20px;
+    font-size: 16px;
+    margin: 12px auto;
+    width: calc(100% - 32px); /* На всю ширину на мобильных */
+  }
+}
+
+/* Делаем заголовок категории визуально кликабельным (v2.2) */
+.breakdown__header.category-clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  padding: 4px 12px;
+  margin: 0 -12px; /* Компенсация padding для выравнивания */
+}
+
+.breakdown__header.category-clickable:hover {
+  background-color: rgba(52, 152, 219, 0.15); /* Подсветка при наведении */
+}
+
+.breakdown__header.category-clickable:active {
+  transform: scale(0.98); /* Эффект нажатия */
+}
+
+body.dark-theme .breakdown__header.category-clickable:hover {
+  background-color: rgba(93, 173, 226, 0.2);
+}
