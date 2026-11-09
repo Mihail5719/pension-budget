@@ -2,7 +2,7 @@
   "name": "Мой бюджет",
   "short_name": "Бюджет",
   "description": "Финансовый помощник: учёт расходов по нескольким счетам, фиксированные платежи и контроль бюджета.",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f7fa",
