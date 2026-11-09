@@ -990,12 +990,45 @@ export function renderStats(settings, fixedExpenses, transactions) {
   }
   // ==========================================================
 
-  // Пенсия учитывается только для "Все счета" или счёта по умолчанию
+  // === ПОДСЧЁТ ДОХОДОВ (Пенсия + Транзакции) ===
   const isDefaultOrAll =
     currentStatsAccountId === 'all' ||
     currentStatsAccountId === settings.defaultAccountId;
-  let totalIncome =
-    settings.currentPeriodStart && isDefaultOrAll ? settings.pensionAmount : 0;
+
+  let pensionCount = 0;
+  if (isDefaultOrAll && settings.pensionAmount > 0) {
+    let currentYear = startDate.getFullYear();
+    let currentMonth = startDate.getMonth();
+    const endYear = endDate.getFullYear();
+    const endMonth = endDate.getMonth();
+
+    while (
+      currentYear < endYear ||
+      (currentYear === endYear && currentMonth <= endMonth)
+    ) {
+      const lastDayOfMonth = new Date(
+        currentYear,
+        currentMonth + 1,
+        0,
+      ).getDate();
+      const actualPensionDay = Math.min(settings.pensionDay, lastDayOfMonth);
+      const pensionDate = new Date(currentYear, currentMonth, actualPensionDay);
+
+      if (pensionDate >= startDate && pensionDate <= endDate) {
+        pensionCount++;
+      }
+
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+    }
+  }
+
+  // Итоговый доход = (количество пенсий в периоде * сумма пенсии) + доходы из транзакций
+  let totalIncome = pensionCount * (settings.pensionAmount || 0);
+  // ============================================
   let totalNonFixed = 0;
   let totalFixed = 0;
   const nonFixedByCat = {};
