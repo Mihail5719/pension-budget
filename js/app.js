@@ -2150,32 +2150,11 @@ document.addEventListener('DOMContentLoaded', () => {
         end: new Date(toDate + 'T23:59:59.999'),
       };
 
-      // === НОВОЕ: Сохраняем пользовательский период в настройки ===
-      console.log('🔍 ПРОВЕРКА ПЕРЕД СОХРАНЕНИЕМ:');
-      console.log('  window.appData:', window.appData);
-      console.log('  window.appData.settings:', window.appData?.settings);
-      console.log('  fromDate:', fromDate);
-      console.log('  toDate:', toDate);
-
+      // === Сохраняем пользовательский период в настройки ===
       if (window.appData && window.appData.settings) {
         window.appData.settings.customFilterStart = fromDate;
         window.appData.settings.customFilterEnd = toDate;
-        console.log('✅ Сохраняем в settings:', {
-          customFilterStart: fromDate,
-          customFilterEnd: toDate,
-        });
         localStorage.setItem('pensionBudget', JSON.stringify(window.appData));
-
-        // Проверяем, что сохранилось
-        const saved = JSON.parse(localStorage.getItem('pensionBudget'));
-        console.log('📦 После сохранения в localStorage:', {
-          customFilterStart: saved.settings.customFilterStart,
-          customFilterEnd: saved.settings.customFilterEnd,
-        });
-      } else {
-        console.error(
-          '❌ ОШИБКА: window.appData или window.appData.settings отсутствует!',
-        );
       }
       // ============================================================
 

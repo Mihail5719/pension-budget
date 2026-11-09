@@ -901,7 +901,8 @@ export function renderStats(settings, fixedExpenses, transactions) {
 
   // Приоритет 1: Пользовательский фильтр из экрана "История"
   if (settings.customFilterStart && settings.customFilterEnd) {
-    startDate = new Date(settings.customFilterStart);
+    const [y, m, d] = settings.customFilterStart.split('-');
+    startDate = new Date(Number(y), Number(m) - 1, Number(d));
     endDate = new Date(settings.customFilterEnd + 'T23:59:59.999');
   }
   // Приоритет 2: Стандартный период пенсии
@@ -912,14 +913,6 @@ export function renderStats(settings, fixedExpenses, transactions) {
     endDate = getCurrentPeriod(settings.pensionDay).endDate;
   }
   // ============================================
-
-  console.log(' renderStats: Период для статистики:', {
-    customFilterStart: settings.customFilterStart,
-    customFilterEnd: settings.customFilterEnd,
-    startDate: startDate,
-    endDate: endDate,
-    fallback: !settings.customFilterStart,
-  });
 
   // === ПРОВЕРКА: РЕЖИМ ДЕТАЛИЗАЦИИ КАТЕГОРИИ (Drill-down) ===
   if (window.currentStatsCategoryId) {
