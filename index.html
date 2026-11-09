@@ -42,48 +42,53 @@
             </div>
             <button id="btn-dismiss-mid-period" class="mid-period-banner__close" title="Понятно">✕</button>
         </div>
-        
+
         <!-- Модальное окно с инструкцией -->
         <div class="modal" id="instruction-modal">
             <div class="modal__overlay"></div>
             <div class="modal__content">
                 <h2 class="modal__title">📋 Настройка при входе в середине периода</h2>
-        
+
                 <div class="instruction-text">
-                    <p>Вы установили приложение после дня получения регулярного ежемесячного дохода. Чтобы дневной лимит был
+                    <p>Вы установили приложение после дня получения регулярного ежемесячного дохода. Чтобы дневной лимит
+                        был
                         точным, сделайте 4 простых шага:</p>
-        
+
                     <div class="instruction-step">
                         <span class="step-number">1️⃣</span>
-                        <span>Укажите <strong>день поступления</strong> и <strong>сумму дохода</strong> <em>(скорее всего, вы
+                        <span>Укажите <strong>день поступления</strong> и <strong>сумму дохода</strong> <em>(скорее
+                                всего, вы
                                 уже это сделали ✅)</em></span>
                     </div>
-        
+
                     <div class="instruction-step">
                         <span class="step-number">2️⃣</span>
-                        <span>В поле <strong>Источник дохода</strong> выберите вид вашего регулярного дохода (Пенсия, Зарплата,
+                        <span>В поле <strong>Источник дохода</strong> выберите вид вашего регулярного дохода (Пенсия,
+                            Зарплата,
                             Стипендия и т.д.)</span>
                     </div>
-        
+
                     <div class="instruction-step">
                         <span class="step-number">3️⃣</span>
                         <span>Добавьте свои счета в разделе <strong>Настройки → Мои счета</strong> (Сбербанк, Наличные и
                             т.д.)</span>
                     </div>
-        
+
                     <div class="instruction-step">
                         <span class="step-number">4️⃣</span>
                         <span>Введите <strong>текущие остатки</strong> по каждому счёту (сколько денег сейчас на каждом
                             счёте)</span>
                     </div>
-        
-                    <p class="instruction-success">✅ Готово! Приложение само рассчитает дневной лимит на оставшиеся дни до
+
+                    <p class="instruction-success">✅ Готово! Приложение само рассчитает дневной лимит на оставшиеся дни
+                        до
                         следующего поступления.</p>
-        
-                    <p class="instruction-tip">💡 <strong>Совет:</strong> Не нужно вводить прошлые траты. Приложение работает с
+
+                    <p class="instruction-tip">💡 <strong>Совет:</strong> Не нужно вводить прошлые траты. Приложение
+                        работает с
                         текущими остатками.</p>
                 </div>
-        
+
                 <div class="modal__buttons">
                     <button class="btn btn--primary" id="btn-close-instruction">Понятно, спасибо!</button>
                 </div>
@@ -160,8 +165,10 @@
                                 ваш реальный доступный бюджет до следующего поступления. Оно учитывает начальный
                                 остаток, все
                                 доходы, расходы и ваш неприкосновенный запас (НЗ).</li>
-                            <li><strong>🏦 Управление несколькими счетами</strong><br>Ведите учет по всем вашим картам и счетам (Сбербанк, ВТБ,
-                                Тинькофф и др.) в одном месте. Приложение автоматически рассчитывает актуальный баланс по каждому из них.
+                            <li><strong>🏦 Управление несколькими счетами</strong><br>Ведите учет по всем вашим картам и
+                                счетам (Сбербанк, ВТБ,
+                                Тинькофф и др.) в одном месте. Приложение автоматически рассчитывает актуальный баланс
+                                по каждому из них.
                                 Поддерживается также учёт наличных денег.</li>
                             <li><strong> Надежная «Копилка» (Накопительные счета)</strong><br>Вы можете пометить любой
                                 счет как
@@ -180,19 +187,40 @@
                                 сумму: Общий баланс, Активные счета и Накопительные счета. Это гарантирует, что цифры в
                                 приложении
                                 всегда сходятся с реальностью до копейки.</li>
-                            <li><strong> Учет фиксированных платежей и дневной лимит</strong><br>Приложение знает о ваших
+                            <li><strong> Учет фиксированных платежей и дневной лимит</strong><br>Приложение знает о
+                                ваших
                                 фиксированных
                                 расходах (кредиты, коммунальные услуги) и заранее вычитает их из бюджета. На основе
                                 оставшейся суммы
                                 оно рассчитывает безопасный <strong>дневной лимит</strong>, чтобы вы могли спокойно
                                 планировать свои
                                 покупки.</li>
-                            <li><strong>🛡️ Защита от перерасхода (v2.1)</strong><br>Приложение автоматически проверяет баланс выбранного счёта
-                                перед записью расхода. Если средств недостаточно, операция будет заблокирована. Это гарантирует, что вы не уйдёте в
+                            <li><strong>🛡️ Защита от перерасхода (v2.1)</strong><br>Приложение автоматически проверяет
+                                баланс выбранного счёта
+                                перед записью расхода. Если средств недостаточно, операция будет заблокирована. Это
+                                гарантирует, что вы не уйдёте в
                                 минус ни по одному из своих счетов.</li>
-                            <li><strong>💡 Умный старт в середине периода (v2.1)</strong><br>Если вы начали вести учёт не с первого дня месяца,
-                                приложение это распознает и покажет баннер с простой инструкцией по вводу текущих остатков, чтобы сразу рассчитать
+                            <li><strong>💡 Умный старт в середине периода (v2.1)</strong><br>Если вы начали вести учёт
+                                не с первого дня месяца,
+                                приложение это распознает и покажет баннер с простой инструкцией по вводу текущих
+                                остатков, чтобы сразу рассчитать
                                 точный дневной лимит.</li>
+                            <li>
+                                <strong>🔍 Расширенный контроль истории (v2.2)</strong>
+                                Мгновенный поиск по записям, архивация транзакций без удаления, гибкие фильтры по датам
+                                и счетам.
+                            </li>
+                            <li>
+                                <strong>📈 Продвинутая аналитика (v2.2)</strong>
+                                Детализация расходов по категориям (drill-down), синхронизация периодов между экранами,
+                                точный подсчёт доходов за
+                                любой период.
+                            </li>
+                            <li>
+                                <strong>📅 Умный перенос дат (v2.2)</strong>
+                                Автоматическая корректировка фиксированных платежей с 29-31 числа на последний день
+                                месяца.
+                            </li>
                         </ul>
 
                         <h3> Ваши гарантии:</h3>
@@ -214,6 +242,9 @@
                                 осознанно, накапливайте стабильно!</strong></p>
                     </div>
                 </div>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 30px; font-size: 0.9em;">
+                    Версия 2.2.0 — Ноябрь 2026
+                </p>
             </section>
 
             <!-- Экран 1: Сегодня -->
@@ -254,16 +285,16 @@
                     <button class="btn btn--primary btn--large" id="btn-add-expense">
                         Записать расход
                     </button>
-                
+
                     <button class="btn btn--success btn--large" id="btn-add-income">
                         Добавить доход
                     </button>
-                
+
                     <!-- Кнопка перевода между счетами (НОВОЕ, v2.5) -->
                     <button class="btn btn--transfer btn--large" id="btn-add-transfer">
                         ⇄ Перевод между счетами
                     </button>
-                
+
                     <!-- Кнопка "Использовать НЗ" -->
                     <button id="btn-use-reserve" class="btn btn--warning" style="display: none;">
                         🔓 Использовать НЗ
@@ -285,14 +316,15 @@
             <!-- Экран 2: История -->
             <section class="screen screen--history" id="screen-history">
                 <h2 class="screen__title">История операций</h2>
-            
+
                 <!-- Поиск по истории операций (v2.2) -->
                 <div class="search-container" id="search-container">
                     <div class="search-input-wrapper">
                         <span class="search-icon">🔍</span>
                         <input type="text" id="search-input" class="search-input"
                             placeholder="Поиск по категории, предмету, месту, комментарию..." autocomplete="off">
-                        <button id="search-clear" class="search-clear-btn" style="display: none;" title="Очистить поиск">✕</button>
+                        <button id="search-clear" class="search-clear-btn" style="display: none;"
+                            title="Очистить поиск">✕</button>
                     </div>
                     <div class="search-info" id="search-info">
                         <span id="search-count">Найдено: 0 из 0 записей</span>
@@ -303,7 +335,8 @@
                     👁️ Показать архив
                 </button>
 
-                <button id="restore-all-btn" class="restore-all-btn" style="display: none;" title="Восстановить все архивные записи">
+                <button id="restore-all-btn" class="restore-all-btn" style="display: none;"
+                    title="Восстановить все архивные записи">
                     ↩️ Восстановить всё
                 </button>
 
@@ -330,10 +363,11 @@
                     </div>
                     <div class="custom-date-actions">
                         <button id="date-apply" class="date-apply-btn">Применить</button>
-                        <button id="date-archive" class="date-archive-btn" title="Скрыть записи за выбранный период">📦 Архив</button>
+                        <button id="date-archive" class="date-archive-btn" title="Скрыть записи за выбранный период">📦
+                            Архив</button>
                     </div>
                 </div>
-            
+
                 <div class="transaction-list" id="transaction-list">
                     <!-- Транзакции будут добавляться сюда из JS -->
                 </div>
@@ -516,19 +550,19 @@
 
             <!-- Экран 4: Статистика -->
             <section class="screen screen--stats" id="screen-stats">
-            
+
                 <!-- Горизонтальные табы счетов (v2.4) -->
                 <div id="stats-tabs-container" class="stats-tabs"></div>
-                
+
                 <!-- Кнопка "Назад" из детализации категории (v2.2) -->
                 <button id="stats-back-btn" class="stats-back-btn" style="display: none;">
                     ← Назад к категориям
                 </button>
-                
+
                 <!-- Верхняя карточка: заголовок + суммы -->
                 <div id="stats-top" class="stats-card"></div>
 
-                
+
 
                 <!-- Средняя карточка: диаграмма -->
                 <div id="stats-chart" class="stats-card">
@@ -615,7 +649,8 @@
 
             <label class="modal__label">
                 <span class="modal__label-text">Комментарий (необязательно):</span>
-                <input type="text" id="expense-note" class="modal__input" placeholder="Например: Автоплатёж, регулярный платёж">
+                <input type="text" id="expense-note" class="modal__input"
+                    placeholder="Например: Автоплатёж, регулярный платёж">
             </label>
 
             <div class="modal__buttons">
@@ -791,7 +826,7 @@
             <!-- Кнопки -->
             <div class="modal__buttons">
                 <button class="btn btn--secondary" id="btn-cancel-edit">Отмена</button>
-                <button class="btn btn--primary" id="btn-save-edit">Сохранить</button>    
+                <button class="btn btn--primary" id="btn-save-edit">Сохранить</button>
             </div>
         </div>
     </div>
@@ -825,42 +860,42 @@
         </div>
     </div>
 
-        <!-- Модальное окно для добавления фиксированного платежа -->
-        <div class="modal" id="fixed-expense-modal">
-            <div class="modal__overlay"></div>
-            <div class="modal__content">
-                <h2 class="modal__title" id="fixed-expense-modal-title">Добавить фиксированный платёж</h2>
-        
-                <label class="modal__label">
-                    <span class="modal__label-text">Название (например: Кредит ВТБ)</span>
-                    <input type="text" class="modal__input" id="fixed-expense-name" placeholder="Название платежа">
-                </label>
-        
-                <label class="modal__label">
-                    <span class="modal__label-text">Сумма (₽)</span>
-                    <input type="number" class="modal__input" id="fixed-expense-amount" placeholder="0.00" inputmode="decimal"
-                        min="0" step="0.01">
-                </label>
-        
-                <label class="modal__label">
-                    <span class="modal__label-text">День месяца (1-31)</span>
-                    <input type="number" class="modal__input" id="fixed-expense-day" placeholder="5" min="1" max="28">
-                </label>
-        
-                <!-- Выбор счёта для списания -->
-                <label class="modal__label">
-                    <span class="modal__label-text">Списать со счёта:</span>
-                    <select class="modal__select" id="fixed-expense-account">
-                        <!-- Счета будут добавляться через JavaScript -->
-                    </select>
-                </label>
-        
-                <div class="modal__buttons">
-                    <button class="btn btn--secondary" id="btn-cancel-fixed-expense">Отмена</button>
-                    <button class="btn btn--primary" id="btn-save-fixed-expense">Сохранить</button>
-                </div>
+    <!-- Модальное окно для добавления фиксированного платежа -->
+    <div class="modal" id="fixed-expense-modal">
+        <div class="modal__overlay"></div>
+        <div class="modal__content">
+            <h2 class="modal__title" id="fixed-expense-modal-title">Добавить фиксированный платёж</h2>
+
+            <label class="modal__label">
+                <span class="modal__label-text">Название (например: Кредит ВТБ)</span>
+                <input type="text" class="modal__input" id="fixed-expense-name" placeholder="Название платежа">
+            </label>
+
+            <label class="modal__label">
+                <span class="modal__label-text">Сумма (₽)</span>
+                <input type="number" class="modal__input" id="fixed-expense-amount" placeholder="0.00"
+                    inputmode="decimal" min="0" step="0.01">
+            </label>
+
+            <label class="modal__label">
+                <span class="modal__label-text">День месяца (1-31)</span>
+                <input type="number" class="modal__input" id="fixed-expense-day" placeholder="5" min="1" max="28">
+            </label>
+
+            <!-- Выбор счёта для списания -->
+            <label class="modal__label">
+                <span class="modal__label-text">Списать со счёта:</span>
+                <select class="modal__select" id="fixed-expense-account">
+                    <!-- Счета будут добавляться через JavaScript -->
+                </select>
+            </label>
+
+            <div class="modal__buttons">
+                <button class="btn btn--secondary" id="btn-cancel-fixed-expense">Отмена</button>
+                <button class="btn btn--primary" id="btn-save-fixed-expense">Сохранить</button>
             </div>
         </div>
+    </div>
 
     <script type="module" src="js/app.js"></script>
     <!-- Hammer.js для свайп-навигации -->
