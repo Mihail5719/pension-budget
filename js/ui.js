@@ -1073,7 +1073,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
 
   let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
-    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); font-size: 0.9em; margin: -8px 0 16px 0;">
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 16px 0;">
       За период (${periodText})
     </div>
     <div class="stats-summary-block">
