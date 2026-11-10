@@ -2981,12 +2981,32 @@ button[onclick*='period'] {
     padding: 32px;
   }
 
+  /* === Диаграмма (Десктоп) === */
+@media (min-width: 601px) {
+  #stats-chart {
+    padding: 32px;
+  }
   #stats-chart canvas {
     max-width: 500px;
     max-height: 500px;
-    width: 500px !important;
-    height: 500px !important;
+    /* Убираем !important, позволяем Chart.js управлять размерами */
+    width: 100%; 
+    height: auto;
   }
+}
+
+/* === Диаграмма (Мобильные устройства) === */
+@media (max-width: 600px) {
+  #stats-chart {
+    padding: 14px; /* Уменьшаем отступы */
+  }
+  #stats-chart canvas {
+    max-width: 100%;
+    max-height: 280px;
+    width: 100% !important;
+    height: auto !important; /* Позволяем Chart.js рассчитать высоту пропорционально */
+  }
+}
 
   /* === Экран сверки === */
   .screen--reconcile,

@@ -1209,8 +1209,9 @@ export function renderStats(settings, fixedExpenses, transactions) {
             position: 'bottom',
             labels: {
               usePointStyle: true,
-              padding: 20,
-              font: { size: 14, weight: '500' },
+              padding: 12, // Уменьшили отступ между элементами
+              font: { size: 12, weight: '500' }, // Уменьшили шрифт для экономии места
+              boxWidth: 12, // Уменьшили размер цветного квадратика
             },
           },
           tooltip: {
