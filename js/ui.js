@@ -949,7 +949,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
     topContainer.innerHTML = `
       <h2 class="stats-title">Расходы: ${window.currentStatsCategoryId}</h2>
       <p style="text-align: center; color: var(--text-secondary); margin-top: -10px;">
-        За выбранный период (${formatDateOnly(startDate)} – ${formatDateOnly(endDate)})
+        За период (${formatDateOnly(startDate)} – ${formatDateOnly(endDate)})
       </p>
       <p style="text-align: center; color: var(--danger-color, #e74c3c); font-size: 1.3em; font-weight: 700; margin-top: 10px;">
         Итого: ${formatMoney(totalCategoryExpenses)}
@@ -1074,7 +1074,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
   let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
     <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); font-size: 0.9em; margin: -8px 0 16px 0;">
-      За выбранный период (${periodText})
+      За период (${periodText})
     </div>
     <div class="stats-summary-block">
       <div class="stats-row income"><span>Доходы:</span><span>+${formatMoney(totalIncome)}</span></div>
