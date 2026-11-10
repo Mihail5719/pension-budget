@@ -3967,7 +3967,7 @@ body.dark-theme .breakdown__header.category-clickable:hover {
 }
 
 /* Адаптивная легенда для мобильных устройств */
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .chart-legend,
   .stats-legend {
     display: flex;
