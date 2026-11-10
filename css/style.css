@@ -4007,6 +4007,8 @@ body.dark-theme .breakdown__header.category-clickable:hover {
 
 /* Подпись периода на экране статистики */
 .stats-period-label {
+  text-align: center;
+  color: var(--text-secondary);
   font-size: 0.9em;
 }
 
