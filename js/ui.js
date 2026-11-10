@@ -1068,8 +1068,14 @@ export function renderStats(settings, fixedExpenses, transactions) {
   const fixedPercent =
     totalExpenses > 0 ? ((totalFixed / totalExpenses) * 100).toFixed(0) : 0;
 
+  // Формируем текст периода так же, как это делается в drill-down
+  const periodText = `${formatDateOnly(startDate)} – ${formatDateOnly(endDate)}`;
+
   let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); font-size: 0.9em; margin: -8px 0 16px 0;">
+      За выбранный период (${periodText})
+    </div>
     <div class="stats-summary-block">
       <div class="stats-row income"><span>Доходы:</span><span>+${formatMoney(totalIncome)}</span></div>
       <div class="stats-row expense"><span>Расходы:</span><span>-${formatMoney(totalExpenses)}</span></div>
@@ -1079,6 +1085,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
     </div>
   `;
   topContainer.innerHTML = topHtml;
+  
 
   const renderSection = (categoriesObj, isFixedSection) => {
     let sectionHtml = '';
