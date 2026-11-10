@@ -948,9 +948,9 @@ export function renderStats(settings, fixedExpenses, transactions) {
     // 4. Отрисовываем верхнюю карточку (заголовок + сумма)
     topContainer.innerHTML = `
       <h2 class="stats-title">Расходы: ${window.currentStatsCategoryId}</h2>
-      <p style="text-align: center; color: var(--text-secondary); margin-top: -10px;">
-        За период (${formatDateOnly(startDate)} – ${formatDateOnly(endDate)})
-      </p>
+      <p class="stats-period-label" style="margin-top: -10px;">
+  За период (${formatDateOnly(startDate)} – ${formatDateOnly(endDate)})
+</p>
       <p style="text-align: center; color: var(--danger-color, #e74c3c); font-size: 1.3em; font-weight: 700; margin-top: 10px;">
         Итого: ${formatMoney(totalCategoryExpenses)}
       </p>
