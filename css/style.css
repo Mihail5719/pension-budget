@@ -4004,3 +4004,16 @@ body.dark-theme .breakdown__header.category-clickable:hover {
     flex: 0 0 auto;
   }
 }
+
+/* Подпись периода на экране статистики */
+.stats-period-label {
+  font-size: 0.9em;
+}
+
+/* Уменьшаем шрифт на мобильных для лучшего размещения */
+@media (max-width: 480px) {
+  .stats-period-label {
+    font-size: 0.8em;
+    text-wrap: balance;
+  }
+}
