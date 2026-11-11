@@ -1,3 +1,5 @@
+import { EXPENSE_CATEGORIES } from './constants.js';
+
 /**
  * Форматирует число в денежный формат с копейками
  * Пример: 12350.45 -> "12 350,45 ₽"
@@ -130,7 +132,6 @@ export function getDateRange(period) {
   }
 }
 
-
 /**
  * Проверяет, попадает ли дата транзакции в заданный диапазон.
  * @param {string|Date} transactionDate - дата транзакции (ISO-строка или Date)
@@ -152,9 +153,14 @@ export function isDateInRange(transactionDate, start, end) {
  * @param {boolean} [includeArchived=false] - показывать ли архивные
  * @returns {Array} отфильтрованный массив транзакций
  */
-export function filterTransactions(query, transactions, dateRange, includeArchived = false) {
+export function filterTransactions(
+  query,
+  transactions,
+  dateRange,
+  includeArchived = false,
+) {
   // 1. Фильтруем по дате и архивации
-  let filtered = transactions.filter(t => {
+  let filtered = transactions.filter((t) => {
     // Исключаем архивные, если не запрошены явно
     if (!includeArchived && t.isArchived) {
       return false;
@@ -166,23 +172,166 @@ export function filterTransactions(query, transactions, dateRange, includeArchiv
   if (query && query.trim() !== '') {
     const lowerQuery = query.toLowerCase().trim();
 
-    filtered = filtered.filter(t => {
+    filtered = filtered.filter((t) => {
       const fieldsToSearch = [
         t.category || '',
         t.subCategory || t.subcategory || '',
         t.item || '',
         t.store || '',
         t.note || '',
-        String(t.amount || '')
+        String(t.amount || ''),
       ];
 
-      return fieldsToSearch.some(field => 
-        String(field).toLowerCase().includes(lowerQuery)
+      return fieldsToSearch.some((field) =>
+        String(field).toLowerCase().includes(lowerQuery),
       );
     });
   }
 
   return filtered;
+}
+
+/**
+ * Анализирует расходы за выбранный период и группирует их по иерархии:
+ * Категория -> Подкатегория -> Товар.
+ * Реализует "умное скрытие" уровня товаров, если они не заполнены.
+ *
+ * @param {Array} transactions - Массив всех транзакций
+ * @param {Object} dateRange - Объект { start: Date, end: Date }
+ * @returns {Object} Структурированные данные для отчета
+ */
+export function analyzeExpenses(transactions, dateRange) {
+  // 1. Фильтрация транзакций
+  const filtered = transactions.filter((t) => {
+    if (t.type !== 'expense' && t.type !== 'committed') return false;
+    const date = new Date(t.date);
+    return date >= dateRange.start && date <= dateRange.end;
+  });
+
+  // 2. Подсчет общей суммы (с защитой от IEEE-754)
+  const totalExpenses =
+    Math.round(filtered.reduce((sum, t) => sum + t.amount, 0) * 100) / 100;
+
+  // Если расходов нет, возвращаем пустую структуру
+  if (totalExpenses === 0) {
+    return {
+      totalExpenses: 0,
+      period: {
+        start: dateRange.start.toISOString().split('T')[0],
+        end: dateRange.end.toISOString().split('T')[0],
+      },
+      categories: [],
+    };
+  }
+
+  // 3. Промежуточная агрегация
+  const aggregation = {};
+
+  filtered.forEach((t) => {
+    const catName = t.category || 'Разное';
+    const subName = t.subcategory || 'Без подкатегории';
+    const itemName = t.item && t.item.trim() ? t.item.trim() : null;
+
+    if (!aggregation[catName]) {
+      aggregation[catName] = { total: 0, subs: {} };
+    }
+    aggregation[catName].total += t.amount;
+
+    if (!aggregation[catName].subs[subName]) {
+      aggregation[catName].subs[subName] = { total: 0, items: {} };
+    }
+    aggregation[catName].subs[subName].total += t.amount;
+
+    if (itemName) {
+      if (!aggregation[catName].subs[subName].items[itemName]) {
+        aggregation[catName].subs[subName].items[itemName] = 0;
+      }
+      aggregation[catName].subs[subName].items[itemName] += t.amount;
+    }
+  });
+
+  // Округляем промежуточные суммы, чтобы избежать накопления ошибок
+  Object.keys(aggregation).forEach((catName) => {
+    aggregation[catName].total =
+      Math.round(aggregation[catName].total * 100) / 100;
+    Object.keys(aggregation[catName].subs).forEach((subName) => {
+      aggregation[catName].subs[subName].total =
+        Math.round(aggregation[catName].subs[subName].total * 100) / 100;
+      Object.keys(aggregation[catName].subs[subName].items).forEach(
+        (itemName) => {
+          aggregation[catName].subs[subName].items[itemName] =
+            Math.round(
+              aggregation[catName].subs[subName].items[itemName] * 100,
+            ) / 100;
+        },
+      );
+    });
+  });
+
+  // 4. Форматирование и сортировка
+  const categories = Object.keys(aggregation)
+    .map((catName) => {
+      const catData = aggregation[catName];
+      const catInfo = EXPENSE_CATEGORIES.find((c) => c.name === catName);
+      const emoji = catInfo ? catInfo.emoji : '📦';
+
+      const subcategories = Object.keys(catData.subs)
+        .map((subName) => {
+          const subData = catData.subs[subName]; // ← ВОТ ЭТА СТРОКА БЫЛА ПОТЕРЯНА
+
+          let items = [];
+          const itemKeys = Object.keys(subData.items);
+
+          if (itemKeys.length > 0) {
+            items = itemKeys
+              .map((name) => ({
+                name,
+                total: subData.items[name],
+                percent:
+                  Math.round((subData.items[name] / totalExpenses) * 1000) / 10,
+              }))
+              .sort((a, b) => b.total - a.total);
+
+            const itemsTotal = items.reduce((sum, i) => sum + i.total, 0);
+            const diff = Math.round((subData.total - itemsTotal) * 100) / 100;
+            // Добавляем "Без названия" только если разница существенна (больше 1 копейки)
+            if (diff > 0.01) {
+              items.push({
+                name: 'Без названия',
+                total: diff,
+                percent: Math.round((diff / totalExpenses) * 1000) / 10,
+              });
+              items.sort((a, b) => b.total - a.total);
+            }
+          }
+
+          return {
+            name: subName,
+            total: subData.total,
+            percent: Math.round((subData.total / totalExpenses) * 1000) / 10,
+            items: items,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+
+      return {
+        name: catName,
+        emoji: emoji,
+        total: catData.total,
+        percent: Math.round((catData.total / totalExpenses) * 1000) / 10,
+        subcategories: subcategories,
+      };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  return {
+    totalExpenses,
+    period: {
+      start: dateRange.start.toISOString().split('T')[0],
+      end: dateRange.end.toISOString().split('T')[0],
+    },
+    categories,
+  };
 }
 
 /**
@@ -197,3 +346,6 @@ export function getActualPaymentDay(requestedDay, year, month) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   return Math.min(requestedDay, daysInMonth);
 }
+
+// Временно делаем функцию доступной в консоли для тестирования
+window.analyzeExpenses = analyzeExpenses;
