@@ -8,6 +8,7 @@ import {
   renderPensionPeriodInfo,
   updateSyncIndicator,
   renderAccountsList,
+  initStatsModeSwitcher,
 } from './ui.js';
 import {
   formatDateKey,
@@ -97,6 +98,11 @@ function init() {
 
   // Отрисовываем всё
   renderAll(appData);
+
+  // Инициализация переключателя режимов статистики
+  if (typeof initStatsModeSwitcher === 'function') {
+    initStatsModeSwitcher();
+  }
 
   // === НОВОЕ: Обновляем индикатор синхронизации при загрузке страницы ===
   if (typeof updateSyncIndicator === 'function') {

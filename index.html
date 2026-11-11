@@ -550,6 +550,11 @@
 
             <!-- Экран 4: Статистика -->
             <section class="screen screen--stats" id="screen-stats">
+                <!-- Переключатель режимов статистики -->
+                <div class="stats-mode-switcher">
+                    <button class="mode-btn active" data-mode="overview">📊 Обзор</button>
+                    <button class="mode-btn" data-mode="analysis">🔍 Анализ</button>
+                </div>
 
                 <!-- Горизонтальные табы счетов (v2.4) -->
                 <div id="stats-tabs-container" class="stats-tabs"></div>
@@ -571,6 +576,9 @@
                         период</p>
                     <canvas id="expense-chart"></canvas>
                 </div>
+
+                <!-- Контейнер для анализа расходов (v2.3) -->
+                <div id="expense-analysis-container"></div>
 
                 <!-- Нижняя карточка: список подкатегорий -->
                 <div id="stats-bottom" class="stats-card"></div>

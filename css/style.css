@@ -2982,31 +2982,31 @@ button[onclick*='period'] {
   }
 
   /* === Диаграмма (Десктоп) === */
-@media (min-width: 601px) {
-  #stats-chart {
-    padding: 32px;
+  @media (min-width: 601px) {
+    #stats-chart {
+      padding: 32px;
+    }
+    #stats-chart canvas {
+      max-width: 500px;
+      max-height: 500px;
+      /* Убираем !important, позволяем Chart.js управлять размерами */
+      width: 100%;
+      height: auto;
+    }
   }
-  #stats-chart canvas {
-    max-width: 500px;
-    max-height: 500px;
-    /* Убираем !important, позволяем Chart.js управлять размерами */
-    width: 100%; 
-    height: auto;
-  }
-}
 
-/* === Диаграмма (Мобильные устройства) === */
-@media (max-width: 600px) {
-  #stats-chart {
-    padding: 14px; /* Уменьшаем отступы */
+  /* === Диаграмма (Мобильные устройства) === */
+  @media (max-width: 600px) {
+    #stats-chart {
+      padding: 14px; /* Уменьшаем отступы */
+    }
+    #stats-chart canvas {
+      max-width: 100%;
+      max-height: 280px;
+      width: 100% !important;
+      height: auto !important; /* Позволяем Chart.js рассчитать высоту пропорционально */
+    }
   }
-  #stats-chart canvas {
-    max-width: 100%;
-    max-height: 280px;
-    width: 100% !important;
-    height: auto !important; /* Позволяем Chart.js рассчитать высоту пропорционально */
-  }
-}
 
   /* === Экран сверки === */
   .screen--reconcile,
@@ -3499,7 +3499,7 @@ button[onclick*='period'] {
   background: var(--bg-card, #fff);
   border: 2px solid var(--border-color, #e0e0e0);
   border-radius: 12px;
-  padding: 8px 48px 8px 12px;  /* ← Изменили на 48px */
+  padding: 8px 48px 8px 12px; /* ← Изменили на 48px */
   transition: border-color 0.2s ease;
 }
 
@@ -3870,7 +3870,7 @@ body.dark-theme .transaction.archived {
     font-size: 16px;
   }
 
-  .date-filter-btn[data-period="custom"] {
+  .date-filter-btn[data-period='custom'] {
     padding: 8px 12px;
     font-size: 12px;
   }
@@ -4018,4 +4018,262 @@ body.dark-theme .breakdown__header.category-clickable:hover {
     font-size: 0.8em;
     text-wrap: balance;
   }
+}
+
+/* Переключатель режимов статистики */
+.stats-mode-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 0 16px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 2px solid var(--border-color, #e0e0e0);
+  background: var(--bg-secondary, #f8f9fa);
+  color: var(--text-primary, #333);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+  background: var(--primary-color, #3498db);
+  color: white;
+  border-color: var(--primary-color, #3498db);
+}
+
+.mode-btn:hover:not(.active) {
+  background: var(--bg-hover, #e9ecef);
+}
+
+/* Скрытие элементов в режиме анализа */
+.stats-mode-analysis #stats-tabs-container,
+.stats-mode-analysis #expense-chart,
+.stats-mode-analysis .chart-title-dynamic {
+  display: none !important;
+}
+
+/* Контейнер для аналитики (по умолчанию скрыт) */
+#expense-analysis-container {
+  display: none;
+  padding: 0 16px;
+}
+
+.stats-mode-analysis #expense-analysis-container {
+  display: block;
+}
+
+/* Контейнер анализа расходов */
+#expense-analysis-container {
+  padding: 16px;
+}
+
+.analysis-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.analysis-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.5em;
+  color: var(--text-primary);
+}
+
+.analysis-period {
+  margin: 0 0 8px 0;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.analysis-total {
+  margin: 0;
+  font-size: 1.1em;
+  color: var(--text-primary);
+}
+
+.analysis-total strong {
+  color: var(--danger-color, #e74c3c);
+  font-size: 1.2em;
+}
+
+.analysis-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 40px;
+}
+
+/* Категории */
+.analysis-category {
+  margin-bottom: 16px;
+  background: var(--bg-secondary, #f8f9fa);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.analysis-category__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.analysis-category__header:hover {
+  background: var(--bg-hover, #e9ecef);
+}
+
+.analysis-category__name {
+  font-weight: 600;
+  font-size: 1.1em;
+  color: var(--text-primary);
+}
+
+.analysis-category__amount {
+  font-weight: 600;
+  color: var(--danger-color, #e74c3c);
+}
+
+.analysis-category__toggle {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+.analysis-category__bar {
+  height: 8px;
+  background: var(--bg-tertiary, #e9ecef);
+  border-radius: 4px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.analysis-category__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Подкатегории */
+.analysis-subcategories {
+  margin-top: 12px;
+  padding-left: 16px;
+}
+
+.analysis-subcategory {
+  margin-bottom: 12px;
+  background: var(--bg-primary, #ffffff);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.analysis-subcategory__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.analysis-subcategory__header:hover {
+  background: var(--bg-hover, #e9ecef);
+}
+
+.analysis-subcategory__name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.analysis-subcategory__amount {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.95em;
+}
+
+.analysis-subcategory__toggle {
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+.analysis-subcategory__bar {
+  height: 6px;
+  background: var(--bg-tertiary, #e9ecef);
+  border-radius: 3px;
+  margin: 6px 0;
+  overflow: hidden;
+}
+
+.analysis-subcategory__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Товары */
+.analysis-items {
+  margin-top: 8px;
+  padding-left: 16px;
+}
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.analysis-item:last-child {
+  border-bottom: none;
+}
+
+.analysis-item__name {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 0.9em;
+}
+
+.analysis-item__amount {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  margin-left: 12px;
+  white-space: nowrap;
+}
+
+.analysis-item__bar {
+  width: 60px;
+  height: 4px;
+  background: var(--bg-tertiary, #e9ecef);
+  border-radius: 2px;
+  margin-left: 12px;
+  overflow: hidden;
+}
+
+.analysis-item__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f39c12, #e67e22);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Контейнер анализа расходов скрыт по умолчанию */
+#expense-analysis-container {
+  display: none;
+  padding: 0 16px;
+}
+
+/* Когда активен режим анализа, показываем его */
+.stats-mode-analysis #expense-analysis-container {
+  display: block;
 }

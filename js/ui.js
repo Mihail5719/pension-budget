@@ -1379,6 +1379,211 @@ function initMoneyFields() {
   });
 }
 
+// Инициализация переключателя режимов статистики (v2.3, без !important)
+export function initStatsModeSwitcher() {
+  const modeButtons = document.querySelectorAll('.mode-btn');
+  const statsScreen = document.getElementById('screen-stats');
+  const analysisContainer = document.getElementById('expense-analysis-container');
+  
+  // Собираем все элементы, которые относятся к режиму "Обзор"
+  const overviewElements = [
+    document.getElementById('stats-tabs-container'),
+    document.getElementById('expense-chart'),
+    document.querySelector('.chart-title-dynamic'),
+    document.getElementById('stats-bottom')
+  ].filter(el => el !== null); // Фильтруем null на случай, если элемента нет на странице
+
+  if (!statsScreen || modeButtons.length === 0) return;
+
+  modeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      modeButtons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const mode = btn.dataset.mode;
+
+      if (mode === 'analysis') {
+        statsScreen.classList.add('stats-mode-analysis');
+        
+        // 1. Скрываем элементы обзора (inline-стиль перебивает всё, но мы его контролируем)
+        overviewElements.forEach(el => {
+          el.style.display = 'none';
+        });
+        
+        // 2. Показываем контейнер анализа и запускаем рендер
+        if (analysisContainer) {
+          analysisContainer.style.display = 'block';
+          renderExpenseAnalysis();
+        }
+      } else {
+        statsScreen.classList.remove('stats-mode-analysis');
+        
+        // 1. Возвращаем элементам обзора их естественное отображение 
+        // (пустая строка удаляет inline-стиль, и элемент подчиняется обычному CSS)
+        overviewElements.forEach(el => {
+          el.style.display = '';
+        });
+        
+        // 2. Скрываем контейнер анализа
+        if (analysisContainer) {
+          analysisContainer.style.display = 'none';
+        }
+
+        // 3. Перерисовываем обычный режим статистики
+        if (window.appData) {
+          renderStats(
+            window.appData.settings,
+            window.appData.fixedExpenses,
+            window.appData.transactions,
+          );
+        }
+      }
+    });
+  });
+}
+
+/**
+ * Отрисовывает детальный анализ расходов за период
+ * Иерархия: Категория → Подкатегория → Товар
+ * С прогресс-барами и раскрытием/сворачиванием
+ */
+export function renderExpenseAnalysis() {
+  const container = document.getElementById('expense-analysis-container');
+  if (!container) {
+    console.error('❌ Контейнер #expense-analysis-container не найден');
+    return;
+  }
+
+  if (!window.appData) {
+    container.innerHTML = '<p>Данные не загружены</p>';
+    return;
+  }
+
+  // Определяем период (используем текущий период или кастомный фильтр)
+  const settings = window.appData.settings;
+  let startDate, endDate;
+
+  if (settings.customFilterStart && settings.customFilterEnd) {
+    const [y, m, d] = settings.customFilterStart.split('-');
+    startDate = new Date(Number(y), Number(m) - 1, Number(d));
+    endDate = new Date(settings.customFilterEnd + 'T23:59:59.999');
+  } else {
+    startDate = settings.currentPeriodStart
+      ? new Date(settings.currentPeriodStart)
+      : getCurrentPeriod(settings.pensionDay).startDate;
+    endDate = getCurrentPeriod(settings.pensionDay).endDate;
+  }
+
+  // Получаем данные анализа
+  const analysis = analyzeExpenses(window.appData.transactions, {
+    start: startDate,
+    end: endDate
+  });
+
+  // Форматируем даты для отображения
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+  };
+
+  // Формируем HTML
+  let html = `
+    <div class="analysis-header">
+      <h3>Анализ расходов</h3>
+      <p class="analysis-period">Период: ${formatDate(startDate)} — ${formatDate(endDate)}</p>
+      <p class="analysis-total">Общие расходы: <strong>${formatMoney(analysis.totalExpenses)}</strong></p>
+    </div>
+  `;
+
+  if (analysis.categories.length === 0) {
+    html += '<p class="analysis-empty">Нет расходов за выбранный период</p>';
+  } else {
+    html += '<div class="analysis-categories">';
+    
+    analysis.categories.forEach((cat, catIndex) => {
+      html += `
+        <div class="analysis-category" data-category-index="${catIndex}">
+          <div class="analysis-category__header" onclick="toggleCategory(${catIndex})">
+            <span class="analysis-category__name">${cat.emoji} ${cat.name}</span>
+            <span class="analysis-category__amount">${formatMoney(cat.total)} (${cat.percent}%)</span>
+            <span class="analysis-category__toggle">▼</span>
+          </div>
+          <div class="analysis-category__bar">
+            <div class="analysis-category__bar-fill" style="width: ${cat.percent}%"></div>
+          </div>
+          <div class="analysis-subcategories" id="category-${catIndex}">
+      `;
+
+      cat.subcategories.forEach((sub, subIndex) => {
+        html += `
+          <div class="analysis-subcategory" data-sub-index="${subIndex}">
+            <div class="analysis-subcategory__header" onclick="toggleSubcategory(${catIndex}, ${subIndex})">
+              <span class="analysis-subcategory__name">${sub.name}</span>
+              <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
+              <span class="analysis-subcategory__toggle">▼</span>
+            </div>
+            <div class="analysis-subcategory__bar">
+              <div class="analysis-subcategory__bar-fill" style="width: ${sub.percent}%"></div>
+            </div>
+        `;
+
+        if (sub.items && sub.items.length > 0) {
+          html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">`;
+          sub.items.forEach(item => {
+            html += `
+              <div class="analysis-item">
+                <span class="analysis-item__name">${item.name}</span>
+                <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
+                <div class="analysis-item__bar">
+                  <div class="analysis-item__bar-fill" style="width: ${item.percent}%"></div>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        }
+
+        html += '</div>';
+      });
+
+      html += '</div></div>';
+    });
+
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+// Глобальные функции для раскрытия/сворачивания (нужны для onclick в HTML)
+window.toggleCategory = function(catIndex) {
+  const subContainer = document.getElementById(`category-${catIndex}`);
+  const toggle = document.querySelector(`[data-category-index="${catIndex}"] .analysis-category__toggle`);
+  
+  if (subContainer.style.display === 'none') {
+    subContainer.style.display = 'block';
+    toggle.textContent = '▼';
+  } else {
+    subContainer.style.display = 'none';
+    toggle.textContent = '▶';
+  }
+};
+
+window.toggleSubcategory = function(catIndex, subIndex) {
+  const itemsContainer = document.getElementById(`subcategory-${catIndex}-${subIndex}`);
+  const toggle = document.querySelector(`[data-sub-index="${subIndex}"] .analysis-subcategory__toggle`);
+  
+  if (!itemsContainer) return;
+  
+  if (itemsContainer.style.display === 'none') {
+    itemsContainer.style.display = 'block';
+    toggle.textContent = '▼';
+  } else {
+    itemsContainer.style.display = 'none';
+    toggle.textContent = '▶';
+  }
+};
+
 export function renderAccountsList() {
   const container = document.getElementById('accounts-list');
   if (!container) return;
