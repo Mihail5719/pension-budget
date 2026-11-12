@@ -1477,29 +1477,32 @@ export function renderExpenseAnalysis() {
   // Получаем данные анализа
   const analysis = analyzeExpenses(window.appData.transactions, {
     start: startDate,
-    end: endDate
+    end: endDate,
   });
 
-  // Форматируем даты для отображения
-  const formatDate = (date) => {
-    const d = new Date(date);
-    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
-  };
+  // Форматируем даты для отображения (используем тот же формат, что и в статистике)
+  const formatDate = (date) => formatDateOnly(date);
 
-  // Формируем HTML
   let html = `
-    <div class="analysis-header">
-      <h3>Анализ расходов</h3>
-      <p class="analysis-period">Период: ${formatDate(startDate)} — ${formatDate(endDate)}</p>
-      <p class="analysis-total">Общие расходы: <strong>${formatMoney(analysis.totalExpenses)}</strong></p>
+  <div class="stats-card">
+    <h2 class="stats-title">Анализ расходов</h2>
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 16px 0;">
+      За период (${formatDate(startDate)} – ${formatDate(endDate)})
     </div>
-  `;
+    <div class="stats-summary-block">
+      <div class="stats-row expense">
+        <span>Расходы:</span>
+        <span>${formatMoney(analysis.totalExpenses)}</span>
+      </div>
+    </div>
+  </div>
+`;
 
   if (analysis.categories.length === 0) {
     html += '<p class="analysis-empty">Нет расходов за выбранный период</p>';
   } else {
     html += '<div class="analysis-categories">';
-    
+
     analysis.categories.forEach((cat, catIndex) => {
       html += `
         <div class="analysis-category" data-category-index="${catIndex}">
@@ -1529,7 +1532,7 @@ export function renderExpenseAnalysis() {
 
         if (sub.items && sub.items.length > 0) {
           html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">`;
-          sub.items.forEach(item => {
+          sub.items.forEach((item) => {
             html += `
               <div class="analysis-item">
                 <span class="analysis-item__name">${item.name}</span>
