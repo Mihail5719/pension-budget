@@ -4421,3 +4421,49 @@ body.dark-theme .breakdown__header.category-clickable:hover {
     font-size: 1em;
   }
 }
+
+/* ============================================
+   ИСПРАВЛЕНИЕ ПРОГРЕСС-БАРОВ (v2.3, фикс)
+   Предотвращаем выход за пределы карточки
+   ============================================ */
+
+@media (max-width: 480px) {
+  /* Контейнеры подкатегорий и товаров */
+  .analysis-subcategory,
+  .analysis-item {
+    box-sizing: border-box; /* Учитываем padding в ширине */
+    overflow: hidden; /* Обрезаем всё, что выходит за край */
+    max-width: 100%; /* Не даём выйти за пределы родителя */
+  }
+
+  /* Прогресс-бары — строго в пределах контейнера */
+  .analysis-category__bar,
+  .analysis-subcategory__bar,
+  .analysis-item__bar {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Заполнение прогресс-бара — тоже ограничиваем */
+  .analysis-category__bar-fill,
+  .analysis-subcategory__bar-fill,
+  .analysis-item__bar-fill {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Уменьшаем отступы контейнера анализа */
+  #expense-analysis-container {
+    padding: 0 4px; /* Было 8px, уменьшаем для экономии места */
+  }
+
+  /* Карточки категорий — убираем лишние отступы */
+  .analysis-category {
+    padding: 0 4px;
+  }
+
+  .analysis-subcategory {
+    padding: 0 4px;
+  }
+}
