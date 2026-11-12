@@ -1,4 +1,4 @@
-import { saveData, } from './storage.js';
+import { saveData } from './storage.js';
 import { formatMoney, formatDateOnly, getCurrentPeriod } from './utils.js';
 import {
   calculateDailyLimit,
@@ -17,7 +17,7 @@ const REGULAR_INCOME_TYPES = ['Стипендия', 'Зарплата', 'Пен�
 let currentStatsAccountId = 'all';
 // ========================================================
 
-window.currentStatsCategoryId = null; 
+window.currentStatsCategoryId = null;
 
 // ─── Предикаты типов операций (v2.0, коммит 2 + проценты) ───
 const isIncome = (t) => t.type === 'income' || t.type === 'interest'; // ← ДОБАВИЛИ interest
@@ -94,7 +94,6 @@ export function renderTodayScreen(settings, fixedExpenses, transactions) {
     bannerEl.style.display = shouldShowBanner ? 'flex' : 'none';
   }
   // ================================================
-  
 
   // 2. ТОЛЬКО глобальный расчёт (убрали логику переключения счетов)
   const result = calculateDailyLimit(settings, fixedExpenses, transactions);
@@ -256,7 +255,6 @@ export function renderTransactionList(
 ) {
   const listEl = document.getElementById(targetElementId);
   if (!listEl) return;
-
 
   // === ВАЖНО: Полностью очищаем список перед новой отрисовкой ===
   listEl.innerHTML = '';
@@ -470,9 +468,9 @@ export function renderSettings(settings, fixedExpenses) {
   // === ИЗМЕНЕНИЕ: Делаем поле "Начальный остаток" только для чтения ===
   const initialBalanceInput = document.getElementById('input-initial-balance');
   if (initialBalanceInput) {
-   initialBalanceInput.value = parseFloat(
-     (settings.initialBalance || 0).toFixed(2),
-   );
+    initialBalanceInput.value = parseFloat(
+      (settings.initialBalance || 0).toFixed(2),
+    );
     initialBalanceInput.readOnly = true; // Запрещаем ручной ввод
     initialBalanceInput.style.backgroundColor = '#f1f3f5'; // Серый фон (визуально неактивно)
     initialBalanceInput.style.cursor = 'not-allowed'; // Курсор "запрещено"
@@ -547,8 +545,6 @@ export function renderSettings(settings, fixedExpenses) {
 
   initMoneyFields();
   renderPensionPeriodInfo(settings);
-
-  
 
   // === ДИНАМИЧЕСКАЯ НАДПИСЬ "Текущий период" (v2.1, Идея 1) ===
   const currentPeriodLabel = document.getElementById('current-period-label');
@@ -1085,7 +1081,6 @@ export function renderStats(settings, fixedExpenses, transactions) {
     </div>
   `;
   topContainer.innerHTML = topHtml;
-  
 
   const renderSection = (categoriesObj, isFixedSection) => {
     let sectionHtml = '';
@@ -1334,8 +1329,6 @@ export function renderPensionPeriodInfo(settings) {
   }
 }
 
-
-
 function initMoneyFields() {
   const moneyInputs = document.querySelectorAll('.money-field');
   moneyInputs.forEach((input) => {
@@ -1383,15 +1376,17 @@ function initMoneyFields() {
 export function initStatsModeSwitcher() {
   const modeButtons = document.querySelectorAll('.mode-btn');
   const statsScreen = document.getElementById('screen-stats');
-  const analysisContainer = document.getElementById('expense-analysis-container');
-  
+  const analysisContainer = document.getElementById(
+    'expense-analysis-container',
+  );
+
   // Собираем все элементы, которые относятся к режиму "Обзор"
   const overviewElements = [
     document.getElementById('stats-tabs-container'),
     document.getElementById('expense-chart'),
     document.querySelector('.chart-title-dynamic'),
-    document.getElementById('stats-bottom')
-  ].filter(el => el !== null); // Фильтруем null на случай, если элемента нет на странице
+    document.getElementById('stats-bottom'),
+  ].filter((el) => el !== null); // Фильтруем null на случай, если элемента нет на странице
 
   if (!statsScreen || modeButtons.length === 0) return;
 
@@ -1404,12 +1399,12 @@ export function initStatsModeSwitcher() {
 
       if (mode === 'analysis') {
         statsScreen.classList.add('stats-mode-analysis');
-        
+
         // 1. Скрываем элементы обзора (inline-стиль перебивает всё, но мы его контролируем)
-        overviewElements.forEach(el => {
+        overviewElements.forEach((el) => {
           el.style.display = 'none';
         });
-        
+
         // 2. Показываем контейнер анализа и запускаем рендер
         if (analysisContainer) {
           analysisContainer.style.display = 'block';
@@ -1417,13 +1412,13 @@ export function initStatsModeSwitcher() {
         }
       } else {
         statsScreen.classList.remove('stats-mode-analysis');
-        
-        // 1. Возвращаем элементам обзора их естественное отображение 
+
+        // 1. Возвращаем элементам обзора их естественное отображение
         // (пустая строка удаляет inline-стиль, и элемент подчиняется обычному CSS)
-        overviewElements.forEach(el => {
+        overviewElements.forEach((el) => {
           el.style.display = '';
         });
-        
+
         // 2. Скрываем контейнер анализа
         if (analysisContainer) {
           analysisContainer.style.display = 'none';
@@ -1519,12 +1514,13 @@ export function renderExpenseAnalysis() {
 
       cat.subcategories.forEach((sub, subIndex) => {
         html += `
-          <div class="analysis-subcategory" data-sub-index="${subIndex}">
-            <div class="analysis-subcategory__header" onclick="toggleSubcategory(${catIndex}, ${subIndex})">
-              <span class="analysis-subcategory__name">${sub.name}</span>
-              <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
-              <span class="analysis-subcategory__toggle">▼</span>
-            </div>
+          <div class="analysis-subcategory__header" 
+     onclick="toggleSubcategory(${catIndex}, ${subIndex})" 
+     data-tooltip="${sub.percent}% от категории ${cat.name}">
+  <span class="analysis-subcategory__name">${sub.name}</span>
+  <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
+  <span class="analysis-subcategory__toggle">▼</span>
+</div>
             <div class="analysis-subcategory__bar">
               <div class="analysis-subcategory__bar-fill" style="width: ${sub.percent}%"></div>
             </div>
@@ -1534,13 +1530,14 @@ export function renderExpenseAnalysis() {
           html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">`;
           sub.items.forEach((item) => {
             html += `
-              <div class="analysis-item">
-                <span class="analysis-item__name">${item.name}</span>
-                <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
-                <div class="analysis-item__bar">
-                  <div class="analysis-item__bar-fill" style="width: ${item.percent}%"></div>
-                </div>
-              </div>
+              <div class="analysis-item" 
+     data-tooltip="${item.percent}% от подкатегории ${sub.name}">
+  <span class="analysis-item__name">${item.name}</span>
+  <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
+  <div class="analysis-item__bar">
+    <div class="analysis-item__bar-fill" style="width: ${item.percent}%"></div>
+  </div>
+</div>
             `;
           });
           html += '</div>';
@@ -1559,10 +1556,12 @@ export function renderExpenseAnalysis() {
 }
 
 // Глобальные функции для раскрытия/сворачивания (нужны для onclick в HTML)
-window.toggleCategory = function(catIndex) {
+window.toggleCategory = function (catIndex) {
   const subContainer = document.getElementById(`category-${catIndex}`);
-  const toggle = document.querySelector(`[data-category-index="${catIndex}"] .analysis-category__toggle`);
-  
+  const toggle = document.querySelector(
+    `[data-category-index="${catIndex}"] .analysis-category__toggle`,
+  );
+
   if (subContainer.style.display === 'none') {
     subContainer.style.display = 'block';
     toggle.textContent = '▼';
@@ -1572,12 +1571,16 @@ window.toggleCategory = function(catIndex) {
   }
 };
 
-window.toggleSubcategory = function(catIndex, subIndex) {
-  const itemsContainer = document.getElementById(`subcategory-${catIndex}-${subIndex}`);
-  const toggle = document.querySelector(`[data-sub-index="${subIndex}"] .analysis-subcategory__toggle`);
-  
+window.toggleSubcategory = function (catIndex, subIndex) {
+  const itemsContainer = document.getElementById(
+    `subcategory-${catIndex}-${subIndex}`,
+  );
+  const toggle = document.querySelector(
+    `[data-sub-index="${subIndex}"] .analysis-subcategory__toggle`,
+  );
+
   if (!itemsContainer) return;
-  
+
   if (itemsContainer.style.display === 'none') {
     itemsContainer.style.display = 'block';
     toggle.textContent = '▼';
@@ -1630,18 +1633,16 @@ export function renderAccountsList() {
       );
     });
 
-        let balance = accountTransactions.reduce((sum, t) => {
-          // ДОБАВЛЕНО: || t.type === 'interest'
-          if (t.type === 'income' || t.type === 'interest')
-            return sum + t.amount;
-          if (t.type === 'expense' || t.type === 'committed')
-            return sum - t.amount;
-          if (t.type === 'transfer') {
-            if (t.fromAccountId === account.id) return sum - t.amount;
-            if (t.toAccountId === account.id) return sum + t.amount;
-          }
-          return sum;
-        }, 0);
+    let balance = accountTransactions.reduce((sum, t) => {
+      // ДОБАВЛЕНО: || t.type === 'interest'
+      if (t.type === 'income' || t.type === 'interest') return sum + t.amount;
+      if (t.type === 'expense' || t.type === 'committed') return sum - t.amount;
+      if (t.type === 'transfer') {
+        if (t.fromAccountId === account.id) return sum - t.amount;
+        if (t.toAccountId === account.id) return sum + t.amount;
+      }
+      return sum;
+    }, 0);
 
     // Добавляем начальный баланс этого счёта
     balance += account.initialBalance || 0;
@@ -1700,7 +1701,7 @@ export function renderAccountsList() {
   const labelActive = isMobile ? '🔹 Активные' : '🔹 Активные счета';
   const labelSavings = isMobile ? '🔸 Накопительные' : '🔸 Накопительные счета';
 
-            summaryBlock.innerHTML = `
+  summaryBlock.innerHTML = `
     <div class="summary-block">
       <!-- Общий баланс -->
       <div class="summary-row">
@@ -1744,28 +1745,35 @@ if (btnDismissMidPeriod) {
   btnDismissMidPeriod.addEventListener('click', () => {
     appData.settings.midPeriodHintDismissed = true;
     saveData(appData); // Сохраняем состояние
-    renderTodayScreen(appData.settings, appData.fixedExpenses, appData.transactions); // Перерисовываем
+    renderTodayScreen(
+      appData.settings,
+      appData.fixedExpenses,
+      appData.transactions,
+    ); // Перерисовываем
   });
 }
 
-  // === ЛОГИКА МОДАЛЬНОГО ОКНА ИНСТРУКЦИИ ===
-  const btnHowToSetup = document.getElementById('btn-how-to-setup');
-  const instructionModal = document.getElementById('instruction-modal');
-  const btnCloseInstruction = document.getElementById('btn-close-instruction');
-  const instructionOverlay = instructionModal?.querySelector('.modal__overlay');
+// === ЛОГИКА МОДАЛЬНОГО ОКНА ИНСТРУКЦИИ ===
+const btnHowToSetup = document.getElementById('btn-how-to-setup');
+const instructionModal = document.getElementById('instruction-modal');
+const btnCloseInstruction = document.getElementById('btn-close-instruction');
+const instructionOverlay = instructionModal?.querySelector('.modal__overlay');
 
-  function openInstructionModal() {
-    if (instructionModal) instructionModal.classList.add('is-open');
-  }
+function openInstructionModal() {
+  if (instructionModal) instructionModal.classList.add('is-open');
+}
 
-  function closeInstructionModal() {
-    if (instructionModal) instructionModal.classList.remove('is-open');
-  }
+function closeInstructionModal() {
+  if (instructionModal) instructionModal.classList.remove('is-open');
+}
 
-  if (btnHowToSetup) btnHowToSetup.addEventListener('click', openInstructionModal);
-  if (btnCloseInstruction) btnCloseInstruction.addEventListener('click', closeInstructionModal);
-  if (instructionOverlay) instructionOverlay.addEventListener('click', closeInstructionModal);
-  // ==========================================
+if (btnHowToSetup)
+  btnHowToSetup.addEventListener('click', openInstructionModal);
+if (btnCloseInstruction)
+  btnCloseInstruction.addEventListener('click', closeInstructionModal);
+if (instructionOverlay)
+  instructionOverlay.addEventListener('click', closeInstructionModal);
+// ==========================================
 
 // === Обработчик изменения источника дохода (v2.1, Идея 1) ===
 document.addEventListener('DOMContentLoaded', () => {
