@@ -4277,3 +4277,147 @@ body.dark-theme .breakdown__header.category-clickable:hover {
 .stats-mode-analysis #expense-analysis-container {
   display: block;
 }
+
+/* ============================================
+   МОБИЛЬНАЯ АДАПТАЦИЯ РЕЖИМА АНАЛИЗА (v2.3)
+   Вертикальная компоновка для узких экранов
+   ============================================ */
+
+@media (max-width: 480px) {
+  /* === Категории: вертикальная компоновка === */
+  .analysis-category__header {
+    flex-direction: column; /* Вертикально, а не горизонтально */
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 8px;
+  }
+
+  .analysis-category__name {
+    font-size: 1.05em;
+    font-weight: 600;
+    white-space: normal; /* Разрешаем перенос */
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  .analysis-category__amount {
+    font-size: 0.95em;
+    color: var(--danger-color, #e74c3c);
+    white-space: normal; /* Разрешаем перенос */
+    word-break: break-word;
+  }
+
+  .analysis-category__toggle {
+    display: none; /* Скрываем стрелку на мобильных */
+  }
+
+  /* === Подкатегории: вертикальная компоновка === */
+  .analysis-subcategory__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 8px;
+  }
+
+  .analysis-subcategory__name {
+    font-size: 0.95em;
+    font-weight: 500;
+    white-space: normal;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  .analysis-subcategory__amount {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .analysis-subcategory__toggle {
+    display: none;
+  }
+
+  /* === Товары: компактная вертикальная === */
+  .analysis-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+  }
+
+  .analysis-item__name {
+    font-size: 0.85em;
+    color: var(--text-primary);
+    white-space: normal;
+    word-break: break-word;
+    width: 100%;
+  }
+
+  .analysis-item__amount {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    white-space: normal;
+    word-break: break-word;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .analysis-item__bar {
+    width: 100%;
+    height: 4px;
+    margin-top: 4px;
+  }
+
+  /* === Прогресс-бары === */
+  .analysis-category__bar {
+    height: 6px;
+    margin: 6px 0 0 0;
+    width: 100%;
+  }
+
+  .analysis-subcategory__bar {
+    height: 5px;
+    margin: 4px 0 0 0;
+    width: 100%;
+  }
+
+  /* === Отступы === */
+  #expense-analysis-container {
+    padding: 0 8px;
+  }
+
+  .analysis-category {
+    padding: 0;
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+
+  .analysis-subcategory {
+    padding: 0;
+    margin-bottom: 12px;
+    border-radius: 6px;
+  }
+
+  .analysis-subcategories {
+    padding-left: 0;
+  }
+
+  .analysis-items {
+    padding-left: 0;
+  }
+
+  /* === Заголовок анализа === */
+  .analysis-header h3 {
+    font-size: 1.3em;
+  }
+
+  .analysis-period {
+    font-size: 0.85em;
+  }
+
+  .analysis-total {
+    font-size: 1em;
+  }
+}
