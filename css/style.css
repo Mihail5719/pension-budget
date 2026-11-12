@@ -4440,3 +4440,43 @@ body.dark-theme .breakdown__header.category-clickable:hover {
     padding: 0 4px;
   }
 }
+
+/* Кастомные подсказки для режима анализа */
+.analysis-subcategory__header[data-tooltip],
+.analysis-item[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+
+.analysis-subcategory__header[data-tooltip]:hover::after,
+.analysis-item[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 4px;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Стрелочка подсказки */
+.analysis-subcategory__header[data-tooltip]:hover::before,
+.analysis-item[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  margin-bottom: -2px;
+}

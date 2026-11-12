@@ -277,7 +277,7 @@ export function analyzeExpenses(transactions, dateRange) {
 
       const subcategories = Object.keys(catData.subs)
         .map((subName) => {
-          const subData = catData.subs[subName]; // ← ВОТ ЭТА СТРОКА БЫЛА ПОТЕРЯНА
+          const subData = catData.subs[subName];
 
           let items = [];
           const itemKeys = Object.keys(subData.items);
@@ -287,19 +287,20 @@ export function analyzeExpenses(transactions, dateRange) {
               .map((name) => ({
                 name,
                 total: subData.items[name],
+                // Процент считается от суммы подкатегории (родителя)
                 percent:
-                  Math.round((subData.items[name] / totalExpenses) * 1000) / 10,
+                  Math.round((subData.items[name] / subData.total) * 1000) / 10,
               }))
               .sort((a, b) => b.total - a.total);
 
             const itemsTotal = items.reduce((sum, i) => sum + i.total, 0);
-            const diff = Math.round((subData.total - itemsTotal) * 100) / 100;
-            // Добавляем "Без названия" только если разница существенна (больше 1 копейки)
-            if (diff > 0.01) {
+            if (itemsTotal < subData.total) {
+              const diff = Math.round((subData.total - itemsTotal) * 100) / 100;
               items.push({
                 name: 'Без названия',
                 total: diff,
-                percent: Math.round((diff / totalExpenses) * 1000) / 10,
+                // Процент считается от суммы подкатегории (родителя)
+                percent: Math.round((diff / subData.total) * 1000) / 10,
               });
               items.sort((a, b) => b.total - a.total);
             }
@@ -308,21 +309,24 @@ export function analyzeExpenses(transactions, dateRange) {
           return {
             name: subName,
             total: subData.total,
-            percent: Math.round((subData.total / totalExpenses) * 1000) / 10,
+            // Процент считается от суммы категории (родителя)
+            percent: Math.round((subData.total / catData.total) * 1000) / 10,
             items: items,
           };
         })
         .sort((a, b) => b.total - a.total);
 
+      // ВОТ ЭТОГО НЕ ХВАТАЛО: возврат данных для уровня Категории
       return {
         name: catName,
         emoji: emoji,
         total: catData.total,
+        // Процент категории считается от ОБЩЕЙ суммы расходов
         percent: Math.round((catData.total / totalExpenses) * 1000) / 10,
         subcategories: subcategories,
       };
-    })
-    .sort((a, b) => b.total - a.total);
+    }) // Закрываем .map для категорий
+    .sort((a, b) => b.total - a.total); // Сортируем категории
 
   return {
     totalExpenses,
