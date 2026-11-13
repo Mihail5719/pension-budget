@@ -1469,8 +1469,28 @@ export function renderExpenseAnalysis() {
     endDate = getCurrentPeriod(settings.pensionDay).endDate;
   }
 
-  // Получаем данные анализа
-  const analysis = analyzeExpenses(window.appData.transactions, {
+  // 🔍 Определяем выбранный счёт из заголовка статистики (надёжнее, чем поиск активной вкладки)
+  const statsTitle = document.querySelector('.stats-title');
+  let filteredTransactions = window.appData.transactions;
+
+  if (statsTitle) {
+    const titleText = statsTitle.textContent.trim(); // "Статистика: ВТБ" или "Статистика: Все счета"
+    const match = titleText.match(/Статистика:\s*(.+)/);
+    
+    if (match) {
+      const accountName = match[1].trim();
+      
+      if (accountName && accountName !== 'Все счета') {
+        const acc = window.appData.settings.accounts.find(a => a.name === accountName);
+        if (acc) {
+          filteredTransactions = window.appData.transactions.filter(t => t.accountId === acc.id);
+        }
+      }
+    }
+  }
+
+  // Получаем данные анализа на основе ОТФИЛЬТРОВАННЫХ транзакций
+  const analysis = analyzeExpenses(filteredTransactions, {
     start: startDate,
     end: endDate,
   });
@@ -1487,7 +1507,9 @@ export function renderExpenseAnalysis() {
     <div class="stats-summary-block">
       <div class="stats-row expense">
         <span>Расходы:</span>
-        <span>${formatMoney(analysis.totalExpenses)}</span>
+        <span style="color: #e74c3c !important; font-weight: 600;">
+          ${formatMoney(analysis.totalExpenses)}
+        </span>
       </div>
     </div>
   </div>
@@ -1514,39 +1536,49 @@ export function renderExpenseAnalysis() {
 
       cat.subcategories.forEach((sub, subIndex) => {
         html += `
-          <div class="analysis-subcategory__header" 
-     onclick="toggleSubcategory(${catIndex}, ${subIndex})" 
-     data-tooltip="${sub.percent}% от категории ${cat.name}">
-  <span class="analysis-subcategory__name">${sub.name}</span>
-  <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
-  <span class="analysis-subcategory__toggle">▼</span>
-</div>
-            <div class="analysis-subcategory__bar">
-              <div class="analysis-subcategory__bar-fill" style="width: ${sub.percent}%"></div>
-            </div>
+            <div class="analysis-subcategory" data-sub-index="${subIndex}">
+              <div class="analysis-subcategory__header" 
+                   onclick="toggleSubcategory(${catIndex}, ${subIndex})" 
+                   data-tooltip="${sub.percent}% от категории ${cat.name}">
+                <span class="analysis-subcategory__name">${sub.name}</span>
+                <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
+                <span class="analysis-subcategory__toggle">▼</span>
+              </div>
+              <div class="analysis-subcategory__bar">
+                <div class="analysis-subcategory__bar-fill" style="width: ${sub.percent}%"></div>
+              </div>
         `;
 
         if (sub.items && sub.items.length > 0) {
-          html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">`;
+          html += `
+              <div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">
+          `;
           sub.items.forEach((item) => {
             html += `
-              <div class="analysis-item" 
-     data-tooltip="${item.percent}% от подкатегории ${sub.name}">
-  <span class="analysis-item__name">${item.name}</span>
-  <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
-  <div class="analysis-item__bar">
-    <div class="analysis-item__bar-fill" style="width: ${item.percent}%"></div>
-  </div>
-</div>
+                <div class="analysis-item" 
+                     data-tooltip="${item.percent}% от подкатегории ${sub.name}">
+                  <span class="analysis-item__name">${item.name}</span>
+                  <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
+                  <div class="analysis-item__bar">
+                    <div class="analysis-item__bar-fill" style="width: ${item.percent}%"></div>
+                  </div>
+                </div>
             `;
           });
-          html += '</div>';
+          html += `
+              </div>
+          `;
         }
 
-        html += '</div>';
+        html += `
+            </div>
+        `;
       });
 
-      html += '</div></div>';
+      html += `
+          </div>
+        </div>
+      `;
     });
 
     html += '</div>';
