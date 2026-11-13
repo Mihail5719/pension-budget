@@ -1539,7 +1539,6 @@ export function renderExpenseAnalysis() {
             <div class="analysis-subcategory" data-sub-index="${subIndex}">
               <div class="analysis-subcategory__header" 
      onclick="toggleSubcategory(${catIndex}, ${subIndex})" 
-     title="${sub.percent}% от категории ${cat.name}"
      data-tooltip="${sub.percent}% от категории ${cat.name}">
                 <span class="analysis-subcategory__name">${sub.name}</span>
                 <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
@@ -1557,7 +1556,6 @@ export function renderExpenseAnalysis() {
           sub.items.forEach((item) => {
             html += `
                 <div class="analysis-item" 
-     title="${item.percent}% от подкатегории ${sub.name}"
      data-tooltip="${item.percent}% от подкатегории ${sub.name}">
                   <span class="analysis-item__name">${item.name}</span>
                   <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
@@ -1929,26 +1927,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 // ============================================================
-// Проверяем, поддерживает ли устройство hover (десктоп с мышью)
-const hasHover = window.matchMedia('(hover: hover)').matches;
+// Подсказки на тач-устройствах: показ по долгому нажатию (вместо ненадёжного title)
+if (!window.matchMedia('(hover: hover)').matches) {
+  let pressTimer = null;
+  let longPressed = false;
+  let activeEl = null;
 
-if (hasHover) {
-  // На десктопе: при наведении скрываем системный title, чтобы не было белого поля
-  // Оставляем data-tooltip для кастомной подсказки через CSS
-  document.addEventListener('mouseover', (e) => {
+  const hideAll = () => {
+    if (activeEl) activeEl.classList.remove('tooltip-visible');
+    activeEl = null;
+  };
+
+  document.addEventListener('touchstart', (e) => {
     const target = e.target.closest('[data-tooltip]');
-    if (target && target.title) {
-      target.dataset.originalTitle = target.title;
-      target.title = '';
+    longPressed = false;
+    if (!target) { clearTimeout(pressTimer); return; }
+    pressTimer = setTimeout(() => {
+      longPressed = true;
+      hideAll();
+      activeEl = target;
+      target.classList.add('tooltip-visible');
+    }, 500);
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    clearTimeout(pressTimer);
+    if (longPressed) {
+      e.preventDefault();        // подавляем клик, чтобы не сработал toggle
+      setTimeout(hideAll, 2000); // скрыть подсказку через 2 секунды
     }
   });
 
-  document.addEventListener('mouseout', (e) => {
-    const target = e.target.closest('[data-tooltip]');
-    if (target && target.dataset.originalTitle) {
-      target.title = target.dataset.originalTitle;
-      delete target.dataset.originalTitle;
-    }
-  });
+  document.addEventListener('touchmove', () => { clearTimeout(pressTimer); longPressed = false; }, { passive: true });
+  document.addEventListener('touchcancel', () => { clearTimeout(pressTimer); longPressed = false; });
 }
-// На мобильных устройствах title остаётся нетронутым — долгое нажатие показывает подсказку
