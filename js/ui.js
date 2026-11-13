@@ -1440,7 +1440,6 @@ export function initStatsModeSwitcher() {
 /**
  * Отрисовывает детальный анализ расходов за период
  * Иерархия: Категория → Подкатегория → Товар
- * С прогресс-барами и раскрытием/сворачиванием
  */
 export function renderExpenseAnalysis() {
   const container = document.getElementById('expense-analysis-container');
@@ -1448,16 +1447,13 @@ export function renderExpenseAnalysis() {
     console.error('❌ Контейнер #expense-analysis-container не найден');
     return;
   }
-
   if (!window.appData) {
     container.innerHTML = '<p>Данные не загружены</p>';
     return;
   }
 
-  // Определяем период (используем текущий период или кастомный фильтр)
   const settings = window.appData.settings;
   let startDate, endDate;
-
   if (settings.customFilterStart && settings.customFilterEnd) {
     const [y, m, d] = settings.customFilterStart.split('-');
     startDate = new Date(Number(y), Number(m) - 1, Number(d));
@@ -1469,17 +1465,13 @@ export function renderExpenseAnalysis() {
     endDate = getCurrentPeriod(settings.pensionDay).endDate;
   }
 
-  // 🔍 Определяем выбранный счёт из заголовка статистики (надёжнее, чем поиск активной вкладки)
+  // Фильтр по выбранному счёту (читаем из заголовка статистики)
   const statsTitle = document.querySelector('.stats-title');
   let filteredTransactions = window.appData.transactions;
-
   if (statsTitle) {
-    const titleText = statsTitle.textContent.trim(); // "Статистика: ВТБ" или "Статистика: Все счета"
-    const match = titleText.match(/Статистика:\s*(.+)/);
-    
+    const match = statsTitle.textContent.trim().match(/Статистика:\s*(.+)/);
     if (match) {
       const accountName = match[1].trim();
-      
       if (accountName && accountName !== 'Все счета') {
         const acc = window.appData.settings.accounts.find(a => a.name === accountName);
         if (acc) {
@@ -1489,13 +1481,7 @@ export function renderExpenseAnalysis() {
     }
   }
 
-  // Получаем данные анализа на основе ОТФИЛЬТРОВАННЫХ транзакций
-  const analysis = analyzeExpenses(filteredTransactions, {
-    start: startDate,
-    end: endDate,
-  });
-
-  // Форматируем даты для отображения (используем тот же формат, что и в статистике)
+  const analysis = analyzeExpenses(filteredTransactions, { start: startDate, end: endDate });
   const formatDate = (date) => formatDateOnly(date);
 
   let html = `
@@ -1512,14 +1498,12 @@ export function renderExpenseAnalysis() {
         </span>
       </div>
     </div>
-  </div>
-`;
+  </div>`;
 
   if (analysis.categories.length === 0) {
     html += '<p class="analysis-empty">Нет расходов за выбранный период</p>';
   } else {
     html += '<div class="analysis-categories">';
-
     analysis.categories.forEach((cat, catIndex) => {
       html += `
         <div class="analysis-category" data-category-index="${catIndex}">
@@ -1531,59 +1515,40 @@ export function renderExpenseAnalysis() {
           <div class="analysis-category__bar">
             <div class="analysis-category__bar-fill" style="width: ${cat.percent}%"></div>
           </div>
-          <div class="analysis-subcategories" id="category-${catIndex}">
-      `;
-
+          <div class="analysis-subcategories" id="category-${catIndex}">`;
       cat.subcategories.forEach((sub, subIndex) => {
         html += `
             <div class="analysis-subcategory" data-sub-index="${subIndex}">
-              <div class="analysis-subcategory__header" 
-     onclick="toggleSubcategory(${catIndex}, ${subIndex})" 
-     data-tooltip="${sub.percent}% от категории ${cat.name}">
+              <div class="analysis-subcategory__header"
+                   onclick="toggleSubcategory(${catIndex}, ${subIndex})"
+                   data-tooltip="${sub.percent}% от категории ${cat.name}">
                 <span class="analysis-subcategory__name">${sub.name}</span>
                 <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
                 <span class="analysis-subcategory__toggle">▼</span>
               </div>
               <div class="analysis-subcategory__bar">
                 <div class="analysis-subcategory__bar-fill" style="width: ${sub.percent}%"></div>
-              </div>
-        `;
-
+              </div>`;
         if (sub.items && sub.items.length > 0) {
-          html += `
-              <div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">
-          `;
+          html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">`;
           sub.items.forEach((item) => {
             html += `
-                <div class="analysis-item" 
-     data-tooltip="${item.percent}% от подкатегории ${sub.name}">
+                <div class="analysis-item" data-tooltip="${item.percent}% от подкатегории ${sub.name}">
                   <span class="analysis-item__name">${item.name}</span>
                   <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
                   <div class="analysis-item__bar">
                     <div class="analysis-item__bar-fill" style="width: ${item.percent}%"></div>
                   </div>
-                </div>
-            `;
+                </div>`;
           });
-          html += `
-              </div>
-          `;
+          html += '</div>';
         }
-
-        html += `
-            </div>
-        `;
+        html += '</div>';
       });
-
-      html += `
-          </div>
-        </div>
-      `;
+      html += '</div></div>';
     });
-
     html += '</div>';
   }
-
   container.innerHTML = html;
 }
 
@@ -1927,37 +1892,42 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 // ============================================================
-// Подсказки на тач-устройствах: показ по долгому нажатию (вместо ненадёжного title)
-if (!window.matchMedia('(hover: hover)').matches) {
-  let pressTimer = null;
-  let longPressed = false;
-  let activeEl = null;
+// ============================================================
+// Надёжные подсказки по долгому нажатию (Pointer Events)
+// Работает на реальных тач-устройствах и в эмуляции DevTools.
+// На десктопе (мышь) этот блок игнорируется, там работает CSS :hover.
+let pressTimer = null;
+let tooltipEl = null;
 
-  const hideAll = () => {
-    if (activeEl) activeEl.classList.remove('tooltip-visible');
-    activeEl = null;
-  };
+const removeTooltip = () => {
+  if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+};
 
-  document.addEventListener('touchstart', (e) => {
-    const target = e.target.closest('[data-tooltip]');
-    longPressed = false;
-    if (!target) { clearTimeout(pressTimer); return; }
-    pressTimer = setTimeout(() => {
-      longPressed = true;
-      hideAll();
-      activeEl = target;
-      target.classList.add('tooltip-visible');
-    }, 500);
-  }, { passive: true });
+document.addEventListener('pointerdown', (e) => {
+  // Реагируем только на касания (touch), игнорируем мышь
+  if (e.pointerType !== 'touch') return;
 
-  document.addEventListener('touchend', (e) => {
-    clearTimeout(pressTimer);
-    if (longPressed) {
-      e.preventDefault();        // подавляем клик, чтобы не сработал toggle
-      setTimeout(hideAll, 2000); // скрыть подсказку через 2 секунды
-    }
-  });
+  const target = e.target.closest('[data-tooltip]');
+  if (!target) { clearTimeout(pressTimer); return; }
 
-  document.addEventListener('touchmove', () => { clearTimeout(pressTimer); longPressed = false; }, { passive: true });
-  document.addEventListener('touchcancel', () => { clearTimeout(pressTimer); longPressed = false; });
-}
+  pressTimer = setTimeout(() => {
+    removeTooltip();
+    tooltipEl = document.createElement('div');
+    tooltipEl.className = 'tooltip-popup';
+    tooltipEl.textContent = target.dataset.tooltip;
+    document.body.appendChild(tooltipEl);
+
+    // Позиционируем подсказку над элементом
+    const r = target.getBoundingClientRect();
+    tooltipEl.style.left = (r.left + r.width / 2) + 'px';
+    tooltipEl.style.top = r.top + 'px';
+  }, 500); // 500 мс для долгого нажатия
+});
+
+document.addEventListener('pointerup', () => {
+  clearTimeout(pressTimer);
+  if (tooltipEl) setTimeout(removeTooltip, 2000); // Скрыть через 2 сек
+});
+
+document.addEventListener('pointermove', () => { clearTimeout(pressTimer); }, { passive: true });
+document.addEventListener('pointercancel', () => { clearTimeout(pressTimer); });
