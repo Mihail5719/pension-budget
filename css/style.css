@@ -4486,3 +4486,18 @@ body.dark-theme .breakdown__header.category-clickable:hover {
   margin-bottom: -2px;
 }
 
+/* JS-подсказка для тач-устройств (долгое нажатие) */
+.tooltip-popup {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
