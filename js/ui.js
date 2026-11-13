@@ -1929,20 +1929,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 // ============================================================
-// На десктопе: при наведении скрываем системный title, чтобы не было белого поля в тёмной теме
-// Оставляем data-tooltip для кастомной подсказки через CSS
-document.addEventListener('mouseover', (e) => {
-  const target = e.target.closest('[data-tooltip]');
-  if (target && target.title) {
-    target.dataset.originalTitle = target.title;
-    target.title = '';
-  }
-});
+// Проверяем, поддерживает ли устройство hover (десктоп с мышью)
+const hasHover = window.matchMedia('(hover: hover)').matches;
 
-document.addEventListener('mouseout', (e) => {
-  const target = e.target.closest('[data-tooltip]');
-  if (target && target.dataset.originalTitle) {
-    target.title = target.dataset.originalTitle;
-    delete target.dataset.originalTitle;
-  }
-});
+if (hasHover) {
+  // На десктопе: при наведении скрываем системный title, чтобы не было белого поля
+  // Оставляем data-tooltip для кастомной подсказки через CSS
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest('[data-tooltip]');
+    if (target && target.title) {
+      target.dataset.originalTitle = target.title;
+      target.title = '';
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target.closest('[data-tooltip]');
+    if (target && target.dataset.originalTitle) {
+      target.title = target.dataset.originalTitle;
+      delete target.dataset.originalTitle;
+    }
+  });
+}
+// На мобильных устройствах title остаётся нетронутым — долгое нажатие показывает подсказку
