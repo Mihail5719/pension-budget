@@ -1538,8 +1538,9 @@ export function renderExpenseAnalysis() {
         html += `
             <div class="analysis-subcategory" data-sub-index="${subIndex}">
               <div class="analysis-subcategory__header" 
-                   onclick="toggleSubcategory(${catIndex}, ${subIndex})" 
-                   data-tooltip="${sub.percent}% от категории ${cat.name}">
+     onclick="toggleSubcategory(${catIndex}, ${subIndex})" 
+     title="${sub.percent}% от категории ${cat.name}"
+     data-tooltip="${sub.percent}% от категории ${cat.name}">
                 <span class="analysis-subcategory__name">${sub.name}</span>
                 <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
                 <span class="analysis-subcategory__toggle">▼</span>
@@ -1556,7 +1557,8 @@ export function renderExpenseAnalysis() {
           sub.items.forEach((item) => {
             html += `
                 <div class="analysis-item" 
-                     data-tooltip="${item.percent}% от подкатегории ${sub.name}">
+     title="${item.percent}% от подкатегории ${sub.name}"
+     data-tooltip="${item.percent}% от подкатегории ${sub.name}">
                   <span class="analysis-item__name">${item.name}</span>
                   <span class="analysis-item__amount">${formatMoney(item.total)} (${item.percent}%)</span>
                   <div class="analysis-item__bar">
@@ -1927,3 +1929,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 // ============================================================
+// На десктопе: при наведении скрываем системный title, чтобы не было белого поля в тёмной теме
+// Оставляем data-tooltip для кастомной подсказки через CSS
+document.addEventListener('mouseover', (e) => {
+  const target = e.target.closest('[data-tooltip]');
+  if (target && target.title) {
+    target.dataset.originalTitle = target.title;
+    target.title = '';
+  }
+});
+
+document.addEventListener('mouseout', (e) => {
+  const target = e.target.closest('[data-tooltip]');
+  if (target && target.dataset.originalTitle) {
+    target.title = target.dataset.originalTitle;
+    delete target.dataset.originalTitle;
+  }
+});
