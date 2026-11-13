@@ -4450,7 +4450,9 @@ body.dark-theme .breakdown__header.category-clickable:hover {
 }
 
 .analysis-subcategory__header[data-tooltip]:hover::after,
-.analysis-item[data-tooltip]:hover::after {
+.analysis-item[data-tooltip]:hover::after,
+.analysis-subcategory__header[data-tooltip].tooltip-visible::after,
+.analysis-item[data-tooltip].tooltip-visible::after {
   content: attr(data-tooltip);
   position: absolute;
   bottom: 100%;
@@ -4470,7 +4472,9 @@ body.dark-theme .breakdown__header.category-clickable:hover {
 
 /* Стрелочка подсказки */
 .analysis-subcategory__header[data-tooltip]:hover::before,
-.analysis-item[data-tooltip]:hover::before {
+.analysis-item[data-tooltip]:hover::before,
+.analysis-subcategory__header[data-tooltip].tooltip-visible::before,
+.analysis-item[data-tooltip].tooltip-visible::before {
   content: '';
   position: absolute;
   bottom: 100%;
