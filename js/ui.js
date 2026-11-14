@@ -1543,12 +1543,12 @@ export function renderExpenseAnalysis() {
           <div class="analysis-category__header" onclick="toggleCategory(${catIndex})">
             <span class="analysis-category__name">${cat.emoji} ${cat.name}</span>
             <span class="analysis-category__amount">${formatMoney(cat.total)} (${cat.percent}%)</span>
-            <span class="analysis-category__toggle">▼</span>
+            <span class="analysis-category__toggle">▶</span>
           </div>
           <div class="analysis-category__bar">
             <div class="analysis-category__bar-fill" style="width: ${cat.percent}%"></div>
           </div>
-          <div class="analysis-subcategories" id="category-${catIndex}">`;
+          <div class="analysis-subcategories" id="category-${catIndex}" style="display: none;">`;
       cat.subcategories.forEach((sub, subIndex) => {
         html += `
             <div class="analysis-subcategory" data-sub-index="${subIndex}">
@@ -1557,13 +1557,13 @@ export function renderExpenseAnalysis() {
                    data-tooltip="${sub.percent}% от категории ${cat.name}">
                 <span class="analysis-subcategory__name">${sub.name}</span>
                 <span class="analysis-subcategory__amount">${formatMoney(sub.total)} (${sub.percent}%)</span>
-                <span class="analysis-subcategory__toggle">▼</span>
+                <span class="analysis-subcategory__toggle">▶</span>
               </div>
               <div class="analysis-subcategory__bar">
                 <div class="analysis-subcategory__bar-fill" style="width: ${sub.percent}%"></div>
               </div>`;
         if (sub.items && sub.items.length > 0) {
-          html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}">`;
+          html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}" style="display: none;">`;
           sub.items.forEach((item) => {
             html += `
                 <div class="analysis-item" data-tooltip="${item.percent}% от подкатегории ${sub.name}">
@@ -1588,35 +1588,35 @@ export function renderExpenseAnalysis() {
 // Глобальные функции для раскрытия/сворачивания (нужны для onclick в HTML)
 window.toggleCategory = function (catIndex) {
   const subContainer = document.getElementById(`category-${catIndex}`);
+  // Ищем стрелку строго внутри конкретной категории
   const toggle = document.querySelector(
-    `[data-category-index="${catIndex}"] .analysis-category__toggle`,
+    `.analysis-category[data-category-index="${catIndex}"] .analysis-category__toggle`
   );
 
-  if (subContainer.style.display === 'none') {
+  if (subContainer.style.display === 'none' || subContainer.style.display === '') {
     subContainer.style.display = 'block';
-    toggle.textContent = '▼';
+    if (toggle) toggle.textContent = '▼';
   } else {
     subContainer.style.display = 'none';
-    toggle.textContent = '▶';
+    if (toggle) toggle.textContent = '▶';
   }
 };
 
 window.toggleSubcategory = function (catIndex, subIndex) {
-  const itemsContainer = document.getElementById(
-    `subcategory-${catIndex}-${subIndex}`,
-  );
+  const itemsContainer = document.getElementById(`subcategory-${catIndex}-${subIndex}`);
+  // Ищем стрелку строго внутри конкретной подкатегории конкретной категории!
   const toggle = document.querySelector(
-    `[data-sub-index="${subIndex}"] .analysis-subcategory__toggle`,
+    `.analysis-category[data-category-index="${catIndex}"] .analysis-subcategory[data-sub-index="${subIndex}"] .analysis-subcategory__toggle`
   );
 
   if (!itemsContainer) return;
 
-  if (itemsContainer.style.display === 'none') {
+  if (itemsContainer.style.display === 'none' || itemsContainer.style.display === '') {
     itemsContainer.style.display = 'block';
-    toggle.textContent = '▼';
+    if (toggle) toggle.textContent = '▼';
   } else {
     itemsContainer.style.display = 'none';
-    toggle.textContent = '▶';
+    if (toggle) toggle.textContent = '▶';
   }
 };
 
