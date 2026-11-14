@@ -1466,12 +1466,27 @@ export function renderExpenseAnalysis() {
   // При переходе в "Анализ" скрываем подпись "% от соответствующих расходов" в верхнем блоке
   const topContainer = document.getElementById('stats-top');
   if (topContainer) {
+    // Скрываем подпись "% от соответствующих расходов"
     const labels = topContainer.querySelectorAll('.stats-period-label');
     labels.forEach((label) => {
       if (label.textContent.includes('соответствующих расходов')) {
         label.style.display = 'none';
       }
     });
+    // Скрываем строки "Нефиксированные" и "Фиксированные"
+    const rows = topContainer.querySelectorAll('.stats-row');
+    rows.forEach((row) => {
+      const firstSpan = row.querySelector('span');
+      if (
+        firstSpan &&
+        /Нефиксированные|Фиксированные/.test(firstSpan.textContent)
+      ) {
+        row.style.display = 'none';
+      }
+    });
+    // Скрываем разделитель над ними
+    const divider = topContainer.querySelector('.stats-divider');
+    if (divider) divider.style.display = 'none';
   }
   // ==========================
 
@@ -1514,14 +1529,11 @@ export function renderExpenseAnalysis() {
   });
   const formatDate = (date) => formatDateOnly(date);
 
-  let html = `
+    let html = `
   <div class="stats-card">
     <h2 class="stats-title">Анализ расходов</h2>
-    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 4px 0;">
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 16px 0;">
       За период (${formatDate(startDate)} – ${formatDate(endDate)})
-    </div>
-    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); font-size: 0.85em; margin-bottom: 16px;">
-      (проценты от общей суммы всех расходов)
     </div>
     <div class="stats-summary-block">
       <div class="stats-row expense">
