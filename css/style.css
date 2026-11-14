@@ -4501,3 +4501,10 @@ body.dark-theme .breakdown__header.category-clickable:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Красный цвет для сумм расходов в drill-down на вкладке "Обзор" */
+.breakdown__header > span:last-child,
+.breakdown__row .breakdown__line > span:last-child {
+  color: #e74c3c;
+  font-weight: 600;
+}
+

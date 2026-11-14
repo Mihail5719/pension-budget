@@ -1067,11 +1067,21 @@ export function renderStats(settings, fixedExpenses, transactions) {
   // Формируем текст периода так же, как это делается в drill-down
   const periodText = `${formatDateOnly(startDate)} – ${formatDateOnly(endDate)}`;
 
-  let topHtml = `
+      let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
-    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 16px 0;">
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 4px 0;">
       За период (${periodText})
     </div>
+        ${
+          !document
+            .querySelector('#screen-stats')
+            ?.classList.contains('stats-mode-analysis')
+            ? `
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); font-size: 0.85em; margin-bottom: 16px;">
+      (% от соответствующих расходов)
+    </div>`
+            : ''
+        }
     <div class="stats-summary-block">
       <div class="stats-row income"><span>Доходы:</span><span>+${formatMoney(totalIncome)}</span></div>
       <div class="stats-row expense"><span>Расходы:</span><span>-${formatMoney(totalExpenses)}</span></div>
@@ -1452,6 +1462,19 @@ export function renderExpenseAnalysis() {
     return;
   }
 
+  // === ДОБАВИТЬ ЭТОТ БЛОК ===
+  // При переходе в "Анализ" скрываем подпись "% от соответствующих расходов" в верхнем блоке
+  const topContainer = document.getElementById('stats-top');
+  if (topContainer) {
+    const labels = topContainer.querySelectorAll('.stats-period-label');
+    labels.forEach((label) => {
+      if (label.textContent.includes('соответствующих расходов')) {
+        label.style.display = 'none';
+      }
+    });
+  }
+  // ==========================
+
   const settings = window.appData.settings;
   let startDate, endDate;
   if (settings.customFilterStart && settings.customFilterEnd) {
@@ -1473,22 +1496,32 @@ export function renderExpenseAnalysis() {
     if (match) {
       const accountName = match[1].trim();
       if (accountName && accountName !== 'Все счета') {
-        const acc = window.appData.settings.accounts.find(a => a.name === accountName);
+        const acc = window.appData.settings.accounts.find(
+          (a) => a.name === accountName,
+        );
         if (acc) {
-          filteredTransactions = window.appData.transactions.filter(t => t.accountId === acc.id);
+          filteredTransactions = window.appData.transactions.filter(
+            (t) => t.accountId === acc.id,
+          );
         }
       }
     }
   }
 
-  const analysis = analyzeExpenses(filteredTransactions, { start: startDate, end: endDate });
+  const analysis = analyzeExpenses(filteredTransactions, {
+    start: startDate,
+    end: endDate,
+  });
   const formatDate = (date) => formatDateOnly(date);
 
   let html = `
   <div class="stats-card">
     <h2 class="stats-title">Анализ расходов</h2>
-    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 16px 0;">
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 4px 0;">
       За период (${formatDate(startDate)} – ${formatDate(endDate)})
+    </div>
+    <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); font-size: 0.85em; margin-bottom: 16px;">
+      (проценты от общей суммы всех расходов)
     </div>
     <div class="stats-summary-block">
       <div class="stats-row expense">
