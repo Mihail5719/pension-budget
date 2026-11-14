@@ -1893,9 +1893,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 // ============================================================
 // ============================================================
-// Надёжные подсказки по долгому нажатию (Pointer Events)
-// Работает на реальных тач-устройствах и в эмуляции DevTools.
-// На десктопе (мышь) этот блок игнорируется, там работает CSS :hover.
+// Подсказки по долгому нажатию на тач-устройствах (touchstart/touchend)
+// На десктопе эти события не срабатывают — там работает CSS :hover
 let pressTimer = null;
 let tooltipEl = null;
 
@@ -1903,10 +1902,7 @@ const removeTooltip = () => {
   if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
 };
 
-document.addEventListener('pointerdown', (e) => {
-  // Реагируем только на касания (touch), игнорируем мышь
-  if (e.pointerType !== 'touch') return;
-
+document.addEventListener('touchstart', (e) => {
   const target = e.target.closest('[data-tooltip]');
   if (!target) { clearTimeout(pressTimer); return; }
 
@@ -1917,17 +1913,16 @@ document.addEventListener('pointerdown', (e) => {
     tooltipEl.textContent = target.dataset.tooltip;
     document.body.appendChild(tooltipEl);
 
-    // Позиционируем подсказку над элементом
     const r = target.getBoundingClientRect();
     tooltipEl.style.left = (r.left + r.width / 2) + 'px';
     tooltipEl.style.top = r.top + 'px';
-  }, 500); // 500 мс для долгого нажатия
-});
+  }, 500);
+}, { passive: true });
 
-document.addEventListener('pointerup', () => {
+document.addEventListener('touchend', () => {
   clearTimeout(pressTimer);
-  if (tooltipEl) setTimeout(removeTooltip, 2000); // Скрыть через 2 сек
+  if (tooltipEl) setTimeout(removeTooltip, 2000);
 });
 
-document.addEventListener('pointermove', () => { clearTimeout(pressTimer); }, { passive: true });
-document.addEventListener('pointercancel', () => { clearTimeout(pressTimer); });
+document.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
+document.addEventListener('touchcancel', () => { clearTimeout(pressTimer); });
