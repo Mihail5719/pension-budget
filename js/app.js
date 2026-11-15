@@ -2231,18 +2231,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Клик по кнопке "Назад"
     if (statsBackBtn) {
-      statsBackBtn.addEventListener('click', () => {
-        window.currentStatsCategoryId = null; // Сбрасываем выбор категории
-
-        // Перерисовываем статистику в обычном режиме
-        if (typeof renderStats === 'function' && window.appData) {
-          renderStats(
-            window.appData.settings,
-            window.appData.fixedExpenses,
-            window.appData.transactions,
-          );
-        }
-      });
+            statsBackBtn.addEventListener('click', () => {
+              window.currentStatsCategoryId = null;
+              window.currentStatsIsFixed = null; // Сбрасываем тип
+              
+              // Перерисовываем статистику в обычном режиме
+              if (typeof renderStats === 'function' && window.appData) {
+                renderStats(
+                  window.appData.settings,
+                  window.appData.fixedExpenses,
+                  window.appData.transactions,
+                );
+              }
+            });
     }
 
     // Клик по категории (делегирование событий)
@@ -2251,21 +2252,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ищем ближайший элемент с классом category-clickable
         const clickableHeader = e.target.closest('.category-clickable');
 
-        if (clickableHeader) {
-          const category = clickableHeader.dataset.category;
-          if (category) {
-            window.currentStatsCategoryId = category; // Запоминаем выбранную категорию
+                if (clickableHeader) {
+                  const category = clickableHeader.dataset.category;
+                  // Читаем, был ли это клик по фиксированным (строка 'true' или 'false')
+                  const isFixed = clickableHeader.dataset.isFixed === 'true';
 
-            // Перерисовываем статистику (она увидит currentStatsCategoryId и покажет список)
-            if (typeof renderStats === 'function' && window.appData) {
-              renderStats(
-                window.appData.settings,
-                window.appData.fixedExpenses,
-                window.appData.transactions,
-              );
-            }
-          }
-        }
+                  if (category) {
+                    window.currentStatsCategoryId = category;
+                    window.currentStatsIsFixed = isFixed; // Запоминаем тип
+
+                    // Перерисовываем статистику (она увидит currentStatsCategoryId и покажет список)
+                    if (typeof renderStats === 'function' && window.appData) {
+                      renderStats(
+                        window.appData.settings,
+                        window.appData.fixedExpenses,
+                        window.appData.transactions,
+                      );
+                    }
+                  }
+                }
       });
     }
     // ========================================================

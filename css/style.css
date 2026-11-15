@@ -4508,3 +4508,20 @@ body.dark-theme .breakdown__header.category-clickable:hover {
   font-weight: 600;
 }
 
+/* Заголовки групп в drill-down (Вариант В) */
+.drilldown-group-title {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-secondary, #f0f0f0);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 0;
+  border-left: 3px solid var(--text-secondary);
+}
+
+/* Небольшой отступ для элементов списка внутри групп */
+.drilldown-list-wrapper {
+  margin-top: 8px;
+}
+

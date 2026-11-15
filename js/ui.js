@@ -18,6 +18,7 @@ let currentStatsAccountId = 'all';
 // ========================================================
 
 window.currentStatsCategoryId = null;
+window.currentStatsIsFixed = null; // Добавлено для фильтрации в drill-down
 
 // ─── Предикаты типов операций (v2.0, коммит 2 + проценты) ───
 const isIncome = (t) => t.type === 'income' || t.type === 'interest'; // ← ДОБАВИЛИ interest
@@ -923,8 +924,15 @@ export function renderStats(settings, fixedExpenses, transactions) {
       const isMatchAccount =
         currentStatsAccountId === 'all' ||
         t.accountId === currentStatsAccountId;
-      // Показываем только расходы и фиксированные платежи этой категории
-      const isExpenseType = isExpense(t) || isCommitted(t);
+      // Фильтруем по типу в зависимости от того, откуда пришёл клик
+      let isExpenseType = false;
+      if (window.currentStatsIsFixed === true) {
+        isExpenseType = isCommitted(t); // Только фиксированные
+      } else if (window.currentStatsIsFixed === false) {
+        isExpenseType = isExpense(t); // Только нефиксированные
+      } else {
+        isExpenseType = isExpense(t) || isCommitted(t); // На всякий случай
+      }
 
       return (
         tDate >= startDate &&
@@ -960,11 +968,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
     if (window.expenseChartInstance) window.expenseChartInstance.destroy();
     if (emptyMsg) emptyMsg.hidden = true;
 
-    // 5. Рисуем список транзакций в нижнем контейнере
-    // Мы создадим временный ID или используем stats-bottom, но renderTransactionList
-    // ожидает конкретную структуру. Давайте просто вызовем её, указав targetElementId.
-    // Но сначала очистим stats-bottom и добавим туда элемент с нужным ID.
-    // Полностью очищаем нижний контейнер перед отрисовкой drill-down
+        // 5. Рисуем список транзакций в нижнем контейнере
     bottomContainer.innerHTML = '';
     const listWrapper = document.createElement('div');
     listWrapper.id = 'stats-transaction-list';
@@ -975,7 +979,8 @@ export function renderStats(settings, fixedExpenses, transactions) {
       'stats-transaction-list',
     );
 
-    return; // ЗАВЕРШАЕМ ФУНКЦИЮ ЗДЕСЬ, чтобы не рисовать обычную статистику
+    return; // ЗАВЕРШАЕМ ФУНКЦИЮ ЗДЕСЬ
+
   }
   // ==========================================================
 
