@@ -968,7 +968,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
     if (window.expenseChartInstance) window.expenseChartInstance.destroy();
     if (emptyMsg) emptyMsg.hidden = true;
 
-        // 5. Рисуем список транзакций в нижнем контейнере
+    // 5. Рисуем список транзакций в нижнем контейнере
     bottomContainer.innerHTML = '';
     const listWrapper = document.createElement('div');
     listWrapper.id = 'stats-transaction-list';
@@ -980,7 +980,6 @@ export function renderStats(settings, fixedExpenses, transactions) {
     );
 
     return; // ЗАВЕРШАЕМ ФУНКЦИЮ ЗДЕСЬ
-
   }
   // ==========================================================
 
@@ -1072,7 +1071,7 @@ export function renderStats(settings, fixedExpenses, transactions) {
   // Формируем текст периода так же, как это делается в drill-down
   const periodText = `${formatDateOnly(startDate)} – ${formatDateOnly(endDate)}`;
 
-      let topHtml = `
+  let topHtml = `
     <h2 class="stats-title">Статистика: ${accountName}</h2>
     <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 4px 0;">
       За период (${periodText})
@@ -1534,7 +1533,7 @@ export function renderExpenseAnalysis() {
   });
   const formatDate = (date) => formatDateOnly(date);
 
-    let html = `
+  let html = `
   <div class="stats-card">
     <h2 class="stats-title">Анализ расходов</h2>
     <div class="stats-period-label" style="text-align: center; color: var(--text-secondary); margin: -8px 0 16px 0;">
@@ -1582,6 +1581,10 @@ export function renderExpenseAnalysis() {
         if (sub.items && sub.items.length > 0) {
           html += `<div class="analysis-items" id="subcategory-${catIndex}-${subIndex}" style="display: none;">`;
           sub.items.forEach((item) => {
+            // Пропускаем "фантомные" товары без имени и с нулевой суммой
+            if (!item.name || item.name.trim() === '' || item.total === 0) {
+              return;
+            }
             html += `
                 <div class="analysis-item" data-tooltip="${item.percent}% от подкатегории ${sub.name}">
                   <span class="analysis-item__name">${item.name}</span>
@@ -1607,10 +1610,13 @@ window.toggleCategory = function (catIndex) {
   const subContainer = document.getElementById(`category-${catIndex}`);
   // Ищем стрелку строго внутри конкретной категории
   const toggle = document.querySelector(
-    `.analysis-category[data-category-index="${catIndex}"] .analysis-category__toggle`
+    `.analysis-category[data-category-index="${catIndex}"] .analysis-category__toggle`,
   );
 
-  if (subContainer.style.display === 'none' || subContainer.style.display === '') {
+  if (
+    subContainer.style.display === 'none' ||
+    subContainer.style.display === ''
+  ) {
     subContainer.style.display = 'block';
     if (toggle) toggle.textContent = '▼';
   } else {
@@ -1620,15 +1626,20 @@ window.toggleCategory = function (catIndex) {
 };
 
 window.toggleSubcategory = function (catIndex, subIndex) {
-  const itemsContainer = document.getElementById(`subcategory-${catIndex}-${subIndex}`);
+  const itemsContainer = document.getElementById(
+    `subcategory-${catIndex}-${subIndex}`,
+  );
   // Ищем стрелку строго внутри конкретной подкатегории конкретной категории!
   const toggle = document.querySelector(
-    `.analysis-category[data-category-index="${catIndex}"] .analysis-subcategory[data-sub-index="${subIndex}"] .analysis-subcategory__toggle`
+    `.analysis-category[data-category-index="${catIndex}"] .analysis-subcategory[data-sub-index="${subIndex}"] .analysis-subcategory__toggle`,
   );
 
   if (!itemsContainer) return;
 
-  if (itemsContainer.style.display === 'none' || itemsContainer.style.display === '') {
+  if (
+    itemsContainer.style.display === 'none' ||
+    itemsContainer.style.display === ''
+  ) {
     itemsContainer.style.display = 'block';
     if (toggle) toggle.textContent = '▼';
   } else {
@@ -1949,30 +1960,48 @@ let pressTimer = null;
 let tooltipEl = null;
 
 const removeTooltip = () => {
-  if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+  if (tooltipEl) {
+    tooltipEl.remove();
+    tooltipEl = null;
+  }
 };
 
-document.addEventListener('touchstart', (e) => {
-  const target = e.target.closest('[data-tooltip]');
-  if (!target) { clearTimeout(pressTimer); return; }
+document.addEventListener(
+  'touchstart',
+  (e) => {
+    const target = e.target.closest('[data-tooltip]');
+    if (!target) {
+      clearTimeout(pressTimer);
+      return;
+    }
 
-  pressTimer = setTimeout(() => {
-    removeTooltip();
-    tooltipEl = document.createElement('div');
-    tooltipEl.className = 'tooltip-popup';
-    tooltipEl.textContent = target.dataset.tooltip;
-    document.body.appendChild(tooltipEl);
+    pressTimer = setTimeout(() => {
+      removeTooltip();
+      tooltipEl = document.createElement('div');
+      tooltipEl.className = 'tooltip-popup';
+      tooltipEl.textContent = target.dataset.tooltip;
+      document.body.appendChild(tooltipEl);
 
-    const r = target.getBoundingClientRect();
-    tooltipEl.style.left = (r.left + r.width / 2) + 'px';
-    tooltipEl.style.top = r.top + 'px';
-  }, 500);
-}, { passive: true });
+      const r = target.getBoundingClientRect();
+      tooltipEl.style.left = r.left + r.width / 2 + 'px';
+      tooltipEl.style.top = r.top + 'px';
+    }, 500);
+  },
+  { passive: true },
+);
 
 document.addEventListener('touchend', () => {
   clearTimeout(pressTimer);
   if (tooltipEl) setTimeout(removeTooltip, 2000);
 });
 
-document.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
-document.addEventListener('touchcancel', () => { clearTimeout(pressTimer); });
+document.addEventListener(
+  'touchmove',
+  () => {
+    clearTimeout(pressTimer);
+  },
+  { passive: true },
+);
+document.addEventListener('touchcancel', () => {
+  clearTimeout(pressTimer);
+});
