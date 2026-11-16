@@ -1398,21 +1398,35 @@ function useReserve() {
 
 // Обработчик изменения настроек
 function handleSettingsChange() {
+  // Добавлено .replace(/\s/g, '') для удаления всех пробелов (в т.ч. неразрывных)
+  // перед заменой запятой на точку. Это предотвращает обрезку чисел вида "34 714,73" до "34"
   const initialBalance =
     parseFloat(
-      document.getElementById('input-initial-balance').value.replace(',', '.'),
+      document
+        .getElementById('input-initial-balance')
+        .value.replace(/\s/g, '')
+        .replace(',', '.'),
     ) || 0;
 
-  const pensionAmount = parseFloat(
-    document.getElementById('input-pension').value.replace(',', '.'),
-  );
+  const pensionAmount =
+    parseFloat(
+      document
+        .getElementById('input-pension')
+        .value.replace(/\s/g, '')
+        .replace(',', '.'),
+    ) || 0;
 
   const pensionDay = parseInt(
     document.getElementById('input-pension-day').value,
   );
-  const reserveAmount = parseFloat(
-    document.getElementById('input-reserve').value.replace(',', '.'),
-  );
+
+  const reserveAmount =
+    parseFloat(
+      document
+        .getElementById('input-reserve')
+        .value.replace(/\s/g, '')
+        .replace(',', '.'),
+    ) || 0;
 
   // Валидация
   if (isNaN(pensionAmount) || pensionAmount <= 0) {
