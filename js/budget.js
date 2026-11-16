@@ -170,14 +170,12 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   }
 
   // 7. Свободный бюджет (для расчёта лимита)
-  // ДЛЯ РАСЧЁТА ЛИМИТА используем workingBalance, который НЕ включает interestIncome!
-  const workingBalance =
-    totalInitialBalance +
-    (currentPeriodStart ? pensionAmount : 0) +
-    regularIncome - // <-- ТОЛЬКО обычные доходы!
-    moneyOut;
+  // ИСПОЛЬЗУЕМ реальный текущий баланс (currentBalance), так как он уже включает
+  // все реальные доходы (включая проценты) и точно отражает деньги на счетах.
+  // Исключение процентов из расчёта (как было в workingBalance) приводило к
+  // занижению доступных средств и огромным минусам при обнулении резерва.
 
-  const freeBudget = workingBalance - reserveAmount - fixedTotal;
+  const freeBudget = currentBalance - reserveAmount - fixedTotal;
   const remaining = freeBudget;
 
   // 8. Считаем оставшиеся дни
