@@ -4131,20 +4131,25 @@ body.dark-theme .breakdown__header.category-clickable:hover {
 
 .analysis-category__name {
   font-weight: 600;
-  font-size: 0.95em; /* Уменьшаем */
+  font-size: 0.95em;
   color: var(--text-primary);
+  flex: 1; /* Занимает всё доступное пространство */
+  margin-right: 16px; /* Отступ до суммы */
 }
 
 .analysis-category__amount {
   font-weight: 600;
   color: var(--danger-color, #e74c3c);
-  font-size: 0.9em; /* Добавляем */
+  font-size: 0.9em;
+  flex-shrink: 0; /* Не сжимается */
+  white-space: nowrap; /* Не переносится */
 }
 
 .analysis-category__toggle {
   font-size: 0.8em;
   color: var(--text-secondary);
   margin-left: 8px;
+  flex-shrink: 0; /* Не сжимается */
 }
 
 .analysis-category__bar {
