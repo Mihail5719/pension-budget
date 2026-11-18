@@ -18,6 +18,7 @@ const FILES_TO_CACHE = [
   './docs/screenshots/screen-stats.png',
   './docs/screenshots/screen-reconcile.png',
   './docs/screenshots/screen-settings.png',
+  './docs/screenshots/screen-analysis.png',
 ];
 
 // Установка: кэшируем все файлы
