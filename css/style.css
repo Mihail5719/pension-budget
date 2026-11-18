@@ -4197,18 +4197,24 @@ body.dark-theme .breakdown__header.category-clickable:hover {
 .analysis-subcategory__name {
   font-weight: 500;
   color: var(--text-primary);
+  flex: 1; /* Занимает всё доступное пространство */
+  margin-right: 12px; /* Отступ до суммы */
 }
 
 .analysis-subcategory__amount {
   font-weight: 500;
   color: var(--text-secondary);
   font-size: 0.95em;
+  flex-shrink: 0; /* Не сжимается */
+  white-space: nowrap; /* Не переносится */
 }
+
 
 .analysis-subcategory__toggle {
   font-size: 0.75em;
   color: var(--text-secondary);
   margin-left: 8px;
+  flex-shrink: 0; /* Не сжимается */
 }
 
 .analysis-subcategory__bar {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pension-budget-v2.1.1';
+const CACHE_NAME = 'pension-budget-v2.3.0';
 const FILES_TO_CACHE = [
   './',
   './index.html',
