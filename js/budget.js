@@ -127,12 +127,32 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
   // Реальный баланс включает ВСЕ доходы (включая проценты), чтобы цифры сходились с банком
   const totalIncomeForBalance = regularIncome + interestIncome;
 
+  // === ИСПРАВЛЕНИЕ: Учёт переводов с накопительных счетов на обычные ===
+  // Перевод с накопительного на обычный счёт увеличивает доступный бюджет,
+  // потому что деньги "размораживаются" и становятся доступны для трат.
+  const transfersFromSavings = periodTransactions
+    .filter((t) => {
+      if (t.type !== 'transfer') return false;
+      const fromAccount = settings.accounts.find(
+        (a) => a.id === t.fromAccountId,
+      );
+      const toAccount = settings.accounts.find((a) => a.id === t.toAccountId);
+      return (
+        fromAccount &&
+        fromAccount.isSavings &&
+        toAccount &&
+        !toAccount.isSavings
+      );
+    })
+    .reduce((sum, t) => sum + t.amount, 0);
+  // ============================================================
+
   const currentBalance =
     totalInitialBalance +
     (currentPeriodStart ? pensionAmount : 0) +
     totalIncomeForBalance -
-    moneyOut;
-  // ============================================================
+    moneyOut +
+    transfersFromSavings; // <-- Добавлено
 
   // 6. Вычисляем баланс накопительных счетов
   let savingsBalance = 0;
