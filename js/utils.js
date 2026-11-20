@@ -168,23 +168,36 @@ export function filterTransactions(
     return isDateInRange(t.date, dateRange.start, dateRange.end);
   });
 
-  // 2. Если есть текстовый запрос — фильтруем дополнительно
+  // 2. Если есть поисковый запрос — фильтруем дополнительно
   if (query && query.trim() !== '') {
-    const lowerQuery = query.toLowerCase().trim();
+    const trimmed = query.trim();
+    // Числовой запрос = только цифры, пробелы, точки и запятые (напр. "500", "34 714,73")
+    const isNumericQuery = /^[\d\s.,]+$/.test(trimmed);
+    const queryNum = isNumericQuery
+      ? parseFloat(trimmed.replace(/\s/g, '').replace(',', '.'))
+      : NaN;
 
     filtered = filtered.filter((t) => {
-      const fieldsToSearch = [
+      if (isNumericQuery && !isNaN(queryNum)) {
+        // Числовой запрос: ищем ТОЛЬКО точное совпадение суммы (в копейках,
+        // чтобы обойти погрешность плавающей точки). Текст не трогаем.
+        const amountCents = Math.round(Math.abs(t.amount) * 100);
+        const queryCents = Math.round(queryNum * 100);
+        return amountCents === queryCents;
+      }
+
+      // Текстовый запрос: ищем подстроку только в описательных полях.
+      const lowerQuery = trimmed.toLowerCase();
+      const textFields = [
         t.category || '',
         t.subCategory || t.subcategory || '',
         t.item || '',
         t.store || '',
         t.note || '',
-        String(t.amount || ''),
-      ];
-
-      return fieldsToSearch.some((field) =>
-        String(field).toLowerCase().includes(lowerQuery),
-      );
+      ]
+        .join(' ')
+        .toLowerCase();
+      return textFields.includes(lowerQuery);
     });
   }
 
