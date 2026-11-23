@@ -102,10 +102,23 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // Проценты (НЕ влияют на лимит, но увеличивают реальный баланс)
-  const interestIncome = periodTransactions
+  // === ИСПРАВЛЕНИЕ: Разделяем проценты по активным и накопительным счетам ===
+  // Проценты по активным счетам увеличивают свободный бюджет.
+  // Проценты по накопительным счетам увеличивают только баланс сбережений.
+  let activeInterestIncome = 0;
+  let savingsInterestIncome = 0;
+
+  periodTransactions
     .filter((t) => t.type === 'interest')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .forEach((t) => {
+      const account = settings.accounts.find((a) => a.id === t.accountId);
+      if (account && account.isSavings) {
+        savingsInterestIncome += t.amount;
+      } else {
+        activeInterestIncome += t.amount;
+      }
+    });
+  // =======================================================================
 
   // Деньги, покинувшие кошелёк: расходы + переводы ТОЛЬКО на накопительные счета
   const moneyOut = periodTransactions
@@ -124,8 +137,8 @@ export function calculateDailyLimit(settings, fixedExpenses, transactions) {
     .filter((account) => !account.isSavings)
     .reduce((sum, acc) => sum + (acc.initialBalance || 0), 0);
 
-  // Реальный баланс включает ВСЕ доходы (включая проценты), чтобы цифры сходились с банком
-  const totalIncomeForBalance = regularIncome + interestIncome;
+  // Реальный баланс активных счетов включает обычные доходы + проценты ТОЛЬКО по активным счетам
+  const totalIncomeForBalance = regularIncome + activeInterestIncome;
 
   // === ИСПРАВЛЕНИЕ: Учёт переводов с накопительных счетов на обычные ===
   // Перевод с накопительного на обычный счёт увеличивает доступный бюджет,
