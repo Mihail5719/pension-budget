@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pension-budget-v2.3.1';
+const CACHE_NAME = 'pension-budget-v2.3.2';
 const FILES_TO_CACHE = [
   './',
   './index.html',
@@ -6,7 +6,10 @@ const FILES_TO_CACHE = [
   './js/app.js',
   './js/budget.js',
   './js/chart.min.js',
+  './js/constants.js',
+  './js/reconcile.js',
   './js/storage.js',
+  './js/transactions.js',
   './js/ui.js',
   './js/utils.js',
   './manifest.json',
