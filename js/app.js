@@ -492,132 +492,127 @@ function setupEventListeners() {
     });
   }
 
-  // === Обработчик изменения/сброса даты пенсии на главном экране ===
-  const btnEditPensionDate = document.getElementById('btn-edit-pension-date');
-  if (btnEditPensionDate) {
-    btnEditPensionDate.addEventListener('click', () => {
-      const currentDate = appData.settings.currentPeriodStart
-        ? appData.settings.currentPeriodStart.split('T')[0]
-        : '';
+  // === Обработчик изменения/сброса даты пенсии на главном экране (v2.3.3) ===
+const btnEditPensionDate = document.getElementById('btn-edit-pension-date');
+if (btnEditPensionDate) {
+  btnEditPensionDate.addEventListener('click', () => {
+    const currentDate = appData.settings.currentPeriodStart
+      ? appData.settings.currentPeriodStart.split('T')[0]
+      : '';
 
-      const userChoice = prompt(
-        'Введите новую дату начала периода (в формате ГГГГ-ММ-ДД, например 2026-10-28)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ОТМЕНИТЬ отметку.',
-        currentDate,
-      );
+    const userChoice = prompt(
+      'Введите новую дату начала периода (в формате ГГГГ-ММ-ДД, например 2026-10-28)\n\nИли оставьте поле ПУСТЫМ и нажмите ОК, чтобы ОТМЕНИТЬ отметку.',
+      currentDate,
+    );
 
-      if (userChoice === null) return;
+    if (userChoice === null) return;
 
-      if (userChoice.trim() === '') {
-        if (
-          confirm('Отменить отметку о получении пенсии? Кнопка появится снова.')
-        ) {
-          delete appData.settings.currentPeriodStart;
-          saveData(appData);
-          renderTodayScreen(
+    if (userChoice.trim() === '') {
+      if (
+        confirm('Отменить отметку о получении пенсии? Кнопка появится снова.')
+      ) {
+        delete appData.settings.currentPeriodStart;
+        saveData(appData);
+        renderTodayScreen(
+          appData.settings,
+          appData.fixedExpenses,
+          appData.transactions,
+        );
+        renderPensionPeriodInfo(appData.settings);
+        if (typeof renderAccountsList === 'function') renderAccountsList();
+        if (typeof renderSettings === 'function') renderSettings();
+        if (window.expenseChartInstance) {
+          renderStats(
             appData.settings,
             appData.fixedExpenses,
             appData.transactions,
-          );
-          renderPensionPeriodInfo(appData.settings);
-          if (window.expenseChartInstance) {
-            renderStats(
-              appData.settings,
-              appData.fixedExpenses,
-              appData.transactions,
-            );
-          }
-        }
-      } else {
-        const newDate = new Date(userChoice);
-        if (!isNaN(newDate.getTime())) {
-          const oldStart = appData.settings.currentPeriodStart
-            ? new Date(appData.settings.currentPeriodStart)
-            : null;
-
-          if (oldStart && newDate.getTime() > oldStart.getTime()) {
-            // Функция для расчёта реального баланса счёта НА ДАТУ
-            const getCurrentAccountBalance = (accountId, untilDate) => {
-              const acc = appData.settings.accounts.find(
-                (a) => a.id === accountId,
-              );
-              // ИСПРАВЛЕНО: Начинаем с initialBalance этого счёта, а не с 0!
-              let balance = acc ? acc.initialBalance || 0 : 0;
-
-              const periodStart = new Date(appData.settings.currentPeriodStart);
-              const untilDateEnd = new Date(untilDate);
-              untilDateEnd.setHours(23, 59, 59, 999);
-
-              appData.transactions.forEach((tx) => {
-                const txDate = new Date(tx.date);
-                // Считаем транзакции только от начала текущего периода до untilDate
-                if (txDate > periodStart && txDate <= untilDateEnd) {
-                  if (tx.type === 'expense' && tx.accountId === accountId) {
-                    balance -= tx.amount;
-                  } else if (
-                    tx.type === 'income' &&
-                    tx.accountId === accountId
-                  ) {
-                    balance += tx.amount;
-                  } else if (tx.type === 'transfer') {
-                    if (tx.fromAccountId === accountId) balance -= tx.amount;
-                    if (tx.toAccountId === accountId) balance += tx.amount;
-                  }
-                }
-              });
-
-              return balance;
-            };
-
-            let newGlobalInitialBalance = 0;
-            appData.settings.accounts.forEach((account) => {
-              const realBalance = getCurrentAccountBalance(account.id, newDate);
-              account.initialBalance = Math.round(realBalance * 100) / 100;
-              newGlobalInitialBalance += account.initialBalance;
-            });
-
-            appData.settings.initialBalance =
-              Math.round(newGlobalInitialBalance * 100) / 100;
-
-            console.log('🔄 Переход в новый период!');
-            console.log(
-              '🔄 Новый глобальный начальный остаток:',
-              appData.settings.initialBalance,
-            );
-
-            const userAgrees = confirm(
-              `Вы переносите начало периода на ${userChoice}.\n\n` +
-                `Новый начальный остаток составит: ${appData.settings.initialBalance.toFixed(2)} ₽\n\n` +
-                `Продолжить?`,
-            );
-
-            if (!userAgrees) return;
-          }
-
-          appData.settings.currentPeriodStart = newDate.toISOString();
-          saveData(appData);
-
-          renderTodayScreen(
-            appData.settings,
-            appData.fixedExpenses,
-            appData.transactions,
-          );
-          renderPensionPeriodInfo(appData.settings);
-          if (window.expenseChartInstance) {
-            renderStats(
-              appData.settings,
-              appData.fixedExpenses,
-              appData.transactions,
-            );
-          }
-          alert('✅ Дата периода успешно изменена, балансы обновлены!');
-        } else {
-          alert(
-            '❌ Неверный формат даты. Попробуйте снова (пример: 2026-10-28).',
           );
         }
       }
-    });
-  }
+    } else {
+      const newDate = new Date(userChoice);
+      if (!isNaN(newDate.getTime())) {
+        const oldStart = appData.settings.currentPeriodStart
+          ? new Date(appData.settings.currentPeriodStart)
+          : null;
+
+        if (oldStart && newDate.getTime() > oldStart.getTime()) {
+          // Функция для расчёта реального баланса счёта НА ДАТУ (исправленная v2.3.3)
+          const getCurrentAccountBalance = (accountId, untilDate) => {
+            const acc = appData.settings.accounts.find(
+              (a) => a.id === accountId,
+            );
+            let balance = acc ? acc.initialBalance || 0 : 0;
+
+            const periodStart = new Date(appData.settings.currentPeriodStart);
+            const untilDateEnd = new Date(untilDate);
+            untilDateEnd.setHours(23, 59, 59, 999);
+
+            appData.transactions.forEach((tx) => {
+              const txDate = new Date(tx.date);
+              if (txDate > periodStart && txDate <= untilDateEnd) {
+                // === ИСПРАВЛЕНИЕ 1: честно вычитаем и обычные расходы, и фиксированные платежи ===
+                if (
+                  (tx.type === 'expense' || tx.type === 'committed') &&
+                  tx.accountId === accountId
+                ) {
+                  balance -= tx.amount;
+                } else if (
+                  tx.type === 'income' &&
+                  tx.accountId === accountId
+                ) {
+                  balance += tx.amount;
+                } else if (tx.type === 'transfer') {
+                  if (tx.fromAccountId === accountId) balance -= tx.amount;
+                  if (tx.toAccountId === accountId) balance += tx.amount;
+                }
+              }
+            });
+
+            // === ИСПРАВЛЕНИЕ 2: добавляем виртуальную пенсию, если это счёт получения ===
+            const pensionAccountId =
+              appData.settings.pensionAccountId ||
+              appData.settings.defaultAccountId;
+            if (
+              accountId === pensionAccountId &&
+              appData.settings.currentPeriodStart
+            ) {
+              balance += appData.settings.pensionAmount || 0;
+            }
+
+            return balance;
+          };
+
+          let newGlobalInitialBalance = 0;
+          appData.settings.accounts.forEach((account) => {
+            const realBalance = getCurrentAccountBalance(account.id, newDate);
+            account.initialBalance = Math.round(realBalance * 100) / 100;
+            newGlobalInitialBalance += account.initialBalance;
+          });
+
+          appData.settings.initialBalance =
+            Math.round(newGlobalInitialBalance * 100) / 100;
+
+          console.log('🔄 Переход в новый период!');
+          console.log(
+            '🔄 Новый глобальный начальный остаток:',
+            appData.settings.initialBalance,
+          );
+
+          const userAgrees = confirm(
+            `Вы переносите начало периода на ${userChoice}.\n\n` +
+              `Новый начальный остаток составит: ${appData.settings.initialBalance.toFixed(2)} ₽\n\n` +
+              `Продолжить?`,
+          );
+
+          if (!userAgrees) return;
+        }
+
+        appData.settings.currentPeriodStart = newDate.toISOString();
+        saveData(appData);
+
+        // === ОБНОВЛЕНИЕ ИНТЕРФЕЙСА БЕЗ ПЕРЕЗАГРУЗКИ (v2.3.3) ===
+       
   // ================================================================
   // === ОБРАБОТЧИКИ ДЛЯ УПРАВЛЕНИЯ СЧЕТАМИ (v2.1) ===
 
