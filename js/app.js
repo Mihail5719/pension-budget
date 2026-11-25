@@ -492,7 +492,7 @@ function setupEventListeners() {
     });
   }
 
-  // === Обработчик изменения/сброса даты пенсии на главном экране ===
+  // === Обработчик изменения/сброса даты пенсии на главном экране (v2.3.3 ФИНАЛЬНАЯ ВЕРСИЯ) ===
   const btnEditPensionDate = document.getElementById('btn-edit-pension-date');
   if (btnEditPensionDate) {
     btnEditPensionDate.addEventListener('click', () => {
@@ -513,6 +513,13 @@ function setupEventListeners() {
         ) {
           delete appData.settings.currentPeriodStart;
           saveData(appData);
+
+          // === ДОБАВЛЕНО: перерисовка при сбросе периода ===
+          if (typeof renderAccountsList === 'function') renderAccountsList();
+          if (typeof renderSettings === 'function')
+            renderSettings(appData.settings, appData.fixedExpenses);
+          // ==================================================
+
           renderTodayScreen(
             appData.settings,
             appData.fixedExpenses,
@@ -609,6 +616,15 @@ function setupEventListeners() {
           appData.settings.currentPeriodStart = newDate.toISOString();
           saveData(appData);
 
+          // === ДОБАВЛЕНО: ОБЯЗАТЕЛЬНАЯ ПЕРЕРИСОВКА ПОСЛЕ ПЕРЕСЧЁТА (v2.3.3) ===
+          if (typeof renderAccountsList === 'function') {
+            renderAccountsList();
+          }
+          if (typeof renderSettings === 'function') {
+            renderSettings(appData.settings, appData.fixedExpenses);
+          }
+          // ==================================================================
+
           renderTodayScreen(
             appData.settings,
             appData.fixedExpenses,
@@ -631,6 +647,7 @@ function setupEventListeners() {
       }
     });
   }
+  // ========================================================================
   // ================================================================
   // === ОБРАБОТЧИКИ ДЛЯ УПРАВЛЕНИЯ СЧЕТАМИ (v2.1) ===
 
