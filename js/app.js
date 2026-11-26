@@ -883,6 +883,8 @@ function openIncomeModal() {
   // ========================================================
 
   // Открываем модальное окно и фокусируемся на категории
+  const dateInput = document.getElementById('income-date');
+  if (dateInput) dateInput.value = toInputDate(new Date());
   incomeModal.classList.add('is-open');
   incomeCategorySelect.focus();
 }
@@ -892,6 +894,9 @@ function closeIncomeModal() {
   incomeModal.classList.remove('is-open');
   incomeCategorySelect.value = 'gift'; // Сброс на первую категорию
   incomeAmountInput.value = '';
+  if (document.getElementById('income-date')) {
+    document.getElementById('income-date').value = ''; // ← НОВОЕ: очистка даты
+  }
 }
 
 /**
@@ -955,6 +960,7 @@ function saveIncome() {
 
   // Получаем выбранный счёт
   const accountId = document.getElementById('income-account').value;
+  const dateValue = document.getElementById('income-date')?.value || ''; 
 
   // === ИСПРАВЛЕНО: Получаем предмет и источник из правильных полей модалки дохода ===
   const itemValue = document.getElementById('income-item')?.value.trim() || '';
@@ -981,6 +987,7 @@ function saveIncome() {
     accountId,
     type,
     note: noteValue, // ← добавили
+    date: dateValue, 
   });
 
   // === НОВОЕ: Сохраняем в localStorage и обновляем индикатор ===
@@ -1193,6 +1200,8 @@ function openExpenseModal() {
   // 3. Открываем окно и ставим фокус на список
   expenseModal.classList.add('is-open');
   expenseCategorySelect.focus();
+  const dateInput = document.getElementById('expense-date');
+  if (dateInput) dateInput.value = toInputDate(new Date());
   fillSubcategories(expenseCategorySelect.value);
 }
 
@@ -1216,6 +1225,7 @@ function saveExpense() {
   const storeValue = document.getElementById('expense-store').value.trim();
   const subId = document.getElementById('expense-subcategory').value;
   const accountId = document.getElementById('expense-account').value;
+  const dateValue = document.getElementById('expense-date')?.value || ''; 
 
   // 1. Валидация
   if (isNaN(amount) || amount <= 0) {
@@ -1292,6 +1302,7 @@ function saveExpense() {
     store: storeValue,
     accountId,
     note: noteValue, // ← добавили
+    date: dateValue,
   });
 
   // 3. Сохраняем в localStorage и обновляем индикатор

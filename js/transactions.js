@@ -28,7 +28,8 @@ import {
  * @returns {Object} Созданная транзакция
  */
 export function createExpense(appData, formData) {
-  const { categoryId, amount, subId, item, store, accountId } = formData;
+  const { categoryId, amount, subId, item, store, accountId, note, date } =
+    formData;
 
   const category = EXPENSE_CATEGORIES.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
@@ -37,17 +38,20 @@ export function createExpense(appData, formData) {
   const sub = subs.find((s) => s.id === subId);
   const subName = sub ? sub.name : subId;
 
-    const transaction = {
-      id: Date.now(),
-      date: new Date().toISOString(),
-      category: categoryName,
-      subcategory: subName,
-      amount: amount,
-      type: 'expense',
-      item: item || '',
-      store: store || '', // ← НОВОЕ
-      accountId: accountId || appData.settings.defaultAccountId,
-    };
+  const transaction = {
+    id: Date.now(),
+    date: date
+      ? new Date(date + 'T12:00:00').toISOString()
+      : new Date().toISOString(),
+    category: categoryName,
+    subcategory: subName,
+    amount: amount,
+    type: 'expense',
+    item: item || '',
+    store: store || '',
+    note: note || '', // ← ИСПРАВЛЕНО: комментарий теперь сохраняется
+    accountId: accountId || appData.settings.defaultAccountId,
+  };
 
   appData.transactions.push(transaction);
   saveData(appData);
@@ -62,21 +66,23 @@ export function createExpense(appData, formData) {
  * @returns {Object} Созданная транзакция
  */
 export function createIncome(appData, formData) {
-  // Добавили 'type' в деструктуризацию
-  const { categoryId, amount, item, store, accountId, type } = formData;
+  const { categoryId, amount, item, store, accountId, type, note, date } =
+    formData;
 
   const category = INCOME_CATEGORIES.find((c) => c.id === categoryId);
   const categoryName = category ? category.name : categoryId;
 
   const transaction = {
     id: Date.now(),
-    date: new Date().toISOString(),
+    date: date
+      ? new Date(date + 'T12:00:00').toISOString()
+      : new Date().toISOString(),
     category: categoryName,
     amount: amount,
-    // Если в форме выбран тип 'interest', сохраняем его. Иначе - обычный 'income'
-    type: type === 'interest' ? 'interest' : 'income', 
-    item: item || '', 
-    store: store || '', 
+    type: type === 'interest' ? 'interest' : 'income',
+    item: item || '',
+    store: store || '',
+    note: note || '', // ← ИСПРАВЛЕНО
     accountId: accountId || appData.settings.defaultAccountId,
   };
 
